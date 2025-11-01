@@ -41,12 +41,6 @@ jobs:
           find ./dist -maxdepth 3 -type f -print || true
           if [ -f ./dist/index.html ]; then head -n 40 ./dist/index.html; else echo "no index.html at ./dist"; fi
 
-      - name: Make asset URLs relative (quick patch)
-        run: |
-          # Replace leading slash references like src="/... with src="./...
-          sed -i 's/src="\//src=".\/g' dist/index.html || true
-          sed -i 's/href="\//href=".\/g' dist/index.html || true
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
