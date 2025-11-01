@@ -25,15 +25,15 @@ export const TabNavigation = ({ tools, activeTool, onToolChange }: TabNavigation
               "group flex items-center gap-2 px-6 py-3 rounded-lg border transition-all duration-200",
               "hover:scale-105 hover:border-primary/50",
               isActive
-                ? "tab-active animate-glow-pulse"
+                ? "tab-active bg-[rgba(255,255,255,0.04)] text-white shadow-[0_0_6px_rgba(255,255,255,0.08)] backdrop-blur-sm"
                 : "bg-card/50 border-border text-muted-foreground hover:text-foreground"
             )}
           >
             <Icon className="w-5 h-5" />
             <span className="font-medium">{tool.label}</span>
-            <kbd className="ml-2 px-2 py-0.5 bg-background/50 rounded text-xs opacity-60">
+            {/* <kbd className="ml-2 px-2 py-0.5 bg-background/50 rounded text-xs opacity-60">
               {index + 1}
-            </kbd>
+            </kbd> */}
           </button>
         );
       })}

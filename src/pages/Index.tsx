@@ -31,12 +31,12 @@ const Index = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Keyboard shortcuts: 1-5 for tools
-      if (e.key >= "1" && e.key <= "5") {
-        const toolIndex = parseInt(e.key) - 1;
-        if (tools[toolIndex]) {
-          setActiveTool(tools[toolIndex].id);
-        }
-      }
+      // if (e.key >= "1" && e.key <= "5") {
+      //   const toolIndex = parseInt(e.key) - 1;
+      //   if (tools[toolIndex]) {
+      //     setActiveTool(tools[toolIndex].id);
+      //   }
+      // }
       
       // Esc to clear (handled in individual tools)
       if (e.key === "Escape") {
@@ -80,10 +80,10 @@ const Index = () => {
           <p>
             All operations run locally in your browser. Your data never leaves your device.
           </p>
-          <p className="mt-2">
+          {/* <p className="mt-2">
             Keyboard shortcuts: <kbd className="px-2 py-1 bg-muted rounded text-xs">1-5</kbd> to
             switch tools
-          </p>
+          </p> */}
         </footer>
       </div>
 
