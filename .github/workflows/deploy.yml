@@ -33,6 +33,13 @@ jobs:
 
       - name: Build
         run: npm run build
+      
+      - name: Show dist contents (debug)
+        run: |
+          echo "===== dist tree ====="
+          ls -la ./dist || true
+          find ./dist -maxdepth 3 -type f -print || true
+          if [ -f ./dist/index.html ]; then head -n 40 ./dist/index.html; else echo "no index.html at ./dist"; fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
