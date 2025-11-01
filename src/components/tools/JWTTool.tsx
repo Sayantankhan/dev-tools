@@ -1,0 +1,287 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { Key, Copy, AlertTriangle, Clock } from "lucide-react";
+
+interface DecodedJWT {
+  header: any;
+  payload: any;
+  signature: string;
+}
+
+export const JWTTool = () => {
+  const [token, setToken] = useState("");
+  const [decoded, setDecoded] = useState<DecodedJWT | null>(null);
+  const [error, setError] = useState("");
+  const [secret, setSecret] = useState("");
+  const [expiryInfo, setExpiryInfo] = useState<string>("");
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
+        return;
+      }
+      const text = e.clipboardData?.getData("text");
+      if (text && text.includes(".")) {
+        setToken(text);
+        decodeToken(text);
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      decodeToken(token);
+    }
+  }, [token]);
+
+  const base64UrlDecode = (str: string): string => {
+    try {
+      str = str.replace(/-/g, "+").replace(/_/g, "/");
+      const pad = str.length % 4;
+      if (pad) {
+        if (pad === 1) {
+          throw new Error("Invalid token");
+        }
+        str += new Array(5 - pad).join("=");
+      }
+      return decodeURIComponent(
+        atob(str)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+    } catch {
+      throw new Error("Invalid base64 encoding");
+    }
+  };
+
+  const decodeToken = (jwtToken: string) => {
+    try {
+      setError("");
+      const parts = jwtToken.trim().split(".");
+
+      if (parts.length !== 3) {
+        throw new Error("Invalid JWT format. Expected 3 parts separated by dots.");
+      }
+
+      const header = JSON.parse(base64UrlDecode(parts[0]));
+      const payload = JSON.parse(base64UrlDecode(parts[1]));
+      const signature = parts[2];
+
+      setDecoded({ header, payload, signature });
+
+      // Check expiry
+      if (payload.exp) {
+        const expDate = new Date(payload.exp * 1000);
+        const now = new Date();
+        const diff = expDate.getTime() - now.getTime();
+
+        if (diff < 0) {
+          setExpiryInfo(`Expired ${formatRelativeTime(-diff)} ago`);
+        } else {
+          setExpiryInfo(`Expires in ${formatRelativeTime(diff)}`);
+        }
+      } else {
+        setExpiryInfo("No expiration claim (exp) found");
+      }
+
+      toast.success("JWT decoded successfully!");
+    } catch (err: any) {
+      setError(err.message);
+      setDecoded(null);
+      toast.error("Failed to decode JWT");
+    }
+  };
+
+  const formatRelativeTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} day${days > 1 ? "s" : ""}`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""}`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? "s" : ""}`;
+    return `${seconds} second${seconds !== 1 ? "s" : ""}`;
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied!`);
+  };
+
+  const handleValidate = () => {
+    if (!secret) {
+      toast.error("Please enter a secret key");
+      return;
+    }
+
+    toast.warning("Signature validation", {
+      description: "Client-side validation is limited. Use server-side validation for production.",
+    });
+  };
+
+  const getClaims = () => {
+    if (!decoded?.payload) return [];
+
+    const standardClaims = ["iss", "sub", "aud", "exp", "nbf", "iat", "jti"];
+    return Object.entries(decoded.payload).filter(([key]) =>
+      standardClaims.includes(key)
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Token Input */}
+      <div className="space-y-3">
+        <Label>JWT Token</Label>
+        <Textarea
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="Paste your JWT token here..."
+          className="code-editor min-h-[120px]"
+        />
+        <p className="text-xs text-muted-foreground">
+          Tip: Press <kbd className="px-1 py-0.5 bg-muted rounded">Ctrl/Cmd+V</kbd> to auto-decode
+        </p>
+      </div>
+
+      {error && (
+        <div className="p-4 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4" />
+          {error}
+        </div>
+      )}
+
+      {/* Decoded Content */}
+      {decoded && (
+        <>
+          {/* Expiry Info */}
+          {decoded.payload.exp && (
+            <div className="p-4 bg-card/50 border border-border rounded-lg flex items-center gap-3">
+              <Clock className="w-5 h-5 text-primary" />
+              <div>
+                <p className="font-medium">{expiryInfo}</p>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(decoded.payload.exp * 1000).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Common Claims */}
+          {getClaims().length > 0 && (
+            <div className="space-y-3">
+              <Label>Common Claims</Label>
+              <div className="grid gap-2">
+                {getClaims().map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="flex items-center justify-between p-3 bg-card/50 rounded-lg"
+                  >
+                    <div>
+                      <code className="text-sm text-primary">{key}</code>
+                      <p className="text-sm text-foreground/70 mt-1">
+                        {typeof value === "number" && (key === "exp" || key === "iat" || key === "nbf")
+                          ? new Date(value * 1000).toLocaleString()
+                          : String(value)}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCopy(String(value), key)}
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Header & Payload Tabs */}
+          <Tabs defaultValue="header" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="header">Header</TabsTrigger>
+              <TabsTrigger value="payload">Payload</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="header" className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>Header</Label>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    handleCopy(JSON.stringify(decoded.header, null, 2), "Header")
+                  }
+                >
+                  <Copy className="w-3 h-3 mr-2" />
+                  Copy
+                </Button>
+              </div>
+              <pre className="bg-input p-4 rounded-lg text-sm overflow-x-auto">
+                {JSON.stringify(decoded.header, null, 2)}
+              </pre>
+            </TabsContent>
+
+            <TabsContent value="payload" className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>Payload</Label>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    handleCopy(JSON.stringify(decoded.payload, null, 2), "Payload")
+                  }
+                >
+                  <Copy className="w-3 h-3 mr-2" />
+                  Copy
+                </Button>
+              </div>
+              <pre className="bg-input p-4 rounded-lg text-sm overflow-x-auto">
+                {JSON.stringify(decoded.payload, null, 2)}
+              </pre>
+            </TabsContent>
+          </Tabs>
+
+          {/* Signature Validation */}
+          <div className="space-y-3 pt-4 border-t border-border">
+            <Label>Signature Validation (Advanced)</Label>
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+                placeholder="Enter secret or public key..."
+                className="flex-1"
+              />
+              <Button onClick={handleValidate} variant="outline">
+                <Key className="w-4 h-4 mr-2" />
+                Validate
+              </Button>
+            </div>
+            <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-sm flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+              <p className="text-destructive">
+                Warning: Never paste production secrets in a browser tool
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Algorithm: {decoded.header.alg || "Unknown"}
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
