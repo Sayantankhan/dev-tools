@@ -26,6 +26,7 @@ export const JSONTool = () => {
   const [output, setOutput] = useState("");
   const [paths, setPaths] = useState<JSONPath[]>([]);
   const [jsonPathQuery, setJsonPathQuery] = useState("");
+  const [jsonPathParseOp, setJsonPathParseOp] = useState("");
   const [error, setError] = useState("");
   const [isDestructured, setIsDestructured] = useState(false);
 
@@ -68,6 +69,71 @@ export const JSONTool = () => {
       toast.error("Invalid JSON format");
     }
   };
+
+  const executeParsing = async () => {
+    try{
+      setError("");
+      
+      if (!input.trim()) {
+        setError("No JSON input provided");
+        toast.error("Please provide JSON input first");
+        return;
+      }
+
+      const query = jsonPathQuery.trim();
+      if (!query) {
+        return; 
+      }
+
+      let parsed: any;
+      try {
+        parsed = parseJSON(input);
+      } catch (err: any) {
+        setError(`Invalid JSON: ${err.message}`);
+        toast.error("Invalid JSON");
+        return;
+      }
+
+      let mod: any;
+      mod = await import("jsonpath-plus");
+      const JSONPath = mod.JSONPath ?? mod.jsonPath;
+      const results = JSONPath({ path: query, json: parsed });
+
+      if (!results || results.length === 0) {
+        setOutput("No results found");
+        toast("No matches found");
+        return;
+      }
+
+      // ✅ If it's a single primitive value, just display it as-is
+      let finalOutput: any;
+      if (results.length === 1) {
+        const single = results[0];
+        if (typeof single === "object" && single !== null) {
+          finalOutput = JSON.stringify(single, null, 2);
+        } else {
+          finalOutput = String(single);
+        }
+      } else {
+        // If it's an array, join primitives line-by-line for readability
+        const allPrimitive = results.every(
+          (r) => typeof r !== "object" || r === null
+        );
+        if (allPrimitive) {
+          finalOutput = results.map((r) => String(r)).join("\n");
+        } else {
+          finalOutput = JSON.stringify(results, null, 2);
+        }
+      }
+
+      setJsonPathParseOp(finalOutput);
+      toast.success("JSONPath executed");
+      
+    } catch (err: any) {
+      setError(`Invalid JSON Query String: ${err.message}`);
+      toast.error("Invalid JSON Query String");
+    }
+  } 
 
   const handleMinify = () => {
     try {
@@ -262,7 +328,7 @@ export const JSONTool = () => {
             placeholder="e.g., $.users[*].email"
             className="flex-1"
           />
-          <Button variant="outline">
+          <Button variant="outline" onClick={executeParsing}>
             <Code2 className="w-4 h-4 mr-2" />
             Execute
           </Button>
@@ -270,6 +336,19 @@ export const JSONTool = () => {
         <p className="text-xs text-muted-foreground">
           Advanced: Use JSONPath syntax to query and extract specific data
         </p>
+
+        {/* ✅ Show output of query here */}
+        {jsonPathParseOp && (
+          <div className="pt-3">
+            <Label className="text-sm font-medium">Query Result</Label>
+            <Textarea
+              value={jsonPathParseOp}
+              readOnly
+              placeholder="Query results will appear here..."
+              className="code-editor min-h-[200px] mt-2"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
