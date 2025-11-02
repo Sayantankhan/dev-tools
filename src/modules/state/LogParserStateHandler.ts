@@ -20,45 +20,65 @@ export const LogParserStateHandler = (): ToolHandler => {
     },
 
     extractTimestamp: (line: string): Date | null => {
-      // Common timestamp patterns in logs
-      const patterns = [
-        // ISO 8601: 2024-01-15T10:30:45.123Z or 2024-01-15 10:30:45
-        /(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})?)/,
-        // With timezone: 2024-01-15 10:30:45+00:00
-        /(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2})/,
-        // DD/MM/YYYY HH:MM:SS or MM/DD/YYYY HH:MM:SS
-        /(\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2})/,
-        // Unix timestamp in milliseconds (13 digits)
-        /\b(\d{13})\b/,
-        // Unix timestamp in seconds (10 digits)
-        /\b(\d{10})\b/,
-        // Date only fallback: 2024-01-15
-        /(\d{4}-\d{2}-\d{2})/,
-        // Date only: DD/MM/YYYY or MM/DD/YYYY
-        /(\d{2}\/\d{2}\/\d{4})/,
-      ];
-
-      for (const pattern of patterns) {
-        const match = line.match(pattern);
-        if (match) {
-          const timestamp = match[1];
-          
-          // Handle unix timestamps
-          if (/^\d{10}$/.test(timestamp)) {
-            return new Date(parseInt(timestamp) * 1000);
-          }
-          if (/^\d{13}$/.test(timestamp)) {
-            return new Date(parseInt(timestamp));
-          }
-          
-          // Try to parse as regular date
-          const date = new Date(timestamp);
-          if (!isNaN(date.getTime())) {
-            return date;
-          }
-        }
+      // 1) ISO 8601 with optional millis/timezone or space separator
+      const iso = line.match(/(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})?)/);
+      if (iso) {
+        const d = new Date(iso[1]);
+        if (!isNaN(d.getTime())) return d;
       }
-      
+
+      // 2) Unix timestamps (ms or s)
+      const unixMs = line.match(/\b(\d{13})\b/);
+      if (unixMs) {
+        const d = new Date(parseInt(unixMs[1]));
+        if (!isNaN(d.getTime())) return d;
+      }
+      const unixS = line.match(/\b(\d{10})\b/);
+      if (unixS) {
+        const d = new Date(parseInt(unixS[1]) * 1000);
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // 3) DD/MM/YYYY HH:MM:SS
+      let m = line.match(/\b(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2}):(\d{2})\b/);
+      if (m) {
+        const [, dd, mm, yyyy, HH, MM, SS] = m;
+        const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(HH), Number(MM), Number(SS));
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // 4) DD-MM-YYYY HH:MM:SS
+      m = line.match(/\b(\d{2})-(\d{2})-(\d{4})[ T](\d{2}):(\d{2}):(\d{2})\b/);
+      if (m) {
+        const [, dd, mm, yyyy, HH, MM, SS] = m;
+        const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(HH), Number(MM), Number(SS));
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // 5) Date only: YYYY-MM-DD
+      m = line.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+      if (m) {
+        const [, yyyy, mm, dd] = m;
+        const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // 6) Date only: DD/MM/YYYY
+      m = line.match(/\b(\d{2})\/(\d{2})\/(\d{4})\b/);
+      if (m) {
+        const [, dd, mm, yyyy] = m;
+        const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // 7) Date only: DD-MM-YYYY
+      m = line.match(/\b(\d{2})-(\d{2})-(\d{4})\b/);
+      if (m) {
+        const [, dd, mm, yyyy] = m;
+        const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+        if (!isNaN(d.getTime())) return d;
+      }
+
       return null;
     },
 
@@ -89,15 +109,21 @@ export const LogParserStateHandler = (): ToolHandler => {
         filtered = filtered.filter((line) => levelPattern.test(line));
       }
 
-      // Filter by date/time range
+      // Filter by date range (date-only inputs)
       if (from || to) {
-        const fromDate = from ? new Date(from) : null;
+        const parseDateOnly = (s: string) => {
+          const [y, m, d] = s.split("-").map(Number);
+          return new Date(y, m - 1, d);
+        };
+        const fromDate = from ? (() => {
+          const d = parseDateOnly(from);
+          d.setHours(0, 0, 0, 0);
+          return d;
+        })() : null;
         const toDate = to ? (() => {
-          if (!to) return null;
-          const date = new Date(to);
-          // Set to end of day (23:59:59.999) for date-only filtering
-          date.setHours(23, 59, 59, 999);
-          return date;
+          const d = parseDateOnly(to);
+          d.setHours(23, 59, 59, 999);
+          return d;
         })() : null;
 
         filtered = filtered.filter((line) => {
