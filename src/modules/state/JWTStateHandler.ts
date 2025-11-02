@@ -15,6 +15,8 @@ export const JWTStateHanler = (): ToolHandler => {
     const [error, setError] = useState("");
     const [secret, setSecret] = useState("");
     const [expiryInfo, setExpiryInfo] = useState<string>("");
+    const [editedHeader, setEditedHeader] = useState("");
+    const [editedPayload, setEditedPayload] = useState("");
 
     useEffect(() => {
         const handlePaste = (e: ClipboardEvent) => {
@@ -40,6 +42,13 @@ export const JWTStateHanler = (): ToolHandler => {
     }, [token]);
 
     const helpers = {
+        base64UrlEncode: (str: string): string => {
+            return btoa(str)
+                .replace(/\+/g, "-")
+                .replace(/\//g, "_")
+                .replace(/=/g, "");
+        },
+
         base64UrlDecode: (str: string): string => {
             try {
                 str = str.replace(/-/g, "+").replace(/_/g, "/");
@@ -75,6 +84,8 @@ export const JWTStateHanler = (): ToolHandler => {
                 const signature = parts[2];
 
                 setDecoded({ header, payload, signature });
+                setEditedHeader(JSON.stringify(header, null, 2));
+                setEditedPayload(JSON.stringify(payload, null, 2));
 
                 // Check expiry
                 if (payload.exp) {
@@ -138,6 +149,46 @@ export const JWTStateHanler = (): ToolHandler => {
                 standardClaims.includes(key)
             );
         },
+
+        generateJWT: async () => {
+            try {
+                const header = JSON.parse(editedHeader);
+                const payload = JSON.parse(editedPayload);
+
+                const headerEncoded = helpers.base64UrlEncode(JSON.stringify(header));
+                const payloadEncoded = helpers.base64UrlEncode(JSON.stringify(payload));
+
+                let signature = "unsigned";
+                
+                if (secret) {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(`${headerEncoded}.${payloadEncoded}`);
+                    const keyData = encoder.encode(secret);
+                    
+                    const cryptoKey = await crypto.subtle.importKey(
+                        "raw",
+                        keyData,
+                        { name: "HMAC", hash: "SHA-256" },
+                        false,
+                        ["sign"]
+                    );
+                    
+                    const signatureArrayBuffer = await crypto.subtle.sign("HMAC", cryptoKey, data);
+                    const signatureArray = Array.from(new Uint8Array(signatureArrayBuffer));
+                    signature = helpers.base64UrlEncode(String.fromCharCode(...signatureArray));
+                }
+
+                const newToken = `${headerEncoded}.${payloadEncoded}.${signature}`;
+                setToken(newToken);
+                toast.success("JWT generated successfully!");
+            } catch (err: any) {
+                toast.error("Failed to generate JWT: " + err.message);
+            }
+        },
+
+        setToken: (value: string) => {
+            setToken(value);
+        },
     }
 
     return {
@@ -146,11 +197,15 @@ export const JWTStateHanler = (): ToolHandler => {
             decoded,
             error,
             secret,
-            expiryInfo
+            expiryInfo,
+            editedHeader,
+            editedPayload
         },
         setters: {
             setToken,
-            setSecret
+            setSecret,
+            setEditedHeader,
+            setEditedPayload
         },
         helpers,
         actions

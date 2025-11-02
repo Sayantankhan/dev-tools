@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Key, Copy, AlertTriangle, Clock } from "lucide-react";
+import { Key, Copy, AlertTriangle, Clock, Wand2 } from "lucide-react";
 import { JWTStateHanler } from "@/modules/state/JWTStateHandler";
 
 interface DecodedJWT {
@@ -100,68 +100,74 @@ export const JWTTool = () => {
 
             <TabsContent value="header" className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label>Header</Label>
+                <Label>Header (Editable)</Label>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() =>
-                    actions.handleCopy(JSON.stringify(state.decoded.header, null, 2), "Header")
+                    actions.handleCopy(state.editedHeader, "Header")
                   }
                 >
                   <Copy className="w-3 h-3 mr-2" />
                   Copy
                 </Button>
               </div>
-              <pre className="bg-input p-4 rounded-lg text-sm overflow-x-auto">
-                {JSON.stringify(state.decoded.header, null, 2)}
-              </pre>
+              <Textarea
+                value={state.editedHeader}
+                onChange={(e) => setters.setEditedHeader(e.target.value)}
+                className="code-editor min-h-[200px] font-mono text-sm"
+              />
             </TabsContent>
 
             <TabsContent value="payload" className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label>Payload</Label>
+                <Label>Payload (Editable)</Label>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() =>
-                    actions.handleCopy(JSON.stringify(state.decoded.payload, null, 2), "Payload")
+                    actions.handleCopy(state.editedPayload, "Payload")
                   }
                 >
                   <Copy className="w-3 h-3 mr-2" />
                   Copy
                 </Button>
               </div>
-              <pre className="bg-input p-4 rounded-lg text-sm overflow-x-auto">
-                {JSON.stringify(state.decoded.payload, null, 2)}
-              </pre>
+              <Textarea
+                value={state.editedPayload}
+                onChange={(e) => setters.setEditedPayload(e.target.value)}
+                className="code-editor min-h-[200px] font-mono text-sm"
+              />
             </TabsContent>
           </Tabs>
 
-          {/* Signature Validation */}
+          {/* Generate New JWT */}
           <div className="space-y-3 pt-4 border-t border-border">
-            <Label>Signature Validation (Advanced)</Label>
-            <div className="flex gap-2">
-              <Input
-                type="password"
-                value={state.secret}
-                onChange={(e) => setters.setSecret(e.target.value)}
-                placeholder="Enter secret or public key..."
-                className="flex-1"
-              />
-              <Button onClick={actions.handleValidate} variant="outline">
-                <Key className="w-4 h-4 mr-2" />
-                Validate
-              </Button>
-            </div>
-            <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-sm flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-destructive" />
-              <p className="text-destructive">
-                Warning: Never paste production secrets in a browser tool
+            <Label>Generate New JWT</Label>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  type="password"
+                  value={state.secret}
+                  onChange={(e) => setters.setSecret(e.target.value)}
+                  placeholder="Enter secret key (optional for unsigned)..."
+                  className="flex-1"
+                />
+                <Button onClick={actions.generateJWT} variant="default">
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Generate
+                </Button>
+              </div>
+              <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-sm flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+                <p className="text-destructive">
+                  Warning: Never paste production secrets in a browser tool
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Edit the header and payload above, then click Generate to create a new JWT token. Leave secret empty for unsigned tokens.
               </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Algorithm: {state.decoded.header.alg || "Unknown"}
-            </p>
           </div>
         </>
       )}
