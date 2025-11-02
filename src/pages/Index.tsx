@@ -4,11 +4,12 @@ import { ImageTool } from "@/components/tools/ImageTool";
 import { JWTTool } from "@/components/tools/JWTTool";
 import { APITool } from "@/components/tools/APITool";
 import { Base64Tool } from "@/components/tools/Base64Tool";
+import { URLTool } from "@/components/tools/URLTool";
 import { TabNavigation } from "@/components/TabNavigation";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode } from "lucide-react";
+import { Code2, Image, Key, Globe, FileCode, Link } from "lucide-react";
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "base64";
+export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url";
 
 export interface Tool {
   id: ToolId;
@@ -23,6 +24,7 @@ const tools: Tool[] = [
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
   { id: "base64", label: "Base64", icon: FileCode, component: Base64Tool },
+  { id: "url", label: "URL", icon: Link, component: URLTool },
 ];
 
 const Index = () => {
