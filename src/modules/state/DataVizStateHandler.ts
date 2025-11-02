@@ -66,11 +66,26 @@ export const DataVizStateHandler = (): ToolHandler => {
       const range = max === min ? 1 : max - min;
       const binWidth = range / binCount;
 
+      // Generate descriptive labels based on cluster count
+      const getClusterDescription = (index: number, total: number): string => {
+        if (total === 2) return index === 0 ? "Low" : "High";
+        if (total === 3) return ["Low", "Medium", "High"][index];
+        if (total === 4) return ["Very Low", "Low", "High", "Very High"][index];
+        if (total === 5) return ["Very Low", "Low", "Medium", "High", "Very High"][index];
+        
+        // For more than 5, use percentile-based labels
+        const percentile = Math.round((index / (total - 1)) * 100);
+        return `P${percentile}`;
+      };
+
       const clusters = new Array(binCount).fill(0).map((_, i) => {
         const x0 = min + i * binWidth;
         const x1 = x0 + binWidth;
+        const description = getClusterDescription(i, binCount);
         return { 
-          label: `${x0.toFixed(1)}-${x1.toFixed(1)}`,
+          label: `${description} (${x0.toFixed(1)}-${x1.toFixed(1)})`,
+          description,
+          range: `${x0.toFixed(1)}-${x1.toFixed(1)}`,
           center: (x0 + x1) / 2,
           count: 0,
           items: [] as number[]

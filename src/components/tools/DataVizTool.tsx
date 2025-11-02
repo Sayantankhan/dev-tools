@@ -232,6 +232,7 @@ export const DataVizTool = () => {
             name: c.label,
             count: c.count,
             center: c.center,
+            description: c.description,
           }));
 
           return (
@@ -240,7 +241,24 @@ export const DataVizTool = () => {
                 <p><strong>Clustering Quality Score:</strong> {(silhouette * 100).toFixed(2)}%</p>
                 <p className="text-xs mt-1">Higher score = better separation between clusters</p>
               </div>
-              <ResponsiveContainer width="100%" height={height - 80}>
+              <div className="text-sm bg-card/50 p-4 rounded-lg border border-border">
+                <p className="font-semibold mb-2">Cluster Descriptions:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {clusters.map((cluster, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div 
+                        className="w-4 h-4 rounded" 
+                        style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                      />
+                      <span className="text-xs">
+                        <strong>{cluster.description}</strong>: {cluster.range} 
+                        <span className="text-muted-foreground ml-1">({cluster.count} items)</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={height - 180}>
                 <BarChart data={clusterData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
