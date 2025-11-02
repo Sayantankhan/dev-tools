@@ -14,6 +14,15 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
       const cleaned = name.trim().replace(/[^a-zA-Z0-9-_]/g, "_");
       return cleaned.endsWith(".pdf") ? cleaned : `${cleaned}.pdf`;
     },
+
+    detectFormat : (dataUrlOrSrc: string) => {
+      if (!dataUrlOrSrc || typeof dataUrlOrSrc !== "string") return "JPEG";
+      if (dataUrlOrSrc.startsWith("data:image/png")) return "PNG";
+      if (dataUrlOrSrc.startsWith("data:image/jpeg") || dataUrlOrSrc.startsWith("data:image/jpg")) return "JPEG";
+      if (dataUrlOrSrc.startsWith("data:image/webp")) return "WEBP";
+      // fallback
+      return "JPEG";
+    },
   };
 
   const actions = {
@@ -61,7 +70,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
       }
 
       try {
-        const doc = new jsPDF();
+        const doc = new jsPDF({ unit: "mm", format: "a4" });
         let yPosition = 20;
 
         // Add text content
@@ -86,14 +95,16 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
 
           const img = new Image();
           img.src = imgData;
-          await new Promise((resolve) => {
+          await new Promise((resolve, reject) => {
             img.onload = resolve;
+            img.onerror = (e) => reject(new Error("Image failed to load"));
           });
 
           const imgWidth = 170;
           const imgHeight = (img.height * imgWidth) / img.width;
+          const format = helpers.detectFormat(imgData).toUpperCase();
 
-          doc.addImage(imgData, "JPEG", 20, yPosition, imgWidth, imgHeight);
+          doc.addImage(imgData, format, 20, yPosition, imgWidth, imgHeight);
           yPosition += imgHeight + 10;
         }
 

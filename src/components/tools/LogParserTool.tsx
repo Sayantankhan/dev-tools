@@ -7,7 +7,7 @@ import { Upload, FileSearch, Trash2 } from "lucide-react";
 import { LogParserStateHandler } from "@/modules/state/LogParserStateHandler";
 
 export const LogParserTool = () => {
-  const { state, setters, actions } = LogParserStateHandler();
+  const { state, helpers, setters, actions } = LogParserStateHandler();
 
   return (
     <div className="space-y-6">
@@ -81,7 +81,7 @@ export const LogParserTool = () => {
           </Label>
           <div className="code-editor p-4 max-h-[500px] overflow-auto">
             {state.filteredLogs.map((line, index) => {
-              const level = state.helpers.detectLogLevel(line);
+              const level = helpers.detectLogLevel(line);
               const colorClass =
                 level === "error"
                   ? "text-red-400"

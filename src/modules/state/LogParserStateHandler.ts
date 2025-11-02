@@ -82,10 +82,14 @@ export const LogParserStateHandler = (): ToolHandler => {
     },
 
     handleFilter: () => {
-      const lines = helpers.parseLogLines(logContent);
-      const filtered = helpers.filterLogs(lines, searchQuery, logLevel);
-      setFilteredLogs(filtered);
-      toast.success(`Found ${filtered.length} matching lines`);
+      try {
+        const lines = helpers.parseLogLines(logContent);
+        const filtered = helpers.filterLogs(lines, searchQuery, logLevel);
+        setFilteredLogs(filtered);
+        toast.success(`Found ${filtered.length} matching lines`);
+      } catch (err : any) {
+        console.log(err);
+      }
     },
 
     handleClear: () => {
