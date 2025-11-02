@@ -92,7 +92,13 @@ export const LogParserStateHandler = (): ToolHandler => {
       // Filter by date/time range
       if (from || to) {
         const fromDate = from ? new Date(from) : null;
-        const toDate = to ? new Date(to) : null;
+        const toDate = to ? (() => {
+          if (!to) return null;
+          const date = new Date(to);
+          // Set to end of day (23:59:59.999) for date-only filtering
+          date.setHours(23, 59, 59, 999);
+          return date;
+        })() : null;
 
         filtered = filtered.filter((line) => {
           const lineTimestamp = helpers.extractTimestamp(line);
