@@ -13,11 +13,22 @@ export const DataConverterStateHandler = (): ToolHandler => {
     parseXML: (xmlString: string): any => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+      
+      // Check for parsing errors
+      const parserError = xmlDoc.querySelector("parsererror");
+      if (parserError) {
+        throw new Error("Invalid XML format");
+      }
 
       const parseNode = (node: any): any => {
-        if (node.nodeType === 3) return node.nodeValue;
+        if (node.nodeType === 3) {
+          const value = node.nodeValue?.trim();
+          return value || null;
+        }
 
         const obj: any = {};
+        
+        // Handle attributes
         if (node.attributes?.length > 0) {
           obj["@attributes"] = {};
           for (let i = 0; i < node.attributes.length; i++) {
@@ -25,45 +36,117 @@ export const DataConverterStateHandler = (): ToolHandler => {
           }
         }
 
+        // Handle child nodes
+        let textContent = "";
+        const childElements: any = {};
+        
         if (node.childNodes?.length > 0) {
           for (let i = 0; i < node.childNodes.length; i++) {
             const child = node.childNodes[i];
-            const childName = child.nodeName;
-
-            if (child.nodeType === 3 && child.nodeValue?.trim()) {
-              return child.nodeValue;
+            
+            // Text node
+            if (child.nodeType === 3) {
+              const text = child.nodeValue?.trim();
+              if (text) textContent += text;
+              continue;
             }
-
-            if (childName !== "#text") {
-              if (!obj[childName]) {
-                obj[childName] = parseNode(child);
+            
+            // Element node
+            if (child.nodeType === 1) {
+              const childName = child.nodeName;
+              const childValue = parseNode(child);
+              
+              if (!childElements[childName]) {
+                childElements[childName] = childValue;
               } else {
-                if (!Array.isArray(obj[childName])) {
-                  obj[childName] = [obj[childName]];
+                if (!Array.isArray(childElements[childName])) {
+                  childElements[childName] = [childElements[childName]];
                 }
-                obj[childName].push(parseNode(child));
+                childElements[childName].push(childValue);
               }
             }
           }
         }
 
+        // If node has only text content and no child elements, return text
+        if (textContent && Object.keys(childElements).length === 0 && !obj["@attributes"]) {
+          return textContent;
+        }
+        
+        // If node has only text and attributes
+        if (textContent && Object.keys(childElements).length === 0 && obj["@attributes"]) {
+          obj["#text"] = textContent;
+          return obj;
+        }
+        
+        // Merge child elements into obj
+        Object.assign(obj, childElements);
+        
+        // Return simple value if no attributes and single text child
+        if (Object.keys(obj).length === 0) {
+          return textContent || null;
+        }
+
         return obj;
       };
 
-      return parseNode(xmlDoc.documentElement);
+      const root = xmlDoc.documentElement;
+      const result: any = {};
+      result[root.nodeName] = parseNode(root);
+      return result;
     },
 
     jsonToXML: (obj: any, rootName: string = "root"): string => {
-      const convert = (data: any, name: string): string => {
+      const convert = (data: any, name: string, indent: number = 0): string => {
+        const spaces = "  ".repeat(indent);
+        const innerSpaces = "  ".repeat(indent + 1);
+        
+        if (data === null || data === undefined) {
+          return `${spaces}<${name}/>`;
+        }
+        
         if (typeof data === "object" && !Array.isArray(data)) {
-          const inner = Object.entries(data)
-            .map(([k, v]) => convert(v, k))
-            .join("\n  ");
-          return `<${name}>\n  ${inner}\n</${name}>`;
+          // Handle attributes if present
+          if (data["@attributes"]) {
+            const attrs = Object.entries(data["@attributes"])
+              .map(([k, v]) => `${k}="${v}"`)
+              .join(" ");
+            const rest = { ...data };
+            delete rest["@attributes"];
+            const hasContent = Object.keys(rest).length > 0;
+            
+            if (!hasContent) {
+              return `${spaces}<${name} ${attrs}/>`;
+            }
+            
+            const inner = Object.entries(rest)
+              .map(([k, v]) => convert(v, k, indent + 1))
+              .join("\n");
+            return `${spaces}<${name} ${attrs}>\n${inner}\n${spaces}</${name}>`;
+          }
+          
+          const entries = Object.entries(data);
+          if (entries.length === 0) {
+            return `${spaces}<${name}/>`;
+          }
+          
+          const inner = entries
+            .map(([k, v]) => convert(v, k, indent + 1))
+            .join("\n");
+          return `${spaces}<${name}>\n${inner}\n${spaces}</${name}>`;
         } else if (Array.isArray(data)) {
-          return data.map((item, idx) => convert(item, `item_${idx}`)).join("\n");
+          return data
+            .map((item) => convert(item, name, indent))
+            .join("\n");
         } else {
-          return `<${name}>${data}</${name}>`;
+          // Escape XML special characters
+          const escaped = String(data)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&apos;");
+          return `${spaces}<${name}>${escaped}</${name}>`;
         }
       };
       return `<?xml version="1.0" encoding="UTF-8"?>\n${convert(obj, rootName)}`;
