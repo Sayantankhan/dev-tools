@@ -56,15 +56,19 @@ export const JSEditorStateHandler = (): ToolHandler => {
         const func = new Function(code);
         func();
 
-        // Wait for async operations to complete (capture logs for 2 seconds)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
         const endTime = performance.now();
         const endMemory = (performance as any).memory?.usedJSHeapSize;
         const executionTime = (endTime - startTime).toFixed(2);
-        const memoryUsed = startMemory && endMemory 
-          ? ((endMemory - startMemory) / 1024).toFixed(2) 
-          : null;
+        
+        // Calculate memory (only show if positive, otherwise GC happened)
+        let memoryUsed: string | null = null;
+        if (startMemory && endMemory) {
+          const memDiff = (endMemory - startMemory) / 1024;
+          memoryUsed = memDiff > 0 ? memDiff.toFixed(2) : "N/A (GC)";
+        }
+
+        // Wait for async operations to complete (capture logs for 2 seconds)
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         const metricsData = [
           `⏱️ Execution time: ${executionTime}ms`,
