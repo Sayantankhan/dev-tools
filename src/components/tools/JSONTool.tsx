@@ -12,6 +12,9 @@ import {
   Copy,
   Trash2,
   Code2,
+  Edit2,
+  Check,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JSONStateHandler } from "@/modules/state/JsonStateHandler";
@@ -85,29 +88,76 @@ export const JSONTool = () => {
                 {state.paths.map((item, index) => (
                   <div
                     key={index}
-                    className="group flex items-start justify-between p-3 bg-card/50 rounded-lg hover:bg-card transition-colors"
+                    className="group flex items-start justify-between gap-3 p-3 bg-card/50 rounded-lg hover:bg-card transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <code className="text-sm text-primary break-all">{item.path}</code>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className="text-xs text-muted-foreground">
                           {item.type}
                         </span>
                         {item.type !== "object" && item.type !== "array" && (
-                          <span className="text-xs text-foreground/70">
-                            = {String(item.value)}
-                          </span>
+                          <>
+                            <span className="text-xs text-foreground/70">=</span>
+                            {item.isEditing ? (
+                              <Input
+                                value={item.editValue}
+                                onChange={(e) => actions.handlePathValueChange(index, e.target.value)}
+                                className="h-7 text-xs flex-1 min-w-[100px]"
+                                autoFocus
+                              />
+                            ) : (
+                              <span className="text-xs text-foreground/70">
+                                {String(item.value)}
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => actions.handleCopy(item.path, "Path")}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Copy className="w-3 h-3" />
-                    </Button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {item.isEditing ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => actions.handleSavePathEdit(index)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Check className="w-3 h-3 text-green-500" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => actions.handleCancelPathEdit(index)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <X className="w-3 h-3 text-red-500" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          {item.type !== "object" && item.type !== "array" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => actions.handleEditPath(index)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => actions.handleCopy(item.path, "Path")}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

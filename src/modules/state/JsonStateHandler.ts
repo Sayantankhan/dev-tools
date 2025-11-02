@@ -6,6 +6,8 @@ interface JSONPath {
     path: string;
     type: string;
     value: any;
+    isEditing?: boolean;
+    editValue?: string;
 }
 
 export const JSONStateHandler = (): ToolHandler => {
@@ -52,14 +54,14 @@ export const JSONStateHandler = (): ToolHandler => {
 
             const traverse = (current: any, path: string) => {
                 if (current === null || current === undefined) {
-                    paths.push({ path, type: "null", value: current });
+                    paths.push({ path, type: "null", value: current, isEditing: false, editValue: String(current) });
                 } else if (Array.isArray(current)) {
-                    paths.push({ path, type: "array", value: `Array(${current.length})` });
+                    paths.push({ path, type: "array", value: `Array(${current.length})`, isEditing: false });
                     current.forEach((item, index) => {
                         traverse(item, `${path}[${index}]`);
                     });
                 } else if (typeof current === "object") {
-                    paths.push({ path, type: "object", value: "Object" });
+                    paths.push({ path, type: "object", value: "Object", isEditing: false });
                     Object.entries(current).forEach(([key, value]) => {
                         traverse(value, path ? `${path}.${key}` : key);
                     });
@@ -68,12 +70,29 @@ export const JSONStateHandler = (): ToolHandler => {
                         path,
                         type: typeof current,
                         value: current,
+                        isEditing: false,
+                        editValue: String(current)
                     });
                 }
             };
 
             traverse(obj, prefix);
             return paths;
+        },
+
+        setValueAtPath: (obj: any, path: string, newValue: any): any => {
+            const keys = path.split(/\.|\[|\]/).filter(k => k);
+            const clone = JSON.parse(JSON.stringify(obj));
+            
+            let current = clone;
+            for (let i = 0; i < keys.length - 1; i++) {
+                current = current[keys[i]];
+            }
+            
+            const lastKey = keys[keys.length - 1];
+            current[lastKey] = newValue;
+            
+            return clone;
         },
     }
 
@@ -212,6 +231,64 @@ export const JSONStateHandler = (): ToolHandler => {
             setIsDestructured(false);
             setJsonPathQuery("");
             setJsonPathParseOp("");
+        },
+
+        handleEditPath: (index: number) => {
+            const updated = [...paths];
+            updated[index].isEditing = true;
+            setPaths(updated);
+        },
+
+        handleSavePathEdit: (index: number) => {
+            try {
+                const pathItem = paths[index];
+                let parsedValue: any;
+                
+                // Parse the edited value based on type
+                const editVal = pathItem.editValue?.trim() || "";
+                
+                if (pathItem.type === "number") {
+                    parsedValue = parseFloat(editVal);
+                    if (isNaN(parsedValue)) {
+                        toast.error("Invalid number");
+                        return;
+                    }
+                } else if (pathItem.type === "boolean") {
+                    parsedValue = editVal.toLowerCase() === "true";
+                } else if (editVal === "null") {
+                    parsedValue = null;
+                } else {
+                    parsedValue = editVal;
+                }
+                
+                // Update the JSON
+                const parsed = helpers.parseJSON(input);
+                const updated = helpers.setValueAtPath(parsed, pathItem.path, parsedValue);
+                const newInput = JSON.stringify(updated, null, 2);
+                
+                setInput(newInput);
+                
+                // Update paths
+                const newPaths = helpers.extractPaths(updated);
+                setPaths(newPaths);
+                
+                toast.success("Value updated");
+            } catch (err: any) {
+                toast.error("Failed to update value");
+            }
+        },
+
+        handleCancelPathEdit: (index: number) => {
+            const updated = [...paths];
+            updated[index].isEditing = false;
+            updated[index].editValue = String(updated[index].value);
+            setPaths(updated);
+        },
+
+        handlePathValueChange: (index: number, newValue: string) => {
+            const updated = [...paths];
+            updated[index].editValue = newValue;
+            setPaths(updated);
         }
     }
 
@@ -228,7 +305,8 @@ export const JSONStateHandler = (): ToolHandler => {
         },
         setters: {
             setInput,
-            setJsonPathQuery
+            setJsonPathQuery,
+            setPaths
         },
         helpers,
         actions
