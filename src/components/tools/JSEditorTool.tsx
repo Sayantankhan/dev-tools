@@ -50,33 +50,28 @@ export const JSEditorTool = () => {
       {/* Output */}
       {(state.output.length > 0 || state.metrics.length > 0 || state.error) && (
         <div className="space-y-3">
-          <Label>Output</Label>
-          <div className="grid grid-cols-1 md:grid-cols-[200px,1fr] gap-6">
-            {/* Metrics Column */}
+          <div className="flex items-center justify-between">
+            <Label>Output</Label>
             {state.metrics.length > 0 && (
-              <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
-                {state.metrics.map((line, index) => (
-                  <div key={index} className="text-muted-foreground font-mono text-sm whitespace-pre-wrap">
-                    {line}
-                  </div>
+              <div className="flex gap-4 text-xs text-muted-foreground font-mono">
+                {state.metrics.map((metric, index) => (
+                  <span key={index}>{metric}</span>
                 ))}
               </div>
             )}
-            
-            {/* Output Column */}
-            <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
-              {state.error ? (
-                <div className="text-red-400 font-mono text-sm whitespace-pre-wrap">
-                  Error: {state.error}
+          </div>
+          <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
+            {state.error ? (
+              <div className="text-red-400 font-mono text-sm whitespace-pre-wrap">
+                Error: {state.error}
+              </div>
+            ) : (
+              state.output.map((line, index) => (
+                <div key={index} className="text-foreground font-mono text-sm whitespace-pre-wrap">
+                  {line}
                 </div>
-              ) : (
-                state.output.map((line, index) => (
-                  <div key={index} className="text-foreground font-mono text-sm whitespace-pre-wrap">
-                    {line}
-                  </div>
-                ))
-              )}
-            </div>
+              ))
+            )}
           </div>
         </div>
       )}
