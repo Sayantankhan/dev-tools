@@ -17,6 +17,7 @@ export const JWTStateHanler = (): ToolHandler => {
     const [expiryInfo, setExpiryInfo] = useState<string>("");
     const [editedHeader, setEditedHeader] = useState("");
     const [editedPayload, setEditedPayload] = useState("");
+    const [showSecret, setShowSecret] = useState(false);
 
     useEffect(() => {
         const handlePaste = (e: ClipboardEvent) => {
@@ -199,13 +200,15 @@ export const JWTStateHanler = (): ToolHandler => {
             secret,
             expiryInfo,
             editedHeader,
-            editedPayload
+            editedPayload,
+            showSecret
         },
         setters: {
             setToken,
             setSecret,
             setEditedHeader,
-            setEditedPayload
+            setEditedPayload,
+            setShowSecret
         },
         helpers,
         actions

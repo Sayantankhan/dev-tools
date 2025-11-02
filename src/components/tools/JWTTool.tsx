@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Key, Copy, AlertTriangle, Clock, Wand2 } from "lucide-react";
+import { Key, Copy, AlertTriangle, Clock, Wand2, Eye, EyeOff } from "lucide-react";
 import { JWTStateHanler } from "@/modules/state/JWTStateHandler";
 
 interface DecodedJWT {
@@ -146,13 +146,23 @@ export const JWTTool = () => {
             <Label>Generate New JWT</Label>
             <div className="space-y-3">
               <div className="flex gap-2">
-                <Input
-                  type="password"
-                  value={state.secret}
-                  onChange={(e) => setters.setSecret(e.target.value)}
-                  placeholder="Enter secret key (optional for unsigned)..."
-                  className="flex-1"
-                />
+                <div className="relative flex-1">
+                  <Input
+                    type={state.showSecret ? "text" : "password"}
+                    value={state.secret}
+                    onChange={(e) => setters.setSecret(e.target.value)}
+                    placeholder="Enter secret key (optional for unsigned)..."
+                    className="pr-10"
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setters.setShowSecret(!state.showSecret)}
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  >
+                    {state.showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
                 <Button onClick={actions.generateJWT} variant="default">
                   <Wand2 className="w-4 h-4 mr-2" />
                   Generate
