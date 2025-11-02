@@ -26,12 +26,24 @@ export const JWTTool = () => {
       {/* Token Input */}
       <div className="space-y-3">
         <Label>JWT Token</Label>
-        <Textarea
-          value={state.token}
-          onChange={(e) => setters.setToken(e.target.value)}
-          placeholder="Paste your JWT token here..."
-          className="code-editor min-h-[120px]"
-        />
+        <div className="relative">
+          <Textarea
+            value={state.token}
+            onChange={(e) => setters.setToken(e.target.value)}
+            placeholder="Paste your JWT token here..."
+            className="code-editor min-h-[120px] pr-12"
+          />
+          {state.token && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => actions.handleCopy(state.token, "JWT Token")}
+              className="absolute right-2 top-2"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">
           Paste your JWT token to decode it automatically
         </p>
