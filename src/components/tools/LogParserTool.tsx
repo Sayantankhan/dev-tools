@@ -98,6 +98,7 @@ export const LogParserTool = () => {
             <Label className="text-sm">From:</Label>
             <Input
               type="datetime-local"
+              step="1"
               value={state.dateFrom}
               onChange={(e) => setters.setDateFrom(e.target.value)}
               className="w-auto"
@@ -108,6 +109,7 @@ export const LogParserTool = () => {
             <Label className="text-sm">To:</Label>
             <Input
               type="datetime-local"
+              step="1"
               value={state.dateTo}
               onChange={(e) => setters.setDateTo(e.target.value)}
               className="w-auto"
