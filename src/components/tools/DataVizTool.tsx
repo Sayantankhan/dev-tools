@@ -343,19 +343,11 @@ export const DataVizTool = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {state.chartType === "clustering"
-                    ? state.columns
-                        .filter((col) => helpers.isNumericColumn(state.data, col))
-                        .map((col) => (
-                          <SelectItem key={col} value={col}>
-                            {col}
-                          </SelectItem>
-                        ))
-                    : state.columns.map((col) => (
-                        <SelectItem key={col} value={col}>
-                          {col}
-                        </SelectItem>
-                      ))}
+                  {state.columns.map((col) => (
+                    <SelectItem key={col} value={col}>
+                      {col}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
