@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { JSONTool } from "@/components/tools/JSONTool";
 import { ImageTool } from "@/components/tools/ImageTool";
 import { JWTTool } from "@/components/tools/JWTTool";
@@ -7,9 +7,20 @@ import { Base64Tool } from "@/components/tools/Base64Tool";
 import { URLTool } from "@/components/tools/URLTool";
 import { TabNavigation } from "@/components/TabNavigation";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode, Link } from "lucide-react";
+import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, FileDown, Shuffle, ArrowRightLeft, MapPin, Terminal, Clock, BarChart3 } from "lucide-react";
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url";
+// Lazy load tools for better performance
+const TextCompareTool = lazy(() => import("@/components/tools/TextCompareTool").then(m => ({ default: m.TextCompareTool })));
+const LogParserTool = lazy(() => import("@/components/tools/LogParserTool").then(m => ({ default: m.LogParserTool })));
+const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool").then(m => ({ default: m.PDFGeneratorTool })));
+const RandomGeneratorTool = lazy(() => import("@/components/tools/RandomGeneratorTool").then(m => ({ default: m.RandomGeneratorTool })));
+const DataConverterTool = lazy(() => import("@/components/tools/DataConverterTool").then(m => ({ default: m.DataConverterTool })));
+const IPLookupTool = lazy(() => import("@/components/tools/IPLookupTool").then(m => ({ default: m.IPLookupTool })));
+const JSEditorTool = lazy(() => import("@/components/tools/JSEditorTool").then(m => ({ default: m.JSEditorTool })));
+const ConverterTool = lazy(() => import("@/components/tools/ConverterTool").then(m => ({ default: m.ConverterTool })));
+const DataVizTool = lazy(() => import("@/components/tools/DataVizTool").then(m => ({ default: m.DataVizTool })));
+
+export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "pdf-generator" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "converter" | "data-viz";
 
 export interface Tool {
   id: ToolId;
@@ -20,11 +31,20 @@ export interface Tool {
 
 const tools: Tool[] = [
   { id: "json", label: "JSON", icon: Code2, component: JSONTool },
+  { id: "text-compare", label: "Text Diff", icon: FileSearch, component: TextCompareTool },
+  { id: "log-parser", label: "Log Parser", icon: ScrollText, component: LogParserTool },
   { id: "image", label: "Image", icon: Image, component: ImageTool },
+  { id: "pdf-generator", label: "PDF Gen", icon: FileDown, component: PDFGeneratorTool },
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
   { id: "base64", label: "Base64", icon: FileCode, component: Base64Tool },
   { id: "url", label: "URL", icon: Link, component: URLTool },
+  { id: "random-generator", label: "Random", icon: Shuffle, component: RandomGeneratorTool },
+  { id: "data-converter", label: "Convert", icon: ArrowRightLeft, component: DataConverterTool },
+  { id: "ip-lookup", label: "IP Lookup", icon: MapPin, component: IPLookupTool },
+  { id: "js-editor", label: "JS Editor", icon: Terminal, component: JSEditorTool },
+  { id: "converter", label: "Units", icon: Clock, component: ConverterTool },
+  { id: "data-viz", label: "Charts", icon: BarChart3, component: DataVizTool },
 ];
 
 const Index = () => {
@@ -73,7 +93,15 @@ const Index = () => {
         {/* Active Tool Panel */}
         <div className="mt-6 animate-fade-in">
           <div className="glass-card p-6">
-            {ActiveComponent && <ActiveComponent />}
+            {ActiveComponent && (
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              }>
+                <ActiveComponent />
+              </Suspense>
+            )}
           </div>
         </div>
 
