@@ -113,7 +113,8 @@ export const LogParserStateHandler = (): ToolHandler => {
       if (lower.includes("error") || lower.includes("fatal")) return "error";
       if (lower.includes("warn")) return "warning";
       if (lower.includes("info")) return "info";
-      if (lower.includes("debug") || lower.includes("trace")) return "debug";
+      if (lower.includes("debug")) return "debug";
+      if (lower.includes("trace")) return "trace";
       return "default";
     },
 

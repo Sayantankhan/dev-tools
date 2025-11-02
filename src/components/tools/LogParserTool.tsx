@@ -37,6 +37,7 @@ export const LogParserTool = () => {
                 <SelectItem value="warn">Warning</SelectItem>
                 <SelectItem value="info">Info</SelectItem>
                 <SelectItem value="debug">Debug</SelectItem>
+                <SelectItem value="trace">Trace</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -143,6 +144,8 @@ export const LogParserTool = () => {
                   : level === "info"
                   ? "text-blue-400"
                   : level === "debug"
+                  ? "text-purple-400"
+                  : level === "trace"
                   ? "text-gray-400"
                   : "text-foreground";
 
