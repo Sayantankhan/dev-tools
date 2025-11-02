@@ -221,13 +221,11 @@ export const DataVizTool = () => {
 
       case "clustering":
         {
-          const numericValues = state.data.map((row) => {
-            const val = parseFloat(row[state.selectedXAxis]);
-            return Number.isFinite(val) ? val : NaN;
-          });
+          // Get all values (numeric or categorical)
+          const values = state.data.map((row) => row[state.selectedXAxis]);
 
           const { clusters, silhouette } = helpers.computeClustering(
-            numericValues, 
+            values, 
             state.clusterBins, 
             state.selectedXAxis,
             state.data

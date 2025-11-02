@@ -57,7 +57,46 @@ export const DataVizStateHandler = (): ToolHandler => {
       });
     },
 
-    computeClustering: (values: number[], binCount: number, columnName: string = "", data: any[] = []) => {
+    computeClustering: (values: any[], binCount: number, columnName: string = "", data: any[] = []) => {
+      // Check if data is numeric or categorical
+      const isNumeric = helpers.isNumericColumn(data, columnName);
+      
+      if (!isNumeric) {
+        // Handle categorical data
+        const categoricalValues = values.filter(v => v != null && v !== "");
+        if (categoricalValues.length === 0) return { clusters: [], silhouette: 0 };
+        
+        // Count occurrences of each unique value
+        const valueCounts = new Map<string, number>();
+        categoricalValues.forEach(v => {
+          const key = String(v);
+          valueCounts.set(key, (valueCounts.get(key) || 0) + 1);
+        });
+        
+        // Convert to clusters format
+        const clusters = Array.from(valueCounts.entries())
+          .sort((a, b) => b[1] - a[1]) // Sort by count descending
+          .map(([value, count]) => ({
+            label: value,
+            description: value,
+            range: value,
+            center: 0,
+            count: count,
+            items: []
+          }));
+        
+        // Simple quality score based on distribution evenness
+        const totalCount = categoricalValues.length;
+        const expectedCount = totalCount / clusters.length;
+        const variance = clusters.reduce((sum, c) => 
+          sum + Math.pow(c.count - expectedCount, 2), 0
+        ) / clusters.length;
+        const silhouette = 1 - (Math.sqrt(variance) / totalCount);
+        
+        return { clusters, silhouette: Math.max(0, silhouette) };
+      }
+      
+      // Handle numeric data (existing logic)
       const nums = values.filter((v) => typeof v === "number" && !isNaN(v));
       if (nums.length === 0) return { clusters: [], silhouette: 0 };
 
