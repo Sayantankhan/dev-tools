@@ -5,7 +5,7 @@ import { ArrowLeftRight, Trash2, FileSearch } from "lucide-react";
 import { TextCompareStateHandler } from "@/modules/state/TextCompareStateHandler";
 
 export const TextCompareTool = () => {
-  const { state, setters, actions } = TextCompareStateHandler();
+  const { state, setters, actions, helpers } = TextCompareStateHandler();
 
   return (
     <div className="space-y-6">
@@ -73,14 +73,12 @@ export const TextCompareTool = () => {
       )}
 
       {/* Diff Result */}
-      {state.diffResult.length > 0 && (() => {
-        const helpers = state.helpers || {};
-        return (
-          <div className="space-y-3">
-            <Label>Comparison Result (Git-style Diff)</Label>
-            <div className="code-editor p-4 min-h-[300px] max-h-[600px] overflow-auto">
-              <div className="font-mono text-xs">
-                {helpers.generateLineDiff && helpers.generateLineDiff(state.diffResult).map((line: any, index: number) => {
+      {state.diffResult.length > 0 && (
+        <div className="space-y-3">
+          <Label>Comparison Result (Git-style Diff)</Label>
+          <div className="code-editor p-4 min-h-[300px] max-h-[600px] overflow-auto">
+            <div className="font-mono text-xs">
+              {helpers.generateLineDiff(state.diffResult).map((line: any, index: number) => {
                   const bgColor = line.type === 'add'
                     ? "bg-green-500/20"
                     : line.type === 'remove'
@@ -105,13 +103,12 @@ export const TextCompareTool = () => {
                         <span className="select-none">{prefix}</span>{line.content}
                       </span>
                     </div>
-                  );
-                })}
-              </div>
+                );
+              })}
             </div>
           </div>
-        );
-      })()}
+        </div>
+      )}
     </div>
   );
 };

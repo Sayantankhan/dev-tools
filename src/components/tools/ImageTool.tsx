@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Upload, Download, Trash2, Image as ImageIcon, Scissors, Droplet } from "lucide-react";
 import { ImageStateHandler } from "@/modules/state/ImageStateHandler";
@@ -200,6 +201,20 @@ export const ImageTool = () => {
 
             <div className="space-y-4">
               <div>
+                <Label>Output Format</Label>
+                <Select value={state.outputFormat} onValueChange={(value) => setters.setOutputFormat(value as 'png' | 'jpeg' | 'gif')} disabled={state.cropMode}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="png">PNG</SelectItem>
+                    <SelectItem value="jpeg">JPEG</SelectItem>
+                    <SelectItem value="gif">GIF</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label>Quality: {state.quality}%</Label>
                 <Slider
                   value={[state.quality]}
@@ -212,15 +227,54 @@ export const ImageTool = () => {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="convert-jpeg"
-                  checked={state.convertToJPEG}
-                  onCheckedChange={(checked) => setters.setConvertToJPEG(checked as boolean)}
+              <div>
+                <Label>Brightness: {state.brightness}%</Label>
+                <Slider
+                  value={[state.brightness]}
+                  onValueChange={(values) => setters.setBrightness(values[0])}
+                  min={0}
+                  max={200}
+                  step={1}
+                  className="mt-2"
                   disabled={state.cropMode}
                 />
-                <Label htmlFor="convert-jpeg" className="cursor-pointer">
-                  Convert to JPEG
+              </div>
+
+              <div>
+                <Label>Contrast: {state.contrast}%</Label>
+                <Slider
+                  value={[state.contrast]}
+                  onValueChange={(values) => setters.setContrast(values[0])}
+                  min={0}
+                  max={200}
+                  step={1}
+                  className="mt-2"
+                  disabled={state.cropMode}
+                />
+              </div>
+
+              <div>
+                <Label>Blur: {state.blur}px</Label>
+                <Slider
+                  value={[state.blur]}
+                  onValueChange={(values) => setters.setBlur(values[0])}
+                  min={0}
+                  max={10}
+                  step={1}
+                  className="mt-2"
+                  disabled={state.cropMode}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="grayscale"
+                  checked={state.grayscale}
+                  onCheckedChange={(checked) => setters.setGrayscale(checked as boolean)}
+                  disabled={state.cropMode}
+                />
+                <Label htmlFor="grayscale" className="cursor-pointer">
+                  Grayscale
                 </Label>
               </div>
 

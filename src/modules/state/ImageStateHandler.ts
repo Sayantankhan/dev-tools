@@ -19,6 +19,11 @@ export const ImageStateHandler = (): ToolHandler => {
     const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
+    const [outputFormat, setOutputFormat] = useState<'png' | 'jpeg' | 'gif'>('png');
+    const [brightness, setBrightness] = useState(100);
+    const [contrast, setContrast] = useState(100);
+    const [blur, setBlur] = useState(0);
+    const [grayscale, setGrayscale] = useState(false);
 
     const helpers = {
         formatFileSize: (bytes: number) => {
@@ -103,9 +108,11 @@ export const ImageStateHandler = (): ToolHandler => {
                 canvas.width = targetWidth;
                 canvas.height = targetHeight || img.height;
 
+                // Apply filters
+                ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) blur(${blur}px) ${grayscale ? 'grayscale(100%)' : ''}`;
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                const outputFormat = convertToJPEG ? "image/jpeg" : file.type;
+                const mimeType = `image/${outputFormat}`;
                 const outputQuality = quality / 100;
 
                 canvas.toBlob(
@@ -120,7 +127,7 @@ export const ImageStateHandler = (): ToolHandler => {
                             });
                         }
                     },
-                    outputFormat,
+                    mimeType,
                     outputQuality
                 );
             } catch (error: any) {
@@ -136,7 +143,8 @@ export const ImageStateHandler = (): ToolHandler => {
 
             const a = document.createElement("a");
             a.href = convertedImage;
-            a.download = `converted-${Date.now()}.${convertToJPEG ? "jpg" : "png"}`;
+            const ext = outputFormat === 'jpeg' ? 'jpg' : outputFormat;
+            a.download = `converted-${Date.now()}.${ext}`;
             a.click();
 
             toast.success("Image downloaded!");
@@ -293,6 +301,11 @@ export const ImageStateHandler = (): ToolHandler => {
             setFileName("");
             setCropMode(false);
             setCropArea({ x: 0, y: 0, width: 0, height: 0 });
+            setBrightness(100);
+            setContrast(100);
+            setBlur(0);
+            setGrayscale(false);
+            setOutputFormat('png');
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
@@ -316,7 +329,12 @@ export const ImageStateHandler = (): ToolHandler => {
             cropMode,
             cropArea,
             fileInputRef,
-            originalDimensions
+            originalDimensions,
+            outputFormat,
+            brightness,
+            contrast,
+            blur,
+            grayscale
         },
         setters: {
             setWidth,
@@ -326,7 +344,12 @@ export const ImageStateHandler = (): ToolHandler => {
             setConvertToJPEG,
             setFileName,
             setCropMode,
-            setCropArea
+            setCropArea,
+            setOutputFormat,
+            setBrightness,
+            setContrast,
+            setBlur,
+            setGrayscale
         },
         helpers,
         actions

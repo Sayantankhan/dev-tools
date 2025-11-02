@@ -99,15 +99,17 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
           }
 
           const img = new Image();
-          img.src = imgData;
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = (e) => reject(new Error("Image failed to load"));
+          const loadPromise = new Promise((resolve, reject) => {
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Image failed to load"));
           });
+          img.src = imgData;
+          
+          await loadPromise;
 
           const imgWidth = 170;
           const imgHeight = (img.height * imgWidth) / img.width;
-          const format = helpers.detectFormat(imgData).toUpperCase();
+          const format = helpers.detectFormat(imgData);
 
           doc.addImage(imgData, format, 20, yPosition, imgWidth, imgHeight);
           yPosition += imgHeight + 10;
