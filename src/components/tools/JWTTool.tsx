@@ -28,12 +28,12 @@ export const JWTTool = () => {
         <Label>JWT Token</Label>
         <Textarea
           value={state.token}
-          onChange={(e) => actions.setToken(e.target.value)}
+          onChange={(e) => setters.setToken(e.target.value)}
           placeholder="Paste your JWT token here..."
           className="code-editor min-h-[120px]"
         />
         <p className="text-xs text-muted-foreground">
-          Tip: Press <kbd className="px-1 py-0.5 bg-muted rounded">Ctrl/Cmd+V</kbd> to auto-decode
+          Paste your JWT token to decode it automatically
         </p>
       </div>
 

@@ -18,13 +18,14 @@ export const JWTStateHanler = (): ToolHandler => {
 
     useEffect(() => {
         const handlePaste = (e: ClipboardEvent) => {
+            // Only handle paste when NOT focused on input/textarea (for convenience)
             if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
                 return;
             }
             const text = e.clipboardData?.getData("text");
             if (text && text.includes(".")) {
+                e.preventDefault();
                 setToken(text);
-                helpers.decodeToken(text);
             }
         };
 
@@ -148,6 +149,7 @@ export const JWTStateHanler = (): ToolHandler => {
             expiryInfo
         },
         setters: {
+            setToken,
             setSecret
         },
         helpers,
