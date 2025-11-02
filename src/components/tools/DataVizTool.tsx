@@ -12,18 +12,47 @@ export const DataVizTool = () => {
   const { state, setters, helpers, actions } = DataVizStateHandler();
 
   const renderChart = () => {
-    if (!state.data.length || !state.selectedXAxis || !state.selectedYAxis) {
-      return (
-        <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-          Load data and select axes to visualize
-        </div>
-      );
+    // For distribution, only need X-axis
+    if (state.chartType === "distribution") {
+      if (!state.data.length || !state.selectedXAxis) {
+        return (
+          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+            Load data and select X-axis to visualize distribution
+          </div>
+        );
+      }
+    } else {
+      if (!state.data.length || !state.selectedXAxis || !state.selectedYAxis) {
+        return (
+          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+            Load data and select axes to visualize
+          </div>
+        );
+      }
     }
 
-    const chartData = state.data.map((row) => ({
-      name: String(row[state.selectedXAxis]),
-      value: parseFloat(row[state.selectedYAxis]) || 0,
-    }));
+    // Filter out null/undefined values and group by uniqueness for bar/line/area
+    const chartData = state.chartType === "distribution" ? [] : (() => {
+      const filtered = state.data
+        .filter((row) => row[state.selectedXAxis] != null && row[state.selectedYAxis] != null)
+        .map((row) => ({
+          name: String(row[state.selectedXAxis]),
+          value: parseFloat(row[state.selectedYAxis]) || 0,
+        }));
+
+      // Group by name and sum values
+      const grouped = filtered.reduce((acc, item) => {
+        const existing = acc.find((a) => a.name === item.name);
+        if (existing) {
+          existing.value += item.value;
+        } else {
+          acc.push({ ...item });
+        }
+        return acc;
+      }, [] as Array<{ name: string; value: number }>);
+
+      return grouped;
+    })();
 
     switch (state.chartType) {
       case "line":
@@ -170,36 +199,46 @@ export const DataVizTool = () => {
         {state.columns.length > 0 && (
           <>
             <div className="min-w-[150px]">
-              <Label>X-Axis</Label>
+              <Label>{state.chartType === "distribution" ? "Column (Numeric)" : "X-Axis"}</Label>
               <Select value={state.selectedXAxis} onValueChange={setters.setSelectedXAxis}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {state.columns.map((col) => (
-                    <SelectItem key={col} value={col}>
-                      {col}
-                    </SelectItem>
-                  ))}
+                  {state.chartType === "distribution"
+                    ? state.columns
+                        .filter((col) => helpers.isNumericColumn(state.data, col))
+                        .map((col) => (
+                          <SelectItem key={col} value={col}>
+                            {col}
+                          </SelectItem>
+                        ))
+                    : state.columns.map((col) => (
+                        <SelectItem key={col} value={col}>
+                          {col}
+                        </SelectItem>
+                      ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="min-w-[150px]">
-              <Label>Y-Axis</Label>
-              <Select value={state.selectedYAxis} onValueChange={setters.setSelectedYAxis}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {state.columns.map((col) => (
-                    <SelectItem key={col} value={col}>
-                      {col}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {state.chartType !== "distribution" && (
+              <div className="min-w-[150px]">
+                <Label>Y-Axis</Label>
+                <Select value={state.selectedYAxis} onValueChange={setters.setSelectedYAxis}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {state.columns.map((col) => (
+                      <SelectItem key={col} value={col}>
+                        {col}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </>
         )}
 
