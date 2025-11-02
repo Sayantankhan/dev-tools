@@ -51,7 +51,7 @@ export const JSEditorTool = () => {
       {(state.output.length > 0 || state.metrics.length > 0 || state.error) && (
         <div className="space-y-3">
           <Label>Output</Label>
-          <div className="grid grid-cols-1 md:grid-cols-[200px,1fr] gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-[200px,1fr] gap-6">
             {/* Metrics Column */}
             {state.metrics.length > 0 && (
               <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
