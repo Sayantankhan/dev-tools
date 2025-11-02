@@ -9,7 +9,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, 
 const COLORS = ["#8b5cf6", "#ec4899", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 
 export const DataVizTool = () => {
-  const { state, setters, actions } = DataVizStateHandler();
+  const { state, setters, helpers, actions } = DataVizStateHandler();
 
   const renderChart = () => {
     if (!state.data.length || !state.selectedXAxis || !state.selectedYAxis) {
@@ -90,7 +90,58 @@ export const DataVizTool = () => {
             </AreaChart>
           </ResponsiveContainer>
         );
+      
+      case "distribution":
+        { 
+          const numericValues = state.data.map((row) => {
+            const val = parseFloat(row[state.selectedXAxis]);
+            return Number.isFinite(val) ? val : NaN;
+          });
 
+          const BIN_COUNT = 25;
+          const { bins, mean, std, maxCount } = helpers.computeHistogram(numericValues, BIN_COUNT);
+
+          const pdfAtMean = helpers.gaussianPdf(mean, mean, std) || 1;
+          const gaussianScale = maxCount / pdfAtMean;
+
+          const distData = bins.map((b) => {
+            const pdfVal = helpers.gaussianPdf(b.center, mean, std);
+            return {
+              name: `${(b.x0).toFixed(2)} - ${(b.x1).toFixed(2)}`,
+              center: b.center,
+              count: b.count,
+              gaussian: pdfVal * gaussianScale,
+            };
+          });
+        
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={distData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" interval={0} tick={{ fontSize: 10 }} />
+              <YAxis />
+
+              <Tooltip
+                formatter={(value: any, name: string) => {
+                  if (name === "gaussian") return [Number(value).toFixed(2), "Gaussian(scaled)"];
+                  return [value, "Count"];
+                }}
+              />
+              <Legend />
+
+              <Bar dataKey="count" fill="#8b5cf6" barSize={12} />
+              <Line
+                type="monotone"
+                dataKey="gaussian"
+                stroke="#ef4444"
+                strokeWidth={2}
+                dot={false}
+                yAxisId={0}
+              />
+              </BarChart>
+          </ResponsiveContainer>
+        )}
+      
       default:
         return null;
     }
@@ -111,6 +162,7 @@ export const DataVizTool = () => {
               <SelectItem value="line">Line Chart</SelectItem>
               <SelectItem value="pie">Pie Chart</SelectItem>
               <SelectItem value="area">Area Chart</SelectItem>
+              <SelectItem value="distribution">Std Distribution</SelectItem>
             </SelectContent>
           </Select>
         </div>
