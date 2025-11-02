@@ -1,30 +1,34 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Upload, Trash2, Maximize2 } from "lucide-react";
 import { DataVizStateHandler, ChartType } from "@/modules/state/DataVizStateHandler";
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ScatterChart, Scatter } from "recharts";
+import { useState } from "react";
 
 const COLORS = ["#8b5cf6", "#ec4899", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 
 export const DataVizTool = () => {
   const { state, setters, helpers, actions } = DataVizStateHandler();
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const renderChart = () => {
-    // For distribution, only need X-axis
-    if (state.chartType === "distribution") {
+  const renderChart = (height = 400) => {
+    // For distribution and clustering, only need X-axis
+    if (state.chartType === "distribution" || state.chartType === "clustering") {
       if (!state.data.length || !state.selectedXAxis) {
         return (
-          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-            Load data and select X-axis to visualize distribution
+          <div className={`h-[${height}px] flex items-center justify-center text-muted-foreground`}>
+            Load data and select X-axis to visualize {state.chartType}
           </div>
         );
       }
     } else {
       if (!state.data.length || !state.selectedXAxis || !state.selectedYAxis) {
         return (
-          <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+          <div className={`h-[${height}px] flex items-center justify-center text-muted-foreground`}>
             Load data and select axes to visualize
           </div>
         );
@@ -32,7 +36,7 @@ export const DataVizTool = () => {
     }
 
     // Filter out null/undefined values and group by uniqueness for bar/line/area
-    const chartData = state.chartType === "distribution" ? [] : (() => {
+    const chartData = state.chartType === "distribution" || state.chartType === "clustering" ? [] : (() => {
       const filtered = state.data
         .filter((row) => row[state.selectedXAxis] != null && row[state.selectedYAxis] != null)
         .map((row) => ({
@@ -51,13 +55,19 @@ export const DataVizTool = () => {
         return acc;
       }, [] as Array<{ name: string; value: number }>);
 
+      // Sort if X-axis is numeric
+      const isXNumeric = helpers.isNumericColumn(state.data, state.selectedXAxis);
+      if (isXNumeric) {
+        grouped.sort((a, b) => parseFloat(a.name) - parseFloat(b.name));
+      }
+
       return grouped;
     })();
 
     switch (state.chartType) {
       case "line":
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={height}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -71,7 +81,7 @@ export const DataVizTool = () => {
 
       case "bar":
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={height}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -85,7 +95,7 @@ export const DataVizTool = () => {
 
       case "pie":
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={height}>
             <PieChart>
               <Pie
                 data={chartData}
@@ -93,7 +103,7 @@ export const DataVizTool = () => {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={120}
+                outerRadius={Math.min(height * 0.3, 120)}
                 label
               >
                 {chartData.map((entry, index) => (
@@ -108,7 +118,7 @@ export const DataVizTool = () => {
 
       case "area":
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={height}>
             <AreaChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -144,7 +154,7 @@ export const DataVizTool = () => {
           });
         
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={height}>
             <BarChart data={distData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" interval={0} tick={{ fontSize: 10 }} />
@@ -170,11 +180,77 @@ export const DataVizTool = () => {
               </BarChart>
           </ResponsiveContainer>
         )}
+
+      case "clustering":
+        {
+          const numericValues = state.data.map((row) => {
+            const val = parseFloat(row[state.selectedXAxis]);
+            return Number.isFinite(val) ? val : NaN;
+          });
+
+          const { clusters, silhouette } = helpers.computeClustering(numericValues, state.clusterBins);
+
+          const clusterData = clusters.map((c) => ({
+            name: c.label,
+            count: c.count,
+            center: c.center,
+          }));
+
+          return (
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
+                <p><strong>Clustering Quality Score:</strong> {(silhouette * 100).toFixed(2)}%</p>
+                <p className="text-xs mt-1">Higher score = better separation between clusters</p>
+              </div>
+              <ResponsiveContainer width="100%" height={height - 80}>
+                <BarChart data={clusterData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="count" fill="#8b5cf6">
+                    {clusterData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          );
+        }
       
       default:
         return null;
     }
   };
+
+  const ChartWrapper = ({ children, showExpand = true }: { children: React.ReactNode, showExpand?: boolean }) => (
+    <div className="relative">
+      {showExpand && (
+        <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="absolute top-2 right-2 z-10"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full">
+            <DialogHeader>
+              <DialogTitle>Expanded Chart View</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-auto">
+              {renderChart(600)}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {children}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -192,6 +268,7 @@ export const DataVizTool = () => {
               <SelectItem value="pie">Pie Chart</SelectItem>
               <SelectItem value="area">Area Chart</SelectItem>
               <SelectItem value="distribution">Std Distribution</SelectItem>
+              <SelectItem value="clustering">Clustering</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -199,13 +276,13 @@ export const DataVizTool = () => {
         {state.columns.length > 0 && (
           <>
             <div className="min-w-[150px]">
-              <Label>{state.chartType === "distribution" ? "Column (Numeric)" : "X-Axis"}</Label>
+              <Label>{(state.chartType === "distribution" || state.chartType === "clustering") ? "Column (Numeric)" : "X-Axis"}</Label>
               <Select value={state.selectedXAxis} onValueChange={setters.setSelectedXAxis}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {state.chartType === "distribution"
+                  {(state.chartType === "distribution" || state.chartType === "clustering")
                     ? state.columns
                         .filter((col) => helpers.isNumericColumn(state.data, col))
                         .map((col) => (
@@ -222,7 +299,21 @@ export const DataVizTool = () => {
               </Select>
             </div>
 
-            {state.chartType !== "distribution" && (
+            {state.chartType === "clustering" && (
+              <div className="min-w-[120px]">
+                <Label>Bins</Label>
+                <Input
+                  type="number"
+                  min={2}
+                  max={20}
+                  value={state.clusterBins}
+                  onChange={(e) => setters.setClusterBins(parseInt(e.target.value) || 5)}
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {state.chartType !== "distribution" && state.chartType !== "clustering" && (
               <div className="min-w-[150px]">
                 <Label>Y-Axis</Label>
                 <Select value={state.selectedYAxis} onValueChange={setters.setSelectedYAxis}>
@@ -285,9 +376,11 @@ export const DataVizTool = () => {
       {state.data.length > 0 && (
         <div className="space-y-3">
           <Label>Visualization</Label>
-          <div className="p-6 bg-card/50 rounded-lg border border-border">
-            {renderChart()}
-          </div>
+          <ChartWrapper>
+            <div className="p-6 bg-card/50 rounded-lg border border-border">
+              {renderChart()}
+            </div>
+          </ChartWrapper>
         </div>
       )}
 
