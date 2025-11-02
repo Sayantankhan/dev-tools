@@ -90,11 +90,8 @@ export const JSEditorStateHandler = (): ToolHandler => {
         ].filter(Boolean) as string[];
 
         setMetrics(metricsData);
-        // If nothing was logged synchronously, keep listening for async logs; otherwise keep existing
-        setTimeout(() => {
-          if (currentRunIdRef.current !== runId) return;
-          setOutput((prev) => (prev.length === 0 ? ["Code executed successfully with no output"] : prev));
-        }, 0);
+        // No placeholder when there is no output
+
 
         toast.success("Code executed!");
       } catch (err: any) {
