@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ToolHandler } from "@/modules/types/ToolHandler";
 import { toast } from "sonner";
 
@@ -7,6 +7,8 @@ export const JSEditorStateHandler = (): ToolHandler => {
   const [output, setOutput] = useState<string[]>([]);
   const [metrics, setMetrics] = useState<string[]>([]);
   const [error, setError] = useState<string>("");
+  const [currentRunId, setCurrentRunId] = useState<number | null>(null);
+  const currentRunIdRef = useRef<number | null>(null);
 
   const helpers = {
     captureConsole: () => {
@@ -46,15 +48,30 @@ export const JSEditorStateHandler = (): ToolHandler => {
       }
 
       setError("");
-      const { logs, restore } = helpers.captureConsole();
+      setOutput([]);
+
+      const runId = Date.now();
+      setCurrentRunId(runId);
+      if (currentRunIdRef) currentRunIdRef.current = runId;
       
       const startTime = performance.now();
       const startMemory = (performance as any).memory?.usedJSHeapSize;
 
+      // Scoped console that persists for async callbacks of this run
+      const push = (msg: string) => {
+        if (currentRunIdRef.current !== runId) return; // ignore logs from old runs
+        setOutput((prev) => [...prev, msg]);
+      };
+      const scopedConsole = {
+        log: (...args: any[]) => push(args.map(String).join(" ")),
+        error: (...args: any[]) => push(`[ERROR] ${args.map(String).join(" ")}`),
+        warn: (...args: any[]) => push(`[WARN] ${args.map(String).join(" ")}`),
+      } as Console;
+
       try {
-        // Execute the code
-        const func = new Function(code);
-        func();
+        // Execute the code with injected console
+        const func = new Function("console", code);
+        func(scopedConsole);
 
         const endTime = performance.now();
         const endMemory = (performance as any).memory?.usedJSHeapSize;
@@ -73,10 +90,14 @@ export const JSEditorStateHandler = (): ToolHandler => {
         ].filter(Boolean) as string[];
 
         setMetrics(metricsData);
-        setOutput(logs.length > 0 ? logs : ["Code executed successfully with no output"]);
+        // If nothing was logged synchronously, keep listening for async logs; otherwise keep existing
+        setTimeout(() => {
+          if (currentRunIdRef.current !== runId) return;
+          setOutput((prev) => (prev.length === 0 ? ["Code executed successfully with no output"] : prev));
+        }, 0);
+
         toast.success("Code executed!");
       } catch (err: any) {
-        // Try to extract line number from error stack
         const stack = err.stack || "";
         const lineMatch = stack.match(/<anonymous>:(\d+):(\d+)/);
         const lineInfo = lineMatch ? ` at line ${lineMatch[1]}, column ${lineMatch[2]}` : "";
@@ -84,8 +105,6 @@ export const JSEditorStateHandler = (): ToolHandler => {
         setError(`${err.message}${lineInfo}`);
         setOutput([]);
         toast.error("Execution failed");
-      } finally {
-        restore();
       }
     },
 
@@ -108,6 +127,8 @@ export const JSEditorStateHandler = (): ToolHandler => {
       setOutput([]);
       setMetrics([]);
       setError("");
+      setCurrentRunId(null);
+      if (currentRunIdRef) currentRunIdRef.current = null;
       toast.success("Cleared!");
     },
   };
