@@ -7,6 +7,7 @@ export const LogParserStateHandler = (): ToolHandler => {
   const [filteredLogs, setFilteredLogs] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [logLevel, setLogLevel] = useState<string>("all");
+  const [fileName, setFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const helpers = {
@@ -52,6 +53,7 @@ export const LogParserStateHandler = (): ToolHandler => {
         return;
       }
 
+      setFileName(file.name);
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
@@ -97,6 +99,7 @@ export const LogParserStateHandler = (): ToolHandler => {
       setFilteredLogs([]);
       setSearchQuery("");
       setLogLevel("all");
+      setFileName("");
       toast.success("Cleared!");
     },
   };
@@ -107,6 +110,7 @@ export const LogParserStateHandler = (): ToolHandler => {
       filteredLogs,
       searchQuery,
       logLevel,
+      fileName,
       fileInputRef,
     },
     setters: {
@@ -114,6 +118,7 @@ export const LogParserStateHandler = (): ToolHandler => {
       setFilteredLogs,
       setSearchQuery,
       setLogLevel,
+      setFileName,
     },
     helpers,
     actions,

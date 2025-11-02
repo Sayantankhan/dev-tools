@@ -39,6 +39,9 @@ export const ImageTool = () => {
         <p className="text-sm text-muted-foreground">
           PNG, JPEG, WEBP, GIF, TIFF supported • Max 25MB
         </p>
+        {state.fileName && (
+          <p className="text-sm text-primary mt-2">📎 {state.fileName}</p>
+        )}
       </div>
 
       {state.preview && (

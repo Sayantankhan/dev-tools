@@ -46,10 +46,15 @@ export const LogParserTool = () => {
           onChange={actions.handleFileUpload}
           className="hidden"
         />
-        <Button onClick={() => state.fileInputRef.current?.click()} variant="outline">
-          <Upload className="w-4 h-4 mr-2" />
-          Upload Log
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => state.fileInputRef.current?.click()} variant="outline">
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Log
+          </Button>
+          {state.fileName && (
+            <span className="text-sm text-muted-foreground">📎 {state.fileName}</span>
+          )}
+        </div>
 
         <Button onClick={actions.handleFilter} className="btn-gradient">
           <FileSearch className="w-4 h-4 mr-2" />

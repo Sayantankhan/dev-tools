@@ -12,6 +12,7 @@ export const DataVizStateHandler = (): ToolHandler => {
   const [selectedYAxis, setSelectedYAxis] = useState("");
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [rawInput, setRawInput] = useState("");
+  const [fileName, setFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const helpers = {
@@ -96,6 +97,7 @@ const actions = {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setFileName(file.name);
     const reader = new FileReader();
     reader.onload = async (e) => {
       const content = e.target?.result as string;
@@ -159,6 +161,7 @@ const actions = {
     setSelectedXAxis("");
     setSelectedYAxis("");
     setRawInput("");
+    setFileName("");
     toast.success("Cleared!");
   },
 };
@@ -171,6 +174,7 @@ return {
     selectedYAxis,
     chartType,
     rawInput,
+    fileName,
     fileInputRef,
   },
   setters: {
@@ -180,6 +184,7 @@ return {
     setSelectedYAxis,
     setChartType,
     setRawInput,
+    setFileName,
   },
   helpers,
   actions,

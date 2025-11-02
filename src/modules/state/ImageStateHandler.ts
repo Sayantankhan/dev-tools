@@ -14,6 +14,7 @@ export const ImageStateHandler = (): ToolHandler => {
     const [originalSize, setOriginalSize] = useState<number>(0);
     const [convertedSize, setConvertedSize] = useState<number>(0);
     const [processing, setProcessing] = useState(false);
+    const [fileName, setFileName] = useState<string>("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
 
@@ -41,6 +42,7 @@ export const ImageStateHandler = (): ToolHandler => {
             }
 
             setFile(selectedFile);
+            setFileName(selectedFile.name);
             setOriginalSize(selectedFile.size);
 
             const reader = new FileReader();
@@ -147,6 +149,7 @@ export const ImageStateHandler = (): ToolHandler => {
             setWidth(800);
             setHeight(0);
             setQuality(85);
+            setFileName("");
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
@@ -166,6 +169,7 @@ export const ImageStateHandler = (): ToolHandler => {
             originalSize,
             convertedSize,
             processing,
+            fileName,
             fileInputRef,
             originalDimensions
         },
@@ -174,7 +178,8 @@ export const ImageStateHandler = (): ToolHandler => {
             setHeight,
             setKeepAspectRatio,
             setQuality,
-            setConvertToJPEG
+            setConvertToJPEG,
+            setFileName
         },
         helpers,
         actions

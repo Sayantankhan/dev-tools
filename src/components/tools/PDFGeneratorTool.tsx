@@ -60,7 +60,19 @@ export const PDFGeneratorTool = () => {
       {/* Image Previews */}
       {state.images.length > 0 && (
         <div className="space-y-3">
-          <Label>Images ({state.images.length})</Label>
+          <div className="flex items-center justify-between">
+            <Label>Images ({state.images.length})</Label>
+          </div>
+          {state.imageFileNames.length > 0 && (
+            <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
+              <p className="font-medium mb-2">📎 Attached files:</p>
+              <ul className="list-disc list-inside space-y-1">
+                {state.imageFileNames.map((name, i) => (
+                  <li key={i}>{name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {state.images.map((img, index) => (
               <div key={index} className="relative group">

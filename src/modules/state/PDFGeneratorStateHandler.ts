@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 export const PDFGeneratorStateHandler = (): ToolHandler => {
   const [textContent, setTextContent] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [imageFileNames, setImageFileNames] = useState<string[]>([]);
   const [fileName, setFileName] = useState("document.pdf");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +32,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
       if (!files) return;
 
       const readers: Promise<string>[] = [];
+      const newFileNames: string[] = [];
 
       Array.from(files).forEach((file) => {
         if (!file.type.startsWith("image/")) {
@@ -38,6 +40,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
           return;
         }
 
+        newFileNames.push(file.name);
         const reader = new FileReader();
         const promise = new Promise<string>((resolve) => {
           reader.onload = (e) => {
@@ -50,6 +53,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
 
       Promise.all(readers).then((results) => {
         setImages((prev) => [...prev, ...results]);
+        setImageFileNames((prev) => [...prev, ...newFileNames]);
         toast.success(`Added ${results.length} image(s)`);
       });
 
@@ -60,6 +64,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
 
     handleRemoveImage: (index: number) => {
       setImages((prev) => prev.filter((_, i) => i !== index));
+      setImageFileNames((prev) => prev.filter((_, i) => i !== index));
       toast.success("Image removed");
     },
 
@@ -119,6 +124,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
     handleClear: () => {
       setTextContent("");
       setImages([]);
+      setImageFileNames([]);
       setFileName("document.pdf");
       toast.success("Cleared!");
     },
@@ -128,12 +134,14 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
     state: {
       textContent,
       images,
+      imageFileNames,
       fileName,
       fileInputRef,
     },
     setters: {
       setTextContent,
       setImages,
+      setImageFileNames,
       setFileName,
     },
     helpers,

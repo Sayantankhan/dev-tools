@@ -249,10 +249,15 @@ export const DataVizTool = () => {
           onChange={actions.handleFileUpload}
           className="hidden"
         />
-        <Button onClick={() => state.fileInputRef.current?.click()} variant="outline">
-          <Upload className="w-4 h-4 mr-2" />
-          Upload File
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => state.fileInputRef.current?.click()} variant="outline">
+            <Upload className="w-4 h-4 mr-2" />
+            Upload File
+          </Button>
+          {state.fileName && (
+            <span className="text-sm text-muted-foreground">📎 {state.fileName}</span>
+          )}
+        </div>
 
         <Button onClick={actions.handleClear} variant="outline">
           <Trash2 className="w-4 h-4 mr-2" />
