@@ -48,21 +48,35 @@ export const JSEditorTool = () => {
       </div>
 
       {/* Output */}
-      {(state.output.length > 0 || state.error) && (
+      {(state.output.length > 0 || state.metrics.length > 0 || state.error) && (
         <div className="space-y-3">
           <Label>Output</Label>
-          <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
-            {state.error ? (
-              <div className="text-red-400 font-mono text-sm whitespace-pre-wrap">
-                Error: {state.error}
+          <div className="grid grid-cols-1 md:grid-cols-[200px,1fr] gap-4">
+            {/* Metrics Column */}
+            {state.metrics.length > 0 && (
+              <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
+                {state.metrics.map((line, index) => (
+                  <div key={index} className="text-muted-foreground font-mono text-sm whitespace-pre-wrap">
+                    {line}
+                  </div>
+                ))}
               </div>
-            ) : (
-              state.output.map((line, index) => (
-                <div key={index} className="text-foreground font-mono text-sm whitespace-pre-wrap">
-                  {line}
-                </div>
-              ))
             )}
+            
+            {/* Output Column */}
+            <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
+              {state.error ? (
+                <div className="text-red-400 font-mono text-sm whitespace-pre-wrap">
+                  Error: {state.error}
+                </div>
+              ) : (
+                state.output.map((line, index) => (
+                  <div key={index} className="text-foreground font-mono text-sm whitespace-pre-wrap">
+                    {line}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
