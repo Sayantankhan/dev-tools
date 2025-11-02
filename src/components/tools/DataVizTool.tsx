@@ -226,7 +226,12 @@ export const DataVizTool = () => {
             return Number.isFinite(val) ? val : NaN;
           });
 
-          const { clusters, silhouette } = helpers.computeClustering(numericValues, state.clusterBins);
+          const { clusters, silhouette } = helpers.computeClustering(
+            numericValues, 
+            state.clusterBins, 
+            state.selectedXAxis,
+            state.data
+          );
 
           const clusterData = clusters.map((c) => ({
             name: c.label,

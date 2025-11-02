@@ -57,7 +57,7 @@ export const DataVizStateHandler = (): ToolHandler => {
       });
     },
 
-    computeClustering: (values: number[], binCount: number) => {
+    computeClustering: (values: number[], binCount: number, columnName: string = "", data: any[] = []) => {
       const nums = values.filter((v) => typeof v === "number" && !isNaN(v));
       if (nums.length === 0) return { clusters: [], silhouette: 0 };
 
@@ -66,24 +66,66 @@ export const DataVizStateHandler = (): ToolHandler => {
       const range = max === min ? 1 : max - min;
       const binWidth = range / binCount;
 
-      // Generate descriptive labels based on cluster count
-      const getClusterDescription = (index: number, total: number): string => {
-        if (total === 2) return index === 0 ? "Low" : "High";
+      // Generate contextual labels based on column name and data
+      const getClusterDescription = (index: number, total: number, x0: number, x1: number): string => {
+        const colLower = columnName.toLowerCase();
+        const center = (x0 + x1) / 2;
+        
+        // Binary/Boolean columns (0 or 1)
+        if (min === 0 && max === 1 && total === 2) {
+          if (colLower.includes('survived') || colLower.includes('survival')) {
+            return center < 0.5 ? "Did not survive" : "Survived";
+          }
+          return center < 0.5 ? "No" : "Yes";
+        }
+        
+        // Categorical detection - check if data has distinct categorical values
+        if (data.length > 0 && columnName) {
+          const uniqueValues = [...new Set(data.map(row => row[columnName]))].filter(v => v != null);
+          if (uniqueValues.length <= 10 && uniqueValues.length === total) {
+            // Return actual categorical values
+            const sortedValues = uniqueValues.sort();
+            return String(sortedValues[index] || `Category ${index + 1}`);
+          }
+        }
+        
+        // Monetary columns
+        if (colLower.includes('price') || colLower.includes('fare') || colLower.includes('cost') || colLower.includes('amount')) {
+          return `$${x0.toFixed(0)}-$${x1.toFixed(0)}`;
+        }
+        
+        // Age columns
+        if (colLower.includes('age')) {
+          if (total === 2) return center < (max - min) / 2 + min ? "Young" : "Old";
+          if (total === 3) return ["Young", "Middle-aged", "Senior"][index];
+          if (total === 4) return ["Child", "Young Adult", "Middle-aged", "Senior"][index];
+          return `Age ${x0.toFixed(0)}-${x1.toFixed(0)}`;
+        }
+        
+        // Score/Rating columns
+        if (colLower.includes('score') || colLower.includes('rating')) {
+          if (total === 2) return center < (max - min) / 2 + min ? "Low Score" : "High Score";
+          if (total === 3) return ["Low", "Medium", "High"][index];
+          return `Score ${x0.toFixed(1)}-${x1.toFixed(1)}`;
+        }
+        
+        // Generic numeric ranges with context
+        if (total === 2) return index === 0 ? "Lower Range" : "Upper Range";
         if (total === 3) return ["Low", "Medium", "High"][index];
         if (total === 4) return ["Very Low", "Low", "High", "Very High"][index];
         if (total === 5) return ["Very Low", "Low", "Medium", "High", "Very High"][index];
         
-        // For more than 5, use percentile-based labels
+        // For more than 5, use percentile
         const percentile = Math.round((index / (total - 1)) * 100);
-        return `P${percentile}`;
+        return `P${percentile} (${x0.toFixed(1)}-${x1.toFixed(1)})`;
       };
 
       const clusters = new Array(binCount).fill(0).map((_, i) => {
         const x0 = min + i * binWidth;
         const x1 = x0 + binWidth;
-        const description = getClusterDescription(i, binCount);
+        const description = getClusterDescription(i, binCount, x0, x1);
         return { 
-          label: `${description} (${x0.toFixed(1)}-${x1.toFixed(1)})`,
+          label: `${description}`,
           description,
           range: `${x0.toFixed(1)}-${x1.toFixed(1)}`,
           center: (x0 + x1) / 2,
