@@ -113,6 +113,21 @@ export const LogParserTool = () => {
               className="w-auto"
             />
           </div>
+
+          {(state.dateFrom || state.dateTo) && (
+            <Button
+              onClick={() => {
+                setters.setDateFrom("");
+                setters.setDateTo("");
+              }}
+              variant="ghost"
+              size="sm"
+              className="h-9"
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              Clear Dates
+            </Button>
+          )}
         </div>
       </div>
 
