@@ -110,6 +110,9 @@ const Index = () => {
           <p>
             All operations run locally in your browser. Your data never leaves your device.
           </p>
+          <p className="mt-4">
+            © {new Date().getFullYear()} Sayantan Khan.
+          </p>
           {/* <p className="mt-2">
             Keyboard shortcuts: <kbd className="px-2 py-1 bg-muted rounded text-xs">1-5</kbd> to
             switch tools
