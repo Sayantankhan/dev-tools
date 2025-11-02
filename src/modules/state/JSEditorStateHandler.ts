@@ -39,7 +39,7 @@ export const JSEditorStateHandler = (): ToolHandler => {
   };
 
   const actions = {
-    handleRun: () => {
+    handleRun: async () => {
       if (!code.trim()) {
         toast.error("Please write some code first");
         return;
@@ -55,6 +55,9 @@ export const JSEditorStateHandler = (): ToolHandler => {
         // Execute the code
         const func = new Function(code);
         func();
+
+        // Wait for async operations to complete (capture logs for 2 seconds)
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         const endTime = performance.now();
         const endMemory = (performance as any).memory?.usedJSHeapSize;
