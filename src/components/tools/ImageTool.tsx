@@ -23,21 +23,30 @@ export const ImageTool = () => {
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!state.cropMode) return;
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const canvas = canvasRef.current;
+    if (!rect || !canvas) return;
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
     setIsDragging(true);
     setDragStart({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
     });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDragging || !state.cropMode) return;
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const canvas = canvasRef.current;
+    if (!rect || !canvas) return;
     
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const currentX = (e.clientX - rect.left) * scaleX;
+    const currentY = (e.clientY - rect.top) * scaleY;
     
     const newCropArea = {
       x: Math.min(dragStart.x, currentX),
@@ -49,9 +58,8 @@ export const ImageTool = () => {
     setters.setCropArea(newCropArea);
 
     // Draw crop preview
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (canvas && ctx && state.preview) {
+    const ctx = canvas.getContext('2d');
+    if (ctx && state.preview) {
       const img = new Image();
       img.src = state.preview;
       img.onload = () => {
