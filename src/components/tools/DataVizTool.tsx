@@ -314,13 +314,13 @@ export const DataVizTool = () => {
         {state.columns.length > 0 && (
           <>
             <div className="min-w-[150px]">
-              <Label>{(state.chartType === "distribution" || state.chartType === "clustering") ? "Column (Numeric)" : "X-Axis"}</Label>
+              <Label>{(state.chartType === "distribution" || state.chartType === "clustering") ? "Column" : "X-Axis"}</Label>
               <Select value={state.selectedXAxis} onValueChange={setters.setSelectedXAxis}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(state.chartType === "distribution" || state.chartType === "clustering")
+                  {state.chartType === "clustering"
                     ? state.columns
                         .filter((col) => helpers.isNumericColumn(state.data, col))
                         .map((col) => (
