@@ -14,6 +14,7 @@ export const DataVizStateHandler = (): ToolHandler => {
   const [rawInput, setRawInput] = useState("");
   const [fileName, setFileName] = useState<string>("");
   const [clusterBins, setClusterBins] = useState(5);
+  const [useLogScale, setUseLogScale] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const helpers = {
@@ -220,6 +221,7 @@ const actions = {
     setRawInput("");
     setFileName("");
     setClusterBins(5);
+    setUseLogScale(false);
     toast.success("Cleared!");
   },
 };
@@ -234,6 +236,7 @@ return {
     rawInput,
     fileName,
     clusterBins,
+    useLogScale,
     fileInputRef,
   },
   setters: {
@@ -245,6 +248,7 @@ return {
     setRawInput,
     setFileName,
     setClusterBins,
+    setUseLogScale,
   },
   helpers,
   actions,

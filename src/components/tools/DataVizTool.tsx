@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Upload, Trash2, Maximize2 } from "lucide-react";
 import { DataVizStateHandler, ChartType } from "@/modules/state/DataVizStateHandler";
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ScatterChart, Scatter } from "recharts";
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ScatterChart, Scatter, ComposedChart } from "recharts";
 import { useState } from "react";
 
 const COLORS = ["#8b5cf6", "#ec4899", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
@@ -132,10 +133,28 @@ export const DataVizTool = () => {
       
       case "distribution":
         { 
-          const numericValues = state.data.map((row) => {
-            const val = parseFloat(row[state.selectedXAxis]);
-            return Number.isFinite(val) ? val : NaN;
-          });
+          let numericValues = state.data
+            .map((row) => {
+              const val = parseFloat(row[state.selectedXAxis]);
+              return Number.isFinite(val) ? val : NaN;
+            })
+            .filter((v) => !isNaN(v));
+
+          // Apply log transformation if enabled
+          if (state.useLogScale && numericValues.length > 0) {
+            numericValues = numericValues
+              .filter((v) => v > 0) // Log only works on positive values
+              .map((v) => Math.log(v));
+          }
+
+          if (numericValues.length === 0) {
+            return (
+              <div className={`h-[${height}px] flex items-center justify-center text-muted-foreground`}>
+                No valid numeric data to display
+                {state.useLogScale && " (log scale requires positive values)"}
+              </div>
+            );
+          }
 
           const BIN_COUNT = 25;
           const { bins, mean, std, maxCount } = helpers.computeHistogram(numericValues, BIN_COUNT);
@@ -146,7 +165,9 @@ export const DataVizTool = () => {
           const distData = bins.map((b) => {
             const pdfVal = helpers.gaussianPdf(b.center, mean, std);
             return {
-              name: `${(b.x0).toFixed(2)} - ${(b.x1).toFixed(2)}`,
+              name: state.useLogScale 
+                ? `${Math.exp(b.x0).toFixed(1)}-${Math.exp(b.x1).toFixed(1)}`
+                : `${b.x0.toFixed(2)}-${b.x1.toFixed(2)}`,
               center: b.center,
               count: b.count,
               gaussian: pdfVal * gaussianScale,
@@ -154,31 +175,48 @@ export const DataVizTool = () => {
           });
         
         return (
-          <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={distData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" interval={0} tick={{ fontSize: 10 }} />
-              <YAxis />
+          <div className="space-y-3">
+            {state.useLogScale && (
+              <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
+                <p><strong>Log Scale Applied:</strong> Data transformed using natural logarithm</p>
+                <p className="text-xs mt-1">Useful for right-skewed distributions</p>
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
+              <p><strong>Statistics:</strong> Mean = {(state.useLogScale ? Math.exp(mean) : mean).toFixed(2)}, Std Dev = {(state.useLogScale ? Math.exp(std) : std).toFixed(2)}</p>
+            </div>
+            <ResponsiveContainer width="100%" height={height - (state.useLogScale ? 160 : 80)}>
+              <ComposedChart data={distData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="name" 
+                  interval={Math.floor(BIN_COUNT / 10)} 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={80}
+                  tick={{ fontSize: 9 }} 
+                />
+                <YAxis />
 
-              <Tooltip
-                formatter={(value: any, name: string) => {
-                  if (name === "gaussian") return [Number(value).toFixed(2), "Gaussian(scaled)"];
-                  return [value, "Count"];
-                }}
-              />
-              <Legend />
+                <Tooltip
+                  formatter={(value: any, name: string) => {
+                    if (name === "gaussian") return [Number(value).toFixed(2), "Gaussian(scaled)"];
+                    return [value, "Count"];
+                  }}
+                />
+                <Legend />
 
-              <Bar dataKey="count" fill="#8b5cf6" barSize={12} />
-              <Line
-                type="monotone"
-                dataKey="gaussian"
-                stroke="#ef4444"
-                strokeWidth={2}
-                dot={false}
-                yAxisId={0}
-              />
-              </BarChart>
-          </ResponsiveContainer>
+                <Bar dataKey="count" fill="#8b5cf6" barSize={10} />
+                <Line
+                  type="monotone"
+                  dataKey="gaussian"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
       case "clustering":
@@ -310,6 +348,19 @@ export const DataVizTool = () => {
                   onChange={(e) => setters.setClusterBins(parseInt(e.target.value) || 5)}
                   className="mt-1"
                 />
+              </div>
+            )}
+
+            {state.chartType === "distribution" && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="log-scale"
+                  checked={state.useLogScale}
+                  onCheckedChange={(checked) => setters.setUseLogScale(checked as boolean)}
+                />
+                <Label htmlFor="log-scale" className="cursor-pointer text-sm">
+                  Log Scale (for skewed data)
+                </Label>
               </div>
             )}
 
