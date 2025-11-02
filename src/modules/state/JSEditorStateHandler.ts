@@ -15,7 +15,7 @@ export const JSEditorStateHandler = (): ToolHandler => {
       const originalWarn = console.warn;
 
       console.log = (...args: any[]) => {
-        logs.push(`[LOG] ${args.map(String).join(" ")}`);
+        logs.push(args.map(String).join(" "));
       };
 
       console.error = (...args: any[]) => {
@@ -46,16 +46,37 @@ export const JSEditorStateHandler = (): ToolHandler => {
 
       setError("");
       const { logs, restore } = helpers.captureConsole();
+      
+      const startTime = performance.now();
+      const startMemory = (performance as any).memory?.usedJSHeapSize;
 
       try {
         // Execute the code
         const func = new Function(code);
         func();
 
-        setOutput(logs.length > 0 ? logs : ["Code executed successfully with no output"]);
+        const endTime = performance.now();
+        const endMemory = (performance as any).memory?.usedJSHeapSize;
+        const executionTime = (endTime - startTime).toFixed(2);
+        const memoryUsed = startMemory && endMemory 
+          ? ((endMemory - startMemory) / 1024).toFixed(2) 
+          : null;
+
+        const metrics = [
+          `⏱️ Execution time: ${executionTime}ms`,
+          memoryUsed ? `💾 Memory used: ${memoryUsed}KB` : null,
+          "---"
+        ].filter(Boolean) as string[];
+
+        setOutput(logs.length > 0 ? [...metrics, ...logs] : [...metrics, "Code executed successfully with no output"]);
         toast.success("Code executed!");
       } catch (err: any) {
-        setError(err.message);
+        // Try to extract line number from error stack
+        const stack = err.stack || "";
+        const lineMatch = stack.match(/<anonymous>:(\d+):(\d+)/);
+        const lineInfo = lineMatch ? ` at line ${lineMatch[1]}, column ${lineMatch[2]}` : "";
+        
+        setError(`${err.message}${lineInfo}`);
         setOutput([]);
         toast.error("Execution failed");
       } finally {

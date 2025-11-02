@@ -93,11 +93,6 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
 
         // Add images
         for (const imgData of images) {
-          if (yPosition > 200) {
-            doc.addPage();
-            yPosition = 20;
-          }
-
           const img = new Image();
           const loadPromise = new Promise((resolve, reject) => {
             img.onload = () => resolve(img);
@@ -107,10 +102,27 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
           
           await loadPromise;
 
-          const imgWidth = 170;
-          const imgHeight = (img.height * imgWidth) / img.width;
-          const format = helpers.detectFormat(imgData);
+          // Calculate proportional dimensions that fit the page
+          const maxWidth = 170; // Max width for A4 with margins
+          const maxHeight = 240; // Max height to avoid overflow
+          const imgAspectRatio = img.width / img.height;
+          
+          let imgWidth = maxWidth;
+          let imgHeight = imgWidth / imgAspectRatio;
+          
+          // If height exceeds max, scale down based on height instead
+          if (imgHeight > maxHeight) {
+            imgHeight = maxHeight;
+            imgWidth = imgHeight * imgAspectRatio;
+          }
 
+          // Check if we need a new page
+          if (yPosition + imgHeight > 280) {
+            doc.addPage();
+            yPosition = 20;
+          }
+
+          const format = helpers.detectFormat(imgData);
           doc.addImage(imgData, format, 20, yPosition, imgWidth, imgHeight);
           yPosition += imgHeight + 10;
         }
