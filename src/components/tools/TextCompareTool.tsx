@@ -73,37 +73,45 @@ export const TextCompareTool = () => {
       )}
 
       {/* Diff Result */}
-      {state.diffResult.length > 0 && (
-        <div className="space-y-3">
-          <Label>Comparison Result</Label>
-          <div className="code-editor p-4 min-h-[300px] max-h-[500px] overflow-auto">
-            {state.diffResult.map((part, index) => {
-              const bgColor = part.added
-                ? "bg-green-500/20"
-                : part.removed
-                ? "bg-red-500/20"
-                : "bg-transparent";
-              const textColor = part.added
-                ? "text-green-400"
-                : part.removed
-                ? "text-red-400"
-                : "text-foreground";
-              const prefix = part.added ? "+ " : part.removed ? "- " : "  ";
+      {state.diffResult.length > 0 && (() => {
+        const helpers = state.helpers || {};
+        return (
+          <div className="space-y-3">
+            <Label>Comparison Result (Git-style Diff)</Label>
+            <div className="code-editor p-4 min-h-[300px] max-h-[600px] overflow-auto">
+              <div className="font-mono text-xs">
+                {helpers.generateLineDiff && helpers.generateLineDiff(state.diffResult).map((line: any, index: number) => {
+                  const bgColor = line.type === 'add'
+                    ? "bg-green-500/20"
+                    : line.type === 'remove'
+                    ? "bg-red-500/20"
+                    : "bg-transparent";
+                  const textColor = line.type === 'add'
+                    ? "text-green-400"
+                    : line.type === 'remove'
+                    ? "text-red-400"
+                    : "text-foreground";
+                  const prefix = line.type === 'add' ? "+ " : line.type === 'remove' ? "- " : "  ";
 
-              return (
-                <div key={index} className={`${bgColor} ${textColor} whitespace-pre-wrap font-mono text-sm`}>
-                  {part.value.split("\n").map((line, i) => (
-                    <div key={i}>
-                      {prefix}
-                      {line}
+                  return (
+                    <div key={index} className={`${bgColor} ${textColor} flex hover:bg-opacity-30 transition-colors`}>
+                      <span className="text-muted-foreground select-none w-16 flex-shrink-0 text-right pr-2 border-r border-border">
+                        {line.oldLineNum || ''}
+                      </span>
+                      <span className="text-muted-foreground select-none w-16 flex-shrink-0 text-right pr-4 border-r border-border">
+                        {line.lineNum || ''}
+                      </span>
+                      <span className="pl-4 flex-1 whitespace-pre">
+                        <span className="select-none">{prefix}</span>{line.content}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

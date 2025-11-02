@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Upload, Download, Trash2, Image as ImageIcon } from "lucide-react";
+import { Upload, Download, Trash2, Image as ImageIcon, Scissors, Droplet } from "lucide-react";
 import { ImageStateHandler } from "@/modules/state/ImageStateHandler";
 
 export const ImageTool = () => {
@@ -15,6 +15,71 @@ export const ImageTool = () => {
     helpers,
     actions
   } = ImageStateHandler();
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!state.cropMode) return;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDragging || !state.cropMode) return;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    setters.setCropArea({
+      x: Math.min(dragStart.x, currentX),
+      y: Math.min(dragStart.y, currentY),
+      width: Math.abs(currentX - dragStart.x),
+      height: Math.abs(currentY - dragStart.y)
+    });
+
+    // Draw crop preview
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (canvas && ctx) {
+      const img = new Image();
+      img.src = state.preview;
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        // Draw crop rectangle
+        ctx.strokeStyle = '#8b5cf6';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          state.cropArea.x,
+          state.cropArea.y,
+          state.cropArea.width,
+          state.cropArea.height
+        );
+        
+        // Dim outside area
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, state.cropArea.y);
+        ctx.fillRect(0, state.cropArea.y, state.cropArea.x, state.cropArea.height);
+        ctx.fillRect(state.cropArea.x + state.cropArea.width, state.cropArea.y, canvas.width - state.cropArea.x - state.cropArea.width, state.cropArea.height);
+        ctx.fillRect(0, state.cropArea.y + state.cropArea.height, canvas.width, canvas.height - state.cropArea.y - state.cropArea.height);
+      };
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -46,6 +111,28 @@ export const ImageTool = () => {
 
       {state.preview && (
         <>
+          {/* Tools */}
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={() => setters.setCropMode(!state.cropMode)} 
+              variant={state.cropMode ? "default" : "outline"}
+            >
+              <Scissors className="w-4 h-4 mr-2" />
+              {state.cropMode ? "Cancel Crop" : "Crop Image"}
+            </Button>
+            
+            {state.cropMode && state.cropArea.width > 0 && (
+              <Button onClick={actions.handleCrop} disabled={state.processing} className="btn-gradient">
+                Apply Crop
+              </Button>
+            )}
+
+            <Button onClick={actions.handleRemoveWatermark} disabled={state.processing} variant="outline">
+              <Droplet className="w-4 h-4 mr-2" />
+              Remove Watermark
+            </Button>
+          </div>
+
           {/* Controls */}
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -56,6 +143,7 @@ export const ImageTool = () => {
                   value={state.width}
                   onChange={(e) => setters.setWidth(parseInt(e.target.value) || 0)}
                   className="mt-2"
+                  disabled={state.cropMode}
                 />
               </div>
 
@@ -65,7 +153,7 @@ export const ImageTool = () => {
                   type="number"
                   value={state.height}
                   onChange={(e) => setters.setHeight(parseInt(e.target.value) || 0)}
-                  disabled={state.keepAspectRatio}
+                  disabled={state.keepAspectRatio || state.cropMode}
                   className="mt-2"
                 />
               </div>
@@ -75,6 +163,7 @@ export const ImageTool = () => {
                   id="aspect-ratio"
                   checked={state.keepAspectRatio}
                   onCheckedChange={(checked) => setters.setKeepAspectRatio(checked as boolean)}
+                  disabled={state.cropMode}
                 />
                 <Label htmlFor="aspect-ratio" className="cursor-pointer">
                   Keep aspect ratio
@@ -92,6 +181,7 @@ export const ImageTool = () => {
                   max={100}
                   step={1}
                   className="mt-2"
+                  disabled={state.cropMode}
                 />
               </div>
 
@@ -100,24 +190,27 @@ export const ImageTool = () => {
                   id="convert-jpeg"
                   checked={state.convertToJPEG}
                   onCheckedChange={(checked) => setters.setConvertToJPEG(checked as boolean)}
+                  disabled={state.cropMode}
                 />
                 <Label htmlFor="convert-jpeg" className="cursor-pointer">
                   Convert to JPEG
                 </Label>
               </div>
 
-              <div className="pt-4">
-                <Button onClick={actions.handleConvert} disabled={state.processing} className="btn-gradient w-full">
-                  {state.processing ? (
-                    "Processing..."
-                  ) : (
-                    <>
-                      <ImageIcon className="w-4 h-4 mr-2" />
-                      Convert Image
-                    </>
-                  )}
-                </Button>
-              </div>
+              {!state.cropMode && (
+                <div className="pt-4">
+                  <Button onClick={actions.handleConvert} disabled={state.processing} className="btn-gradient w-full">
+                    {state.processing ? (
+                      "Processing..."
+                    ) : (
+                      <>
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Convert Image
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -125,12 +218,28 @@ export const ImageTool = () => {
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <Label>Original ({state.originalDimensions.width}×{state.originalDimensions.height})</Label>
-              <div className="bg-input rounded-lg p-4 flex items-center justify-center min-h-[300px]">
-                <img src={state.preview} alt="Original" className="max-w-full max-h-[400px] object-contain" />
+              <div className="bg-input rounded-lg p-4 flex items-center justify-center min-h-[300px] relative overflow-hidden">
+                {state.cropMode ? (
+                  <canvas
+                    ref={canvasRef}
+                    className="max-w-full max-h-[400px] cursor-crosshair"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                  />
+                ) : (
+                  <img src={state.preview} alt="Original" className="max-w-full max-h-[400px] object-contain" />
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 Size: {helpers.formatFileSize(state.originalSize)}
               </p>
+              {state.cropMode && (
+                <p className="text-sm text-primary">
+                  Drag to select crop area
+                </p>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -139,14 +248,16 @@ export const ImageTool = () => {
                 {state.convertedImage ? (
                   <img src={state.convertedImage} alt="Converted" className="max-w-full max-h-[400px] object-contain" />
                 ) : (
-                  <p className="text-muted-foreground">Click "Convert Image" to see result</p>
+                  <p className="text-muted-foreground">Process image to see result</p>
                 )}
               </div>
               {state.convertedImage && (
                 <>
                   <p className="text-sm text-success">
-                    Size: {helpers.formatFileSize(state.convertedSize)} (
-                    {((1 - state.convertedSize / state.originalSize) * 100).toFixed(1)}% smaller)
+                    Size: {helpers.formatFileSize(state.convertedSize)} 
+                    {state.originalSize > state.convertedSize && 
+                      ` (${((1 - state.convertedSize / state.originalSize) * 100).toFixed(1)}% smaller)`
+                    }
                   </p>
                   <div className="flex gap-2">
                     <Button onClick={actions.handleDownload} className="flex-1">

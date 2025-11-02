@@ -16,12 +16,53 @@ export const TextCompareStateHandler = (): ToolHandler => {
       let unchanged = 0;
 
       diff.forEach((part) => {
-        if (part.added) additions += part.count || 0;
-        else if (part.removed) deletions += part.count || 0;
-        else unchanged += part.count || 0;
+        const lines = part.value.split('\n').filter((l: string) => l);
+        if (part.added) additions += lines.length;
+        else if (part.removed) deletions += lines.length;
+        else unchanged += lines.length;
       });
 
       return { additions, deletions, unchanged };
+    },
+
+    generateLineDiff: (diff: any[]) => {
+      const result: Array<{ lineNum: number | null, oldLineNum: number | null, content: string, type: 'add' | 'remove' | 'unchanged' }> = [];
+      let leftLineNum = 1;
+      let rightLineNum = 1;
+
+      diff.forEach((part) => {
+        const lines = part.value.split('\n');
+        
+        lines.forEach((line, index) => {
+          // Skip empty last line from split
+          if (index === lines.length - 1 && line === '') return;
+
+          if (part.added) {
+            result.push({
+              lineNum: rightLineNum++,
+              oldLineNum: null,
+              content: line,
+              type: 'add'
+            });
+          } else if (part.removed) {
+            result.push({
+              lineNum: null,
+              oldLineNum: leftLineNum++,
+              content: line,
+              type: 'remove'
+            });
+          } else {
+            result.push({
+              lineNum: rightLineNum++,
+              oldLineNum: leftLineNum++,
+              content: line,
+              type: 'unchanged'
+            });
+          }
+        });
+      });
+
+      return result;
     },
   };
 

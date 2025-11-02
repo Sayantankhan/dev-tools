@@ -15,6 +15,8 @@ export const ImageStateHandler = (): ToolHandler => {
     const [convertedSize, setConvertedSize] = useState<number>(0);
     const [processing, setProcessing] = useState(false);
     const [fileName, setFileName] = useState<string>("");
+    const [cropMode, setCropMode] = useState(false);
+    const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
 
@@ -140,6 +142,145 @@ export const ImageStateHandler = (): ToolHandler => {
             toast.success("Image downloaded!");
         },
 
+        handleCrop: async () => {
+            if (!preview || !cropArea.width || !cropArea.height) {
+                toast.error("Please select a crop area");
+                return;
+            }
+
+            setProcessing(true);
+
+            try {
+                const img = new Image();
+                img.src = preview;
+
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                });
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                if (!ctx) throw new Error("Could not get canvas context");
+
+                canvas.width = cropArea.width;
+                canvas.height = cropArea.height;
+
+                ctx.drawImage(
+                    img,
+                    cropArea.x,
+                    cropArea.y,
+                    cropArea.width,
+                    cropArea.height,
+                    0,
+                    0,
+                    cropArea.width,
+                    cropArea.height
+                );
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            const url = URL.createObjectURL(blob);
+                            setConvertedImage(url);
+                            setConvertedSize(blob.size);
+                            setProcessing(false);
+                            setCropMode(false);
+                            toast.success("Image cropped!");
+                        }
+                    },
+                    "image/png",
+                    1.0
+                );
+            } catch (error: any) {
+                setProcessing(false);
+                toast.error("Crop failed", {
+                    description: error.message,
+                });
+            }
+        },
+
+        handleRemoveWatermark: async () => {
+            if (!preview) return;
+
+            setProcessing(true);
+
+            try {
+                const img = new Image();
+                img.src = preview;
+
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                });
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                if (!ctx) throw new Error("Could not get canvas context");
+
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                ctx.drawImage(img, 0, 0);
+
+                // Simple watermark removal - blur bottom region (common watermark area)
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                // Apply a simple blur to bottom 15% of image
+                const watermarkRegionStart = Math.floor(canvas.height * 0.85);
+                
+                for (let y = watermarkRegionStart; y < canvas.height; y++) {
+                    for (let x = 0; x < canvas.width; x++) {
+                        const idx = (y * canvas.width + x) * 4;
+                        
+                        // Average with surrounding pixels for blur effect
+                        let r = 0, g = 0, b = 0, count = 0;
+                        for (let dy = -2; dy <= 2; dy++) {
+                            for (let dx = -2; dx <= 2; dx++) {
+                                const ny = y + dy;
+                                const nx = x + dx;
+                                if (ny >= 0 && ny < canvas.height && nx >= 0 && nx < canvas.width) {
+                                    const nIdx = (ny * canvas.width + nx) * 4;
+                                    r += data[nIdx];
+                                    g += data[nIdx + 1];
+                                    b += data[nIdx + 2];
+                                    count++;
+                                }
+                            }
+                        }
+                        
+                        data[idx] = r / count;
+                        data[idx + 1] = g / count;
+                        data[idx + 2] = b / count;
+                    }
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            const url = URL.createObjectURL(blob);
+                            setConvertedImage(url);
+                            setConvertedSize(blob.size);
+                            setProcessing(false);
+                            toast.success("Watermark removal attempted!", {
+                                description: "Bottom region blurred"
+                            });
+                        }
+                    },
+                    "image/png",
+                    1.0
+                );
+            } catch (error: any) {
+                setProcessing(false);
+                toast.error("Watermark removal failed", {
+                    description: error.message,
+                });
+            }
+        },
+
         handleClear: () => {
             setFile(null);
             setPreview("");
@@ -150,6 +291,8 @@ export const ImageStateHandler = (): ToolHandler => {
             setHeight(0);
             setQuality(85);
             setFileName("");
+            setCropMode(false);
+            setCropArea({ x: 0, y: 0, width: 0, height: 0 });
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
@@ -170,6 +313,8 @@ export const ImageStateHandler = (): ToolHandler => {
             convertedSize,
             processing,
             fileName,
+            cropMode,
+            cropArea,
             fileInputRef,
             originalDimensions
         },
@@ -179,7 +324,9 @@ export const ImageStateHandler = (): ToolHandler => {
             setKeepAspectRatio,
             setQuality,
             setConvertToJPEG,
-            setFileName
+            setFileName,
+            setCropMode,
+            setCropArea
         },
         helpers,
         actions
