@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Key, Copy, AlertTriangle, Clock, Wand2, Eye, EyeOff } from "lucide-react";
+import { Key, Copy, AlertTriangle, Clock, Wand2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { JWTStateHanler } from "@/modules/state/JWTStateHandler";
 
 interface DecodedJWT {
@@ -141,9 +141,9 @@ export const JWTTool = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Generate New JWT */}
+          {/* Secret Section */}
           <div className="space-y-3 pt-4 border-t border-border">
-            <Label>Generate New JWT</Label>
+            <Label>Secret</Label>
             <div className="space-y-3">
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -163,11 +163,30 @@ export const JWTTool = () => {
                     {state.showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
                 </div>
+                <Button onClick={actions.handleValidate} variant="outline">
+                  <Key className="w-4 h-4 mr-2" />
+                  Verify
+                </Button>
                 <Button onClick={actions.generateJWT} variant="default">
                   <Wand2 className="w-4 h-4 mr-2" />
                   Generate
                 </Button>
               </div>
+              
+              {state.isValidSecret === true && (
+                <div className="p-3 bg-green-500/10 border border-green-500/50 rounded-lg text-sm flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <p className="text-green-500">Valid secret - Signature verified!</p>
+                </div>
+              )}
+              
+              {state.isValidSecret === false && (
+                <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-sm flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-destructive" />
+                  <p className="text-destructive">Invalid secret - Signature mismatch</p>
+                </div>
+              )}
+              
               <div className="p-3 bg-destructive/10 border border-destructive/50 rounded-lg text-sm flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-destructive" />
                 <p className="text-destructive">
@@ -175,7 +194,7 @@ export const JWTTool = () => {
                 </p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Edit the header and payload above, then click Generate to create a new JWT token. Leave secret empty for unsigned tokens.
+                Edit the header and payload above, then click Generate to create a new JWT token. Click Verify to check if secret is valid.
               </p>
             </div>
           </div>

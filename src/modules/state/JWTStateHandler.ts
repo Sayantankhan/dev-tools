@@ -18,6 +18,7 @@ export const JWTStateHanler = (): ToolHandler => {
     const [editedHeader, setEditedHeader] = useState("");
     const [editedPayload, setEditedPayload] = useState("");
     const [showSecret, setShowSecret] = useState(false);
+    const [isValidSecret, setIsValidSecret] = useState<boolean | null>(null);
 
     useEffect(() => {
         const handlePaste = (e: ClipboardEvent) => {
@@ -130,15 +131,51 @@ export const JWTStateHanler = (): ToolHandler => {
             toast.success(`${label} copied!`);
         },
 
-        handleValidate: () => {
+        handleValidate: async () => {
             if (!secret) {
                 toast.error("Please enter a secret key");
                 return;
             }
 
-            toast.warning("Signature validation", {
-                description: "Client-side validation is limited. Use server-side validation for production.",
-            });
+            if (!decoded) {
+                toast.error("No JWT token to validate");
+                return;
+            }
+
+            try {
+                const parts = token.split(".");
+                if (parts.length !== 3) {
+                    toast.error("Invalid JWT format");
+                    return;
+                }
+
+                const encoder = new TextEncoder();
+                const data = encoder.encode(`${parts[0]}.${parts[1]}`);
+                const keyData = encoder.encode(secret);
+
+                const cryptoKey = await crypto.subtle.importKey(
+                    "raw",
+                    keyData,
+                    { name: "HMAC", hash: "SHA-256" },
+                    false,
+                    ["sign"]
+                );
+
+                const signatureArrayBuffer = await crypto.subtle.sign("HMAC", cryptoKey, data);
+                const signatureArray = Array.from(new Uint8Array(signatureArrayBuffer));
+                const computedSignature = helpers.base64UrlEncode(String.fromCharCode(...signatureArray));
+
+                if (computedSignature === parts[2]) {
+                    setIsValidSecret(true);
+                    toast.success("Valid secret - Signature verified!");
+                } else {
+                    setIsValidSecret(false);
+                    toast.error("Invalid secret - Signature mismatch");
+                }
+            } catch (err: any) {
+                setIsValidSecret(false);
+                toast.error("Validation failed: " + err.message);
+            }
         },
 
 
@@ -189,6 +226,7 @@ export const JWTStateHanler = (): ToolHandler => {
 
         setToken: (value: string) => {
             setToken(value);
+            setIsValidSecret(null);
         },
     }
 
@@ -201,11 +239,15 @@ export const JWTStateHanler = (): ToolHandler => {
             expiryInfo,
             editedHeader,
             editedPayload,
-            showSecret
+            showSecret,
+            isValidSecret
         },
         setters: {
             setToken,
-            setSecret,
+            setSecret: (value: string) => {
+                setSecret(value);
+                setIsValidSecret(null);
+            },
             setEditedHeader,
             setEditedPayload,
             setShowSecret
