@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,17 +39,19 @@ export const ImageTool = () => {
     const currentX = e.clientX - rect.left;
     const currentY = e.clientY - rect.top;
     
-    setters.setCropArea({
+    const newCropArea = {
       x: Math.min(dragStart.x, currentX),
       y: Math.min(dragStart.y, currentY),
       width: Math.abs(currentX - dragStart.x),
       height: Math.abs(currentY - dragStart.y)
-    });
+    };
+    
+    setters.setCropArea(newCropArea);
 
     // Draw crop preview
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (canvas && ctx) {
+    if (canvas && ctx && state.preview) {
       const img = new Image();
       img.src = state.preview;
       img.onload = () => {
@@ -61,18 +63,18 @@ export const ImageTool = () => {
         ctx.strokeStyle = '#8b5cf6';
         ctx.lineWidth = 2;
         ctx.strokeRect(
-          state.cropArea.x,
-          state.cropArea.y,
-          state.cropArea.width,
-          state.cropArea.height
+          newCropArea.x,
+          newCropArea.y,
+          newCropArea.width,
+          newCropArea.height
         );
         
         // Dim outside area
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(0, 0, canvas.width, state.cropArea.y);
-        ctx.fillRect(0, state.cropArea.y, state.cropArea.x, state.cropArea.height);
-        ctx.fillRect(state.cropArea.x + state.cropArea.width, state.cropArea.y, canvas.width - state.cropArea.x - state.cropArea.width, state.cropArea.height);
-        ctx.fillRect(0, state.cropArea.y + state.cropArea.height, canvas.width, canvas.height - state.cropArea.y - state.cropArea.height);
+        ctx.fillRect(0, 0, canvas.width, newCropArea.y);
+        ctx.fillRect(0, newCropArea.y, newCropArea.x, newCropArea.height);
+        ctx.fillRect(newCropArea.x + newCropArea.width, newCropArea.y, canvas.width - newCropArea.x - newCropArea.width, newCropArea.height);
+        ctx.fillRect(0, newCropArea.y + newCropArea.height, canvas.width, canvas.height - newCropArea.y - newCropArea.height);
       };
     }
   };
@@ -80,6 +82,23 @@ export const ImageTool = () => {
   const handleMouseUp = () => {
     setIsDragging(false);
   };
+
+  // Initialize canvas when entering crop mode
+  useEffect(() => {
+    if (state.cropMode && state.preview && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const img = new Image();
+        img.src = state.preview;
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+      }
+    }
+  }, [state.cropMode, state.preview]);
 
   return (
     <div className="space-y-6">
@@ -219,7 +238,7 @@ export const ImageTool = () => {
             <div className="space-y-3">
               <Label>Original ({state.originalDimensions.width}×{state.originalDimensions.height})</Label>
               <div className="bg-input rounded-lg p-4 flex items-center justify-center min-h-[300px] relative overflow-hidden">
-                {state.cropMode ? (
+                {state.cropMode && state.preview ? (
                   <canvas
                     ref={canvasRef}
                     className="max-w-full max-h-[400px] cursor-crosshair"
@@ -228,9 +247,9 @@ export const ImageTool = () => {
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                   />
-                ) : (
+                ) : state.preview ? (
                   <img src={state.preview} alt="Original" className="max-w-full max-h-[400px] object-contain" />
-                )}
+                ) : null}
               </div>
               <p className="text-sm text-muted-foreground">
                 Size: {helpers.formatFileSize(state.originalSize)}

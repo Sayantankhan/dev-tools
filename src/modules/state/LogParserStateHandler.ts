@@ -51,10 +51,10 @@ export const LogParserStateHandler = (): ToolHandler => {
         filtered = filtered.filter((line) => {
           // Try to extract date from line (common formats)
           const dateMatch = line.match(/\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}|\d{2}-\d{2}-\d{4}/);
-          if (!dateMatch) return true; // Keep if no date found
+          if (!dateMatch) return false; // Exclude if no date found
           
           const lineDate = new Date(dateMatch[0]);
-          if (isNaN(lineDate.getTime())) return true; // Keep if date parsing fails
+          if (isNaN(lineDate.getTime())) return false; // Exclude if date parsing fails
           
           if (from && new Date(from) > lineDate) return false;
           if (to && new Date(to) < lineDate) return false;
