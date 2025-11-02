@@ -19,6 +19,49 @@ export const LogParserStateHandler = (): ToolHandler => {
       return content.split("\n").filter((line) => line.trim());
     },
 
+    extractTimestamp: (line: string): Date | null => {
+      // Common timestamp patterns in logs
+      const patterns = [
+        // ISO 8601: 2024-01-15T10:30:45.123Z or 2024-01-15 10:30:45
+        /(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})?)/,
+        // With timezone: 2024-01-15 10:30:45+00:00
+        /(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2})/,
+        // DD/MM/YYYY HH:MM:SS or MM/DD/YYYY HH:MM:SS
+        /(\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2})/,
+        // Unix timestamp in milliseconds (13 digits)
+        /\b(\d{13})\b/,
+        // Unix timestamp in seconds (10 digits)
+        /\b(\d{10})\b/,
+        // Date only fallback: 2024-01-15
+        /(\d{4}-\d{2}-\d{2})/,
+        // Date only: DD/MM/YYYY or MM/DD/YYYY
+        /(\d{2}\/\d{2}\/\d{4})/,
+      ];
+
+      for (const pattern of patterns) {
+        const match = line.match(pattern);
+        if (match) {
+          const timestamp = match[1];
+          
+          // Handle unix timestamps
+          if (/^\d{10}$/.test(timestamp)) {
+            return new Date(parseInt(timestamp) * 1000);
+          }
+          if (/^\d{13}$/.test(timestamp)) {
+            return new Date(parseInt(timestamp));
+          }
+          
+          // Try to parse as regular date
+          const date = new Date(timestamp);
+          if (!isNaN(date.getTime())) {
+            return date;
+          }
+        }
+      }
+      
+      return null;
+    },
+
     filterLogs: (lines: string[], query: string, level: string, regex: boolean, caseSens: boolean, from: string, to: string): string[] => {
       let filtered = lines;
 
@@ -46,18 +89,17 @@ export const LogParserStateHandler = (): ToolHandler => {
         filtered = filtered.filter((line) => levelPattern.test(line));
       }
 
-      // Filter by date range
+      // Filter by date/time range
       if (from || to) {
+        const fromDate = from ? new Date(from) : null;
+        const toDate = to ? new Date(to) : null;
+
         filtered = filtered.filter((line) => {
-          // Try to extract date from line (common formats)
-          const dateMatch = line.match(/\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}|\d{2}-\d{2}-\d{4}/);
-          if (!dateMatch) return false; // Exclude if no date found
+          const lineTimestamp = helpers.extractTimestamp(line);
+          if (!lineTimestamp) return false; // Exclude if no timestamp found
           
-          const lineDate = new Date(dateMatch[0]);
-          if (isNaN(lineDate.getTime())) return false; // Exclude if date parsing fails
-          
-          if (from && new Date(from) > lineDate) return false;
-          if (to && new Date(to) < lineDate) return false;
+          if (fromDate && lineTimestamp < fromDate) return false;
+          if (toDate && lineTimestamp > toDate) return false;
           
           return true;
         });
