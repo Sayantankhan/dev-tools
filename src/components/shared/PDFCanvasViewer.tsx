@@ -1,11 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
-// Vite: load pdf.js worker as a web worker
-// @ts-ignore - worker import provided by Vite
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker?worker";
+import * as pdfjsLib from "pdfjs-dist";
 
-GlobalWorkerOptions.workerPort = new pdfjsWorker();
+// Set worker source for pdfjs-dist v5
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.394/pdf.worker.min.mjs`;
 
 interface PDFCanvasViewerProps {
   url: string;
@@ -22,7 +20,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url }) => {
       try {
         const res = await fetch(url);
         const data = await res.arrayBuffer();
-        loadingTask = getDocument({ data });
+        loadingTask = pdfjsLib.getDocument({ data });
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(1);
         const viewport = page.getViewport({ scale: 1.5 });
