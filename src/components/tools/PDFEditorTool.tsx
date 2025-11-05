@@ -2,11 +2,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
-import { Upload, FileText, Trash2, Download } from "lucide-react";
+import { Upload, FileText, Trash2, Download, Save } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
+import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
+import { useState } from "react";
 
 export const PDFEditorTool = () => {
   const { state, actions } = PDFEditorStateHandler();
+  const [editorCanvas, setEditorCanvas] = useState<any>(null);
+
+  const handleSaveEdited = () => {
+    if (!editorCanvas) return;
+    actions.handleDownloadEdited(editorCanvas);
+  };
 
   return (
     <div className="space-y-6">
@@ -42,37 +50,50 @@ export const PDFEditorTool = () => {
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {state.pdfUrl && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>PDF Preview (first page)</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(state.pdfUrl, "_blank", "noopener,noreferrer")}
-                  >
-                    Open in new tab
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={actions.handleDownload}
-                    className="flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </Button>
-                </div>
+      {state.pdfUrl && state.pdfDimensions && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Edit PDF (first page)</span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(state.pdfUrl, "_blank", "noopener,noreferrer")}
+                >
+                  Open Original
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveEdited}
+                  className="flex items-center gap-2"
+                  disabled={!editorCanvas}
+                >
+                  <Save className="w-4 h-4" />
+                  Save & Download
+                </Button>
               </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
               <div className="border rounded-lg overflow-hidden bg-muted">
                 <PDFCanvasViewer url={state.pdfUrl} />
               </div>
+              <div className="absolute inset-0 top-0 left-0 right-0">
+                <PDFEditorCanvas
+                  width={state.pdfDimensions.width * 1.5}
+                  height={state.pdfDimensions.height * 1.5}
+                  onExport={setEditorCanvas}
+                />
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {state.pdfFile && (
         <div className="flex gap-2">
@@ -82,7 +103,7 @@ export const PDFEditorTool = () => {
             className="flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
-            Clear
+            Clear All
           </Button>
         </div>
       )}
