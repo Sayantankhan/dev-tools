@@ -113,7 +113,7 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-2 left-2 z-20 flex flex-wrap gap-2 items-center bg-card/90 backdrop-blur p-2 rounded-md border">
+      <div className="hidden">
         <Button
           variant={activeTool === "select" ? "default" : "outline"}
           size="sm"
@@ -148,7 +148,7 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
         </Button>
       </div>
 
-      {activeTool === "text" && (
+      {false && (
         <div className="absolute top-14 left-2 z-20 flex gap-2 items-end bg-card/90 backdrop-blur p-3 rounded-md border">
           <div className="flex-1">
             <Label>Enter text</Label>
@@ -163,7 +163,7 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
         </div>
       )}
 
-      {activeTool === "signature" && (
+      {false && (
         <div className="absolute top-14 left-2 z-20 bg-muted/90 backdrop-blur p-3 rounded-md text-sm text-muted-foreground">
           <div className="flex flex-col md:flex-row md:items-center gap-2">
             <span>Upload your signature image (PNG/JPG), then drag to position and resize.</span>

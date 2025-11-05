@@ -1,17 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
-import { Upload, FileText, Trash2, Download, Save } from "lucide-react";
+import { Upload, FileText, Trash2, Download, Save, Type, PenTool } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
 import { useEffect, useRef, useState } from "react";
+import { IText, Image as FabricImage } from "fabric";
 
 export const PDFEditorTool = () => {
   const { state, actions } = PDFEditorStateHandler();
   const [editorCanvas, setEditorCanvas] = useState<any>(null);
   const viewerWrapperRef = useRef<HTMLDivElement>(null);
-  const [viewSize, setViewSize] = useState({ width: 0, height: 0 });
+const [viewSize, setViewSize] = useState({ width: 0, height: 0 });
+  const [textValue, setTextValue] = useState("");
+  const [showTextInput, setShowTextInput] = useState(false);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!viewerWrapperRef.current) return;
@@ -27,6 +32,60 @@ export const PDFEditorTool = () => {
     if (!editorCanvas) return;
     actions.handleDownloadEdited(editorCanvas);
   };
+
+  const handleAddText = () => {
+    if (!editorCanvas || !textValue.trim()) return;
+    const text = new IText(textValue, {
+      left: viewSize.width / 2 - 50,
+      top: viewSize.height / 2,
+      fontSize: 20,
+      fill: "#000000",
+      fontFamily: "Arial",
+    });
+    editorCanvas.add(text);
+    editorCanvas.setActiveObject(text);
+    editorCanvas.renderAll();
+    setTextValue("");
+  };
+
+  const handleSignatureUploadClick = () => {
+    signatureInputRef.current?.click();
+  };
+
+  const handleSignatureFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!editorCanvas || !file) return;
+    const url = URL.createObjectURL(file);
+    const imgEl = new Image();
+    imgEl.crossOrigin = "anonymous";
+    imgEl.onload = () => {
+      try {
+        const img = new FabricImage(imgEl, {
+          left: viewSize.width / 2 - (imgEl.naturalWidth * 0.5) / 2,
+          top: viewSize.height / 2 - (imgEl.naturalHeight * 0.5) / 2,
+          scaleX: 0.5,
+          scaleY: 0.5,
+        });
+        editorCanvas.add(img);
+        editorCanvas.setActiveObject(img);
+        editorCanvas.renderAll();
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    imgEl.onerror = () => {
+      URL.revokeObjectURL(url);
+    };
+    imgEl.src = url;
+  };
+
+  const handleClearCanvas = () => {
+    if (!editorCanvas) return;
+    editorCanvas.clear();
+    editorCanvas.backgroundColor = "transparent";
+    editorCanvas.renderAll();
+  };
+
 
   return (
     <div className="space-y-6">
@@ -70,7 +129,42 @@ export const PDFEditorTool = () => {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Edit PDF (first page)</span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTextInput((v) => !v)}
+                >
+                  <Type className="w-4 h-4" />
+                  Text
+                </Button>
+                {showTextInput && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={textValue}
+                      onChange={(e) => setTextValue(e.target.value)}
+                      placeholder="Type text..."
+                      className="h-9 w-40"
+                      onKeyDown={(e) => e.key === "Enter" && handleAddText()}
+                    />
+                    <Button size="sm" onClick={handleAddText}>Add</Button>
+                  </div>
+                )}
+                <input
+                  ref={signatureInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={handleSignatureFileChange}
+                  className="hidden"
+                />
+                <Button variant="outline" size="sm" onClick={handleSignatureUploadClick}>
+                  <PenTool className="w-4 h-4" />
+                  Signature
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleClearCanvas}>
+                  <Trash2 className="w-4 h-4" />
+                  Clear
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
