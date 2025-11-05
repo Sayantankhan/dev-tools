@@ -27,6 +27,16 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       }
     },
 
+    handleDownload: () => {
+      if (!pdfFile) return;
+      
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = pdfFile.name;
+      link.click();
+      toast.success("Downloaded!");
+    },
+
     handleClear: () => {
       setPdfFile(null);
       setPdfUrl("");

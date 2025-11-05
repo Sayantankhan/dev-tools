@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
-import { Upload, FileText, Trash2 } from "lucide-react";
+import { Upload, FileText, Trash2, Download } from "lucide-react";
 
 export const PDFEditorTool = () => {
   const { state, actions } = PDFEditorStateHandler();
@@ -44,14 +44,36 @@ export const PDFEditorTool = () => {
 
           {state.pdfUrl && (
             <div className="space-y-3">
-              <Label>PDF Preview</Label>
-              <div className="border rounded-lg overflow-hidden bg-background">
-                <embed
-                  src={state.pdfUrl}
+              <div className="flex items-center justify-between">
+                <Label>PDF Preview</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={actions.handleDownload}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              <div className="border rounded-lg overflow-hidden bg-muted">
+                <object
+                  data={state.pdfUrl}
                   type="application/pdf"
                   className="w-full h-[600px]"
-                  title="PDF Preview"
-                />
+                  aria-label="PDF Preview"
+                >
+                  <div className="flex flex-col items-center justify-center h-[600px] gap-4 p-6 text-center">
+                    <FileText className="w-16 h-16 text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      PDF preview not available in this browser.
+                    </p>
+                    <Button onClick={actions.handleDownload}>
+                      <Download className="w-4 h-4 mr-2" />
+                      Download PDF
+                    </Button>
+                  </div>
+                </object>
               </div>
             </div>
           )}
