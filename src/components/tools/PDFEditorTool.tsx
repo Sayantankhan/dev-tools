@@ -93,17 +93,15 @@ export const PDFEditorTool = () => {
           <CardContent>
             <div ref={viewerWrapperRef} className="relative border rounded-lg overflow-hidden bg-muted">
               <PDFCanvasViewer url={state.pdfUrl} />
-              <div className="absolute inset-0 pointer-events-none">
-                {viewSize.width > 0 && viewSize.height > 0 && (
-                  <div className="h-full w-full pointer-events-auto">
-                    <PDFEditorCanvas
-                      width={viewSize.width}
-                      height={viewSize.height}
-                      onExport={setEditorCanvas}
-                    />
-                  </div>
-                )}
-              </div>
+              {viewSize.width > 0 && viewSize.height > 0 && (
+                <div className="absolute inset-0 z-10">
+                  <PDFEditorCanvas
+                    width={viewSize.width}
+                    height={viewSize.height}
+                    onExport={setEditorCanvas}
+                  />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
