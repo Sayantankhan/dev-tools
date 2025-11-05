@@ -181,7 +181,7 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
         </div>
       )}
 
-      <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+      <canvas ref={canvasRef} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
     </div>
   );
 };
