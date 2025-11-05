@@ -7,12 +7,13 @@ import { Base64Tool } from "@/components/tools/Base64Tool";
 import { URLTool } from "@/components/tools/URLTool";
 import { TabNavigation } from "@/components/TabNavigation";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, FileDown, Shuffle, ArrowRightLeft, MapPin, Terminal, Clock, BarChart3 } from "lucide-react";
+import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, FileDown, Shuffle, ArrowRightLeft, MapPin, Terminal, Clock, BarChart3, FileEdit } from "lucide-react";
 
 // Lazy load tools for better performance
 const TextCompareTool = lazy(() => import("@/components/tools/TextCompareTool").then(m => ({ default: m.TextCompareTool })));
 const LogParserTool = lazy(() => import("@/components/tools/LogParserTool").then(m => ({ default: m.LogParserTool })));
 const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool").then(m => ({ default: m.PDFGeneratorTool })));
+const PDFEditorTool = lazy(() => import("@/components/tools/PDFEditorTool").then(m => ({ default: m.PDFEditorTool })));
 const RandomGeneratorTool = lazy(() => import("@/components/tools/RandomGeneratorTool").then(m => ({ default: m.RandomGeneratorTool })));
 const DataConverterTool = lazy(() => import("@/components/tools/DataConverterTool").then(m => ({ default: m.DataConverterTool })));
 const IPLookupTool = lazy(() => import("@/components/tools/IPLookupTool").then(m => ({ default: m.IPLookupTool })));
@@ -20,7 +21,7 @@ const JSEditorTool = lazy(() => import("@/components/tools/JSEditorTool").then(m
 const ConverterTool = lazy(() => import("@/components/tools/ConverterTool").then(m => ({ default: m.ConverterTool })));
 const DataVizTool = lazy(() => import("@/components/tools/DataVizTool").then(m => ({ default: m.DataVizTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "pdf-generator" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "converter" | "data-viz";
+export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "pdf-generator" | "pdf-editor" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "converter" | "data-viz";
 
 export interface Tool {
   id: ToolId;
@@ -35,6 +36,7 @@ const tools: Tool[] = [
   { id: "log-parser", label: "Log Parser", icon: ScrollText, component: LogParserTool },
   { id: "image", label: "Image", icon: Image, component: ImageTool },
   { id: "pdf-generator", label: "PDF Gen", icon: FileDown, component: PDFGeneratorTool },
+  { id: "pdf-editor", label: "Sign PDF", icon: FileEdit, component: PDFEditorTool },
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
   { id: "base64", label: "Base64", icon: FileCode, component: Base64Tool },
