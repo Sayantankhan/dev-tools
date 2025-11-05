@@ -94,7 +94,7 @@ export const PDFEditorTool = () => {
             <div ref={viewerWrapperRef} className="relative border rounded-lg overflow-hidden bg-muted">
               <PDFCanvasViewer url={state.pdfUrl} />
               {viewSize.width > 0 && viewSize.height > 0 && (
-                <div className="absolute inset-0 z-10">
+                <div className="absolute inset-0 z-20">
                   <PDFEditorCanvas
                     width={viewSize.width}
                     height={viewSize.height}
