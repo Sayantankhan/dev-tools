@@ -41,7 +41,7 @@ export const BackgroundRemoverTool = () => {
     toast.info("Loading AI model... This may take a moment");
     
     try {
-      const segmenter = await pipeline('image-segmentation', 'Xenova/modnet', {
+      const segmenter = await pipeline('image-segmentation', 'Xenova/isnet-general-use', {
         device: 'webgpu',
       });
       
