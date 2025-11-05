@@ -2,8 +2,13 @@ import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import * as pdfjsLib from "pdfjs-dist";
 
-// Set worker source for pdfjs-dist v5
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.394/pdf.worker.min.mjs`;
+// Use local worker from pdfjs-dist package
+if (typeof window !== 'undefined' && 'Worker' in window) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString();
+}
 
 interface PDFCanvasViewerProps {
   url: string;
