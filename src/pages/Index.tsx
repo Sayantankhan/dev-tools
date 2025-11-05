@@ -36,7 +36,7 @@ const tools: Tool[] = [
   { id: "log-parser", label: "Log Parser", icon: ScrollText, component: LogParserTool },
   { id: "image", label: "Image", icon: Image, component: ImageTool },
   { id: "pdf-generator", label: "PDF Gen", icon: FileDown, component: PDFGeneratorTool },
-  { id: "pdf-editor", label: "Sign PDF", icon: FileEdit, component: PDFEditorTool },
+  { id: "pdf-editor", label: "PDF Viewer", icon: FileEdit, component: PDFEditorTool },
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
   { id: "base64", label: "Base64", icon: FileCode, component: Base64Tool },
