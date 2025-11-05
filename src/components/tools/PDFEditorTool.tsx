@@ -142,8 +142,7 @@ export const PDFEditorTool = () => {
   const handleAddText = () => {
     if (!editorCanvas || !textValue.trim()) return;
     
-    const { IText } = require("fabric");
-    const text = new IText(textValue, {
+    const text = new (require("fabric").IText)(textValue, {
       left: viewSize.width / 2 - 50,
       top: viewSize.height / 2,
       fontSize: parseInt(fontSize),
@@ -177,7 +176,7 @@ export const PDFEditorTool = () => {
     imgEl.crossOrigin = "anonymous";
     imgEl.onload = () => {
       try {
-        const { Image: FabricImage } = require("fabric");
+        const FabricImage = require("fabric").Image;
         const img = new FabricImage(imgEl, {
           left: viewSize.width / 2 - (imgEl.naturalWidth * 0.3) / 2,
           top: viewSize.height / 2 - (imgEl.naturalHeight * 0.3) / 2,
@@ -206,7 +205,7 @@ export const PDFEditorTool = () => {
     
     const imgEl = new Image();
     imgEl.onload = () => {
-      const { Image: FabricImage } = require("fabric");
+      const FabricImage = require("fabric").Image;
       const img = new FabricImage(imgEl, {
         left: viewSize.width / 2 - (imgEl.naturalWidth * 0.5) / 2,
         top: viewSize.height / 2 - (imgEl.naturalHeight * 0.5) / 2,
@@ -425,13 +424,6 @@ export const PDFEditorTool = () => {
                 >
                   <Trash2 className="w-4 h-4" />
                   Clear {selectedObject ? "Selected" : "All"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(state.pdfUrl, "_blank", "noopener,noreferrer")}
-                >
-                  Open Original
                 </Button>
                 <Button
                   size="sm"
