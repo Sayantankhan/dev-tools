@@ -23,7 +23,7 @@ const DataVizTool = lazy(() => import("@/components/tools/DataVizTool").then(m =
 const ImageConverterTool = lazy(() => import("@/components/tools/ImageConverterTool").then(m => ({ default: m.ImageConverterTool })));
 const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRemoverTool").then(m => ({ default: m.BackgroundRemoverTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "pdf-generator" | "pdf-editor" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "converter" | "data-viz" | "image-converter" | "bg-remover";
+export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "pdf-generator" | "pdf-editor" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover";
 
 export interface Tool {
   id: ToolId;
@@ -47,9 +47,7 @@ const tools: Tool[] = [
   { id: "data-converter", label: "Convert", icon: ArrowRightLeft, component: DataConverterTool },
   { id: "ip-lookup", label: "IP Lookup", icon: MapPin, component: IPLookupTool },
   { id: "js-editor", label: "JS Editor", icon: Terminal, component: JSEditorTool },
-  { id: "converter", label: "Units", icon: Clock, component: ConverterTool },
   { id: "data-viz", label: "Charts", icon: BarChart3, component: DataVizTool },
-  { id: "image-converter", label: "IMG to PNG", icon: FileImage, component: ImageConverterTool },
   { id: "bg-remover", label: "BG Remover", icon: Scissors, component: BackgroundRemoverTool },
 ];
 
