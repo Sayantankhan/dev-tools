@@ -97,15 +97,20 @@ export const BackgroundRemoverTool = () => {
         const data = outputImageData.data;
         const mask = result[0].mask.data;
         
-        // Use the slider value as threshold (0-100 -> 0-1)
-        const threshold = bgRemovalIntensity[0] / 100;
+        // Slider: 0% = remove nothing, 100% = remove all background
+        // Convert slider (0-100) to threshold (0-1)
+        // Higher slider = lower threshold = more removal
+        const removalIntensity = bgRemovalIntensity[0] / 100;
+        const threshold = 1 - removalIntensity; // Invert so 100% slider = 0 threshold
         
         for (let i = 0; i < mask.length; i++) {
-          const maskValue = mask[i];
+          const maskValue = mask[i]; // 0 = background, 1 = foreground
           
           if (maskValue < threshold) {
+            // Below threshold: make transparent
             data[i * 4 + 3] = 0;
           } else {
+            // Above threshold: keep with graduated alpha
             const normalizedAlpha = (maskValue - threshold) / (1 - threshold);
             data[i * 4 + 3] = Math.round(normalizedAlpha * 255);
           }
@@ -211,6 +216,7 @@ export const BackgroundRemoverTool = () => {
                         step={1}
                         className="flex-1"
                       />
+                      <span className="text-sm font-medium w-12 text-right">{bgRemovalIntensity[0]}%</span>
                     </div>
                   </div>
                   <Button 
