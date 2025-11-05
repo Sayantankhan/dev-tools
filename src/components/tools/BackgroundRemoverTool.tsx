@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Upload, Download, Scissors } from "lucide-react";
+import { Upload, Scissors } from "lucide-react";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { pipeline, env } from '@huggingface/transformers';
@@ -13,6 +12,7 @@ const MAX_IMAGE_DIMENSION = 1024;
 
 export const BackgroundRemoverTool = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +27,8 @@ export const BackgroundRemoverTool = () => {
     }
     
     setSelectedFile(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
     setProcessedImage(null);
   };
 
@@ -125,12 +127,22 @@ export const BackgroundRemoverTool = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleClear = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setProcessedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDone = () => {
     if (!processedImage) return;
     const a = document.createElement('a');
     a.href = processedImage;
     a.download = selectedFile?.name.replace(/\.[^.]+$/, '-no-bg.png') || 'no-background.png';
     a.click();
+    toast.success("Image downloaded!");
   };
 
   return (
@@ -143,43 +155,63 @@ export const BackgroundRemoverTool = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <Label>Select Image</Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <div className="flex gap-2">
-              <Button onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
+          {!previewUrl ? (
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button 
+                onClick={() => fileInputRef.current?.click()} 
+                className="w-full"
+                size="lg"
+              >
                 <Upload className="w-4 h-4 mr-2" />
                 Select Image
               </Button>
-              {selectedFile && (
-                <span className="flex items-center text-sm text-muted-foreground">
-                  {selectedFile.name}
-                </span>
-              )}
             </div>
-          </div>
-          
-          {selectedFile && !processedImage && (
-            <Button onClick={removeBackground} disabled={isProcessing}>
-              {isProcessing ? "Processing..." : "Remove Background"}
-            </Button>
-          )}
-          
-          {processedImage && (
-            <div className="space-y-3">
-              <div className="bg-checkered rounded-lg p-4">
-                <img src={processedImage} alt="Processed" className="max-w-full" />
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-card border rounded-lg p-4">
+                <img 
+                  src={processedImage || previewUrl} 
+                  alt="Preview" 
+                  className="w-full h-auto max-h-96 object-contain mx-auto"
+                  style={{ backgroundColor: processedImage ? 'transparent' : 'white' }}
+                />
               </div>
-              <Button onClick={handleDownload}>
-                <Download className="w-4 h-4 mr-2" />
-                Download PNG
-              </Button>
+              
+              {!processedImage && (
+                <Button 
+                  onClick={removeBackground} 
+                  disabled={isProcessing}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isProcessing ? "Processing..." : "Remove Background"}
+                </Button>
+              )}
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleClear} 
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Clear
+                </Button>
+                {processedImage && (
+                  <Button 
+                    onClick={handleDone}
+                    className="flex-1"
+                  >
+                    Done
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
