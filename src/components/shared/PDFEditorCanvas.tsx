@@ -60,7 +60,7 @@ export const PDFEditorCanvas = ({
     return () => {
       canvas.dispose();
     };
-  }, [width, height, onExport]);
+  }, [width, height]); // Removed onExport from dependencies
 
   // Update snap to grid behavior
   useEffect(() => {
