@@ -37,7 +37,7 @@ export const BackgroundRemoverTool = () => {
     toast.info("Loading AI model... This may take a moment");
     
     try {
-      const segmenter = await pipeline('image-segmentation', 'Xenova/segformer-b0-finetuned-ade-512-512', {
+      const segmenter = await pipeline('image-segmentation', 'Xenova/modnet', {
         device: 'webgpu',
       });
       
@@ -72,18 +72,17 @@ export const BackgroundRemoverTool = () => {
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
         
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
         toast.info("Processing image...");
         
-        const result = await segmenter(imageData);
+        const result = await segmenter(canvas.toDataURL('image/png'));
         
         if (!result || !Array.isArray(result) || result.length === 0 || !result[0].mask) {
           throw new Error('Invalid segmentation result');
         }
         
         const outputCanvas = document.createElement('canvas');
-        outputCanvas.width = canvas.width;
-        outputCanvas.height = canvas.height;
+        outputCanvas.width = width;
+        outputCanvas.height = height;
         const outputCtx = outputCanvas.getContext('2d');
         
         if (!outputCtx) throw new Error('Could not get output canvas context');
@@ -94,7 +93,7 @@ export const BackgroundRemoverTool = () => {
         const data = outputImageData.data;
         
         for (let i = 0; i < result[0].mask.data.length; i++) {
-          const alpha = Math.round((1 - result[0].mask.data[i]) * 255);
+          const alpha = Math.round(result[0].mask.data[i] * 255);
           data[i * 4 + 3] = alpha;
         }
         
