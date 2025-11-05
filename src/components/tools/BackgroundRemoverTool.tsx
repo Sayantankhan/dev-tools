@@ -103,15 +103,20 @@ export const BackgroundRemoverTool = () => {
         const removalIntensity = bgRemovalIntensity[0] / 100;
         const threshold = 1 - removalIntensity; // Invert so 100% slider = 0 threshold
         
+        const bytesPerEl = (mask as any)?.BYTES_PER_ELEMENT ?? 4;
+        
         for (let i = 0; i < mask.length; i++) {
-          const maskValue = mask[i]; // 0 = background, 1 = foreground
+          // Normalize mask to 0..1 regardless of underlying dtype
+          const raw = mask[i] as number;
+          const m = bytesPerEl === 1 ? raw / 255 : raw; // Uint8 -> [0..1]
+          const value = Math.min(1, Math.max(0, m));
           
-          if (maskValue < threshold) {
+          if (value < threshold) {
             // Below threshold: make transparent
             data[i * 4 + 3] = 0;
           } else {
             // Above threshold: keep with graduated alpha
-            const normalizedAlpha = (maskValue - threshold) / (1 - threshold);
+            const normalizedAlpha = (value - threshold) / (1 - threshold);
             data[i * 4 + 3] = Math.round(normalizedAlpha * 255);
           }
         }
