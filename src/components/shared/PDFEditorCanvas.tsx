@@ -27,8 +27,11 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
       backgroundColor: "transparent",
     });
 
-    canvas.freeDrawingBrush.color = "#000000";
-    canvas.freeDrawingBrush.width = 2;
+    // Initialize drawing brush if needed
+    if (canvas.freeDrawingBrush) {
+      canvas.freeDrawingBrush.color = "#000000";
+      canvas.freeDrawingBrush.width = 2;
+    }
 
     setFabricCanvas(canvas);
     onExport(canvas);
@@ -41,9 +44,10 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
   useEffect(() => {
     if (!fabricCanvas) return;
 
-    fabricCanvas.isDrawingMode = activeTool === "signature";
+    const isDrawing = activeTool === "signature";
+    fabricCanvas.isDrawingMode = isDrawing;
     
-    if (activeTool === "signature" && fabricCanvas.freeDrawingBrush) {
+    if (isDrawing && fabricCanvas.freeDrawingBrush) {
       fabricCanvas.freeDrawingBrush.color = "#000000";
       fabricCanvas.freeDrawingBrush.width = 2;
     }
