@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { Upload, FileText, Trash2, Download } from "lucide-react";
+import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 
 export const PDFEditorTool = () => {
   const { state, actions } = PDFEditorStateHandler();
@@ -45,35 +46,28 @@ export const PDFEditorTool = () => {
           {state.pdfUrl && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>PDF Preview</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={actions.handleDownload}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </Button>
+                <Label>PDF Preview (first page)</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(state.pdfUrl, "_blank", "noopener,noreferrer")}
+                  >
+                    Open in new tab
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={actions.handleDownload}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </Button>
+                </div>
               </div>
               <div className="border rounded-lg overflow-hidden bg-muted">
-                <object
-                  data={state.pdfUrl}
-                  type="application/pdf"
-                  className="w-full h-[600px]"
-                  aria-label="PDF Preview"
-                >
-                  <div className="flex flex-col items-center justify-center h-[600px] gap-4 p-6 text-center">
-                    <FileText className="w-16 h-16 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      PDF preview not available in this browser.
-                    </p>
-                    <Button onClick={actions.handleDownload}>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download PDF
-                    </Button>
-                  </div>
-                </object>
+                <PDFCanvasViewer url={state.pdfUrl} />
               </div>
             </div>
           )}
