@@ -7,7 +7,7 @@ import { Base64Tool } from "@/components/tools/Base64Tool";
 import { URLTool } from "@/components/tools/URLTool";
 import { TabNavigation } from "@/components/TabNavigation";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors } from "lucide-react";
+import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search } from "lucide-react";
 
 // Lazy load tools for better performance
 const TextCompareTool = lazy(() => import("@/components/tools/TextCompareTool").then(m => ({ default: m.TextCompareTool })));
@@ -20,8 +20,9 @@ const ConverterTool = lazy(() => import("@/components/tools/ConverterTool").then
 const DataVizTool = lazy(() => import("@/components/tools/DataVizTool").then(m => ({ default: m.DataVizTool })));
 const ImageConverterTool = lazy(() => import("@/components/tools/ImageConverterTool").then(m => ({ default: m.ImageConverterTool })));
 const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRemoverTool").then(m => ({ default: m.BackgroundRemoverTool })));
+const SearchTool = lazy(() => import("@/components/tools/SearchTool").then(m => ({ default: m.SearchTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover";
+export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search";
 
 export interface Tool {
   id: ToolId;
@@ -45,6 +46,7 @@ const tools: Tool[] = [
   { id: "js-editor", label: "JS Editor", icon: Terminal, component: JSEditorTool },
   { id: "data-viz", label: "Charts", icon: BarChart3, component: DataVizTool },
   { id: "bg-remover", label: "BG Remover", icon: Scissors, component: BackgroundRemoverTool },
+  { id: "search", label: "Search", icon: Search, component: SearchTool },
 ];
 
 const Index = () => {
