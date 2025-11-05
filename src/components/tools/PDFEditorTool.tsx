@@ -45,9 +45,10 @@ export const PDFEditorTool = () => {
           {state.pdfUrl && (
             <div className="space-y-3">
               <Label>PDF Preview</Label>
-              <div className="border rounded-lg overflow-hidden">
-                <iframe
+              <div className="border rounded-lg overflow-hidden bg-background">
+                <embed
                   src={state.pdfUrl}
+                  type="application/pdf"
                   className="w-full h-[600px]"
                   title="PDF Preview"
                 />
