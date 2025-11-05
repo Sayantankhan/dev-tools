@@ -1,23 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { Canvas as FabricCanvas, IText, Image as FabricImage } from "fabric";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Type, PenTool, Eraser, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Canvas as FabricCanvas } from "fabric";
 
 interface PDFEditorCanvasProps {
   width: number;
   height: number;
   onExport: (canvas: FabricCanvas) => void;
+  snapToGrid?: boolean;
+  zoom?: number;
 }
 
-export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProps) => {
+export const PDFEditorCanvas = ({ 
+  width, 
+  height, 
+  onExport,
+  snapToGrid = false,
+  zoom = 1
+}: PDFEditorCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
-  const [activeTool, setActiveTool] = useState<"select" | "text" | "signature">("select");
-  const [textInput, setTextInput] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -25,13 +26,33 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
       width,
       height,
       backgroundColor: "transparent",
+      selection: true,
+      preserveObjectStacking: true,
     });
 
-    // Initialize drawing brush if needed
-    if (canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = "#000000";
-      canvas.freeDrawingBrush.width = 2;
-    }
+    // Enable object controls
+    canvas.on('object:moving', (e) => {
+      if (!e.target || !snapToGrid) return;
+      const gridSize = 20;
+      e.target.set({
+        left: Math.round((e.target.left || 0) / gridSize) * gridSize,
+        top: Math.round((e.target.top || 0) / gridSize) * gridSize,
+      });
+    });
+
+    // Add shadow to objects for better visibility
+    canvas.on('object:added', (e) => {
+      if (e.target) {
+        e.target.set({
+          shadow: {
+            color: 'rgba(0,0,0,0.3)',
+            blur: 5,
+            offsetX: 2,
+            offsetY: 2,
+          }
+        });
+      }
+    });
 
     setFabricCanvas(canvas);
     onExport(canvas);
@@ -41,147 +62,38 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
     };
   }, [width, height, onExport]);
 
+  // Update snap to grid behavior
   useEffect(() => {
     if (!fabricCanvas) return;
-
-    // Disable free drawing; signature will be uploaded as an image
-    fabricCanvas.isDrawingMode = false;
-  }, [activeTool, fabricCanvas]);
-
-  const handleAddText = () => {
-    if (!fabricCanvas || !textInput.trim()) {
-      toast.error("Please enter some text");
-      return;
-    }
-
-    const text = new IText(textInput, {
-      left: width / 2 - 50,
-      top: height / 2,
-      fontSize: 20,
-      fill: "#000000",
-      fontFamily: "Arial",
-    });
-
-    fabricCanvas.add(text);
-    fabricCanvas.setActiveObject(text);
     fabricCanvas.renderAll();
-    setTextInput("");
-    toast.success("Text added! Drag to reposition.");
-  };
+  }, [snapToGrid, fabricCanvas]);
 
-  // Signature upload handlers
-  const handleSignatureUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleSignatureFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!fabricCanvas || !file) return;
-    const url = URL.createObjectURL(file);
-    const imgEl = new Image();
-    imgEl.crossOrigin = "anonymous";
-    imgEl.onload = () => {
-      try {
-        const img = new FabricImage(imgEl, {
-          left: width / 2 - (imgEl.naturalWidth * 0.5) / 2,
-          top: height / 2 - (imgEl.naturalHeight * 0.5) / 2,
-          scaleX: 0.5,
-          scaleY: 0.5,
-        });
-        fabricCanvas.add(img);
-        fabricCanvas.setActiveObject(img);
-        fabricCanvas.renderAll();
-        toast.success("Signature image added! Drag to position.");
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-    };
-    imgEl.onerror = () => {
-      URL.revokeObjectURL(url);
-      toast.error("Failed to load image");
-    };
-    imgEl.src = url;
-  };
-
-  const handleClear = () => {
+  // Handle zoom
+  useEffect(() => {
     if (!fabricCanvas) return;
-    fabricCanvas.clear();
-    fabricCanvas.backgroundColor = "transparent";
+    fabricCanvas.setZoom(zoom);
     fabricCanvas.renderAll();
-    toast.success("Annotations cleared!");
-  };
+  }, [zoom, fabricCanvas]);
 
   return (
     <div className="relative w-full h-full">
-      <div className="hidden">
-        <Button
-          variant={activeTool === "select" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setActiveTool("select")}
-        >
-          <Eraser className="w-4 h-4 mr-2" />
-          Select
-        </Button>
-        <Button
-          variant={activeTool === "text" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setActiveTool("text")}
-        >
-          <Type className="w-4 h-4 mr-2" />
-          Text
-        </Button>
-        <Button
-          variant={activeTool === "signature" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setActiveTool("signature")}
-        >
-          <PenTool className="w-4 h-4 mr-2" />
-          Signature
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleClear}
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Clear All
-        </Button>
-      </div>
-
-      {false && (
-        <div className="absolute top-14 left-2 z-20 flex gap-2 items-end bg-card/90 backdrop-blur p-3 rounded-md border">
-          <div className="flex-1">
-            <Label>Enter text</Label>
-            <Input
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Type your text..."
-              onKeyDown={(e) => e.key === "Enter" && handleAddText()}
-            />
-          </div>
-          <Button onClick={handleAddText}>Add Text</Button>
-        </div>
+      {snapToGrid && (
+        <div 
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(128,128,128,0.1) 19px, rgba(128,128,128,0.1) 20px),
+              repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(128,128,128,0.1) 19px, rgba(128,128,128,0.1) 20px)
+            `,
+            backgroundSize: '20px 20px'
+          }}
+        />
       )}
-
-      {false && (
-        <div className="absolute top-14 left-2 z-20 bg-muted/90 backdrop-blur p-3 rounded-md text-sm text-muted-foreground">
-          <div className="flex flex-col md:flex-row md:items-center gap-2">
-            <span>Upload your signature image (PNG/JPG), then drag to position and resize.</span>
-            <div className="flex items-center gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={handleSignatureFileChange}
-                className="hidden"
-              />
-              <Button size="sm" onClick={handleSignatureUploadClick}>Upload Signature</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <canvas ref={canvasRef} className="absolute inset-0 z-0" style={{ width: '100%', height: '100%' }} />
+      <canvas 
+        ref={canvasRef} 
+        className="absolute inset-0 z-10" 
+        style={{ width: '100%', height: '100%' }} 
+      />
     </div>
   );
 };
