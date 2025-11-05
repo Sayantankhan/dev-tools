@@ -141,7 +141,7 @@ export const PDFEditorCanvas = ({ width, height, onExport }: PDFEditorCanvasProp
       )}
 
       <div className="relative">
-        <canvas ref={canvasRef} className="w-full h-auto" />
+        <canvas ref={canvasRef} style={{ width: '100%', height: 'auto' }} />
       </div>
     </div>
   );
