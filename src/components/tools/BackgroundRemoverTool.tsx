@@ -131,12 +131,22 @@ export const BackgroundRemoverTool = () => {
     const outputImageData = outputCtx.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
     const data = outputImageData.data;
     
-    const intensityFactor = intensity / 100;
+    // Convert intensity (0-100) to threshold (0-1)
+    // Lower intensity = remove more (lower threshold)
+    const threshold = intensity / 100;
     
     for (let i = 0; i < mask.length; i++) {
-      const maskValue = mask[i];
-      const alpha = Math.round(maskValue * 255 * intensityFactor + (1 - intensityFactor) * 255);
-      data[i * 4 + 3] = alpha;
+      const maskValue = mask[i]; // Value between 0 and 1
+      
+      if (maskValue < threshold) {
+        // Below threshold: make transparent
+        data[i * 4 + 3] = 0;
+      } else {
+        // Above threshold: apply graduated transparency
+        // Scale the remaining range to full opacity
+        const normalizedAlpha = (maskValue - threshold) / (1 - threshold);
+        data[i * 4 + 3] = Math.round(normalizedAlpha * 255);
+      }
     }
     
     outputCtx.putImageData(outputImageData, 0, 0);
