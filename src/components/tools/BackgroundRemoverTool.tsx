@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Upload, Scissors } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { pipeline, env } from '@huggingface/transformers';
 
@@ -15,6 +16,9 @@ export const BackgroundRemoverTool = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [maskData, setMaskData] = useState<any>(null);
+  const [originalCanvas, setOriginalCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [bgRemovalIntensity, setBgRemovalIntensity] = useState([100]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,24 +95,11 @@ export const BackgroundRemoverTool = () => {
         
         outputCtx.drawImage(canvas, 0, 0);
         
-        const outputImageData = outputCtx.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
-        const data = outputImageData.data;
+        // Store mask and canvas for later adjustments
+        setMaskData(result[0].mask.data);
+        setOriginalCanvas(canvas);
         
-        for (let i = 0; i < result[0].mask.data.length; i++) {
-          const alpha = Math.round(result[0].mask.data[i] * 255);
-          data[i * 4 + 3] = alpha;
-        }
-        
-        outputCtx.putImageData(outputImageData, 0, 0);
-        
-        outputCanvas.toBlob((blob) => {
-          if (blob) {
-            const pngUrl = URL.createObjectURL(blob);
-            setProcessedImage(pngUrl);
-            toast.success("Background removed!");
-            setIsProcessing(false);
-          }
-        }, 'image/png', 1.0);
+        applyMask(canvas, result[0].mask.data, 100);
         
         URL.revokeObjectURL(url);
       };
@@ -127,10 +118,57 @@ export const BackgroundRemoverTool = () => {
     }
   };
 
+  const applyMask = (canvas: HTMLCanvasElement, mask: any, intensity: number) => {
+    const outputCanvas = document.createElement('canvas');
+    outputCanvas.width = canvas.width;
+    outputCanvas.height = canvas.height;
+    const outputCtx = outputCanvas.getContext('2d');
+    
+    if (!outputCtx) return;
+    
+    outputCtx.drawImage(canvas, 0, 0);
+    
+    const outputImageData = outputCtx.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
+    const data = outputImageData.data;
+    
+    const intensityFactor = intensity / 100;
+    
+    for (let i = 0; i < mask.length; i++) {
+      const maskValue = mask[i];
+      const alpha = Math.round(maskValue * 255 * intensityFactor + (1 - intensityFactor) * 255);
+      data[i * 4 + 3] = alpha;
+    }
+    
+    outputCtx.putImageData(outputImageData, 0, 0);
+    
+    outputCanvas.toBlob((blob) => {
+      if (blob) {
+        const pngUrl = URL.createObjectURL(blob);
+        if (processedImage) {
+          URL.revokeObjectURL(processedImage);
+        }
+        setProcessedImage(pngUrl);
+        if (intensity === 100) {
+          toast.success("Background removed!");
+        }
+        setIsProcessing(false);
+      }
+    }, 'image/png', 1.0);
+  };
+
+  useEffect(() => {
+    if (maskData && originalCanvas) {
+      applyMask(originalCanvas, maskData, bgRemovalIntensity[0]);
+    }
+  }, [bgRemovalIntensity]);
+
   const handleClear = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setProcessedImage(null);
+    setMaskData(null);
+    setOriginalCanvas(null);
+    setBgRemovalIntensity([100]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -193,6 +231,22 @@ export const BackgroundRemoverTool = () => {
                 >
                   {isProcessing ? "Processing..." : "Remove Background"}
                 </Button>
+              )}
+              
+              {processedImage && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 px-1">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">Remove background</span>
+                    <Slider
+                      value={bgRemovalIntensity}
+                      onValueChange={setBgRemovalIntensity}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
               )}
               
               <div className="flex gap-2">
