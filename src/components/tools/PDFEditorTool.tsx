@@ -5,11 +5,23 @@ import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { Upload, FileText, Trash2, Download, Save } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const PDFEditorTool = () => {
   const { state, actions } = PDFEditorStateHandler();
   const [editorCanvas, setEditorCanvas] = useState<any>(null);
+  const viewerWrapperRef = useRef<HTMLDivElement>(null);
+  const [viewSize, setViewSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (!viewerWrapperRef.current) return;
+    const el = viewerWrapperRef.current;
+    const update = () => setViewSize({ width: el.clientWidth, height: el.clientHeight });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const handleSaveEdited = () => {
     if (!editorCanvas) return;
@@ -79,16 +91,18 @@ export const PDFEditorTool = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative border rounded-lg overflow-hidden bg-muted">
+            <div ref={viewerWrapperRef} className="relative border rounded-lg overflow-hidden bg-muted">
               <PDFCanvasViewer url={state.pdfUrl} />
               <div className="absolute inset-0 pointer-events-none">
-                <div className="pointer-events-auto">
-                  <PDFEditorCanvas
-                    width={state.pdfDimensions.width * 1.5}
-                    height={state.pdfDimensions.height * 1.5}
-                    onExport={setEditorCanvas}
-                  />
-                </div>
+                {viewSize.width > 0 && viewSize.height > 0 && (
+                  <div className="h-full w-full pointer-events-auto">
+                    <PDFEditorCanvas
+                      width={viewSize.width}
+                      height={viewSize.height}
+                      onExport={setEditorCanvas}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
