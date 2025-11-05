@@ -7,7 +7,7 @@ import { Base64Tool } from "@/components/tools/Base64Tool";
 import { URLTool } from "@/components/tools/URLTool";
 import { TabNavigation } from "@/components/TabNavigation";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, FileDown, Shuffle, ArrowRightLeft, MapPin, Terminal, Clock, BarChart3, FileEdit } from "lucide-react";
+import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, FileDown, Shuffle, ArrowRightLeft, MapPin, Terminal, Clock, BarChart3, FileEdit, Scissors, FileImage } from "lucide-react";
 
 // Lazy load tools for better performance
 const TextCompareTool = lazy(() => import("@/components/tools/TextCompareTool").then(m => ({ default: m.TextCompareTool })));
@@ -20,8 +20,10 @@ const IPLookupTool = lazy(() => import("@/components/tools/IPLookupTool").then(m
 const JSEditorTool = lazy(() => import("@/components/tools/JSEditorTool").then(m => ({ default: m.JSEditorTool })));
 const ConverterTool = lazy(() => import("@/components/tools/ConverterTool").then(m => ({ default: m.ConverterTool })));
 const DataVizTool = lazy(() => import("@/components/tools/DataVizTool").then(m => ({ default: m.DataVizTool })));
+const ImageConverterTool = lazy(() => import("@/components/tools/ImageConverterTool").then(m => ({ default: m.ImageConverterTool })));
+const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRemoverTool").then(m => ({ default: m.BackgroundRemoverTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "pdf-generator" | "pdf-editor" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "converter" | "data-viz";
+export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "pdf-generator" | "pdf-editor" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "converter" | "data-viz" | "image-converter" | "bg-remover";
 
 export interface Tool {
   id: ToolId;
@@ -47,6 +49,8 @@ const tools: Tool[] = [
   { id: "js-editor", label: "JS Editor", icon: Terminal, component: JSEditorTool },
   { id: "converter", label: "Units", icon: Clock, component: ConverterTool },
   { id: "data-viz", label: "Charts", icon: BarChart3, component: DataVizTool },
+  { id: "image-converter", label: "IMG to PNG", icon: FileImage, component: ImageConverterTool },
+  { id: "bg-remover", label: "BG Remover", icon: Scissors, component: BackgroundRemoverTool },
 ];
 
 const Index = () => {
