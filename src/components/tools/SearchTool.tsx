@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Search, Upload, Trash2, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchHandler } from "@/modules/state/SearchStateHandler";
@@ -20,6 +21,8 @@ export const SearchTool = () => {
     isProcessing,
     selectedModel,
     pastedText,
+    downloadProgress,
+    isDownloading,
   } = handler.state;
 
   const {
@@ -51,7 +54,7 @@ export const SearchTool = () => {
           <CardTitle className="text-lg">Embedding Model</CardTitle>
           <CardDescription>Select the model for semantic search</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Select value={selectedModel} onValueChange={setSelectedModel}>
             <SelectTrigger>
               <SelectValue />
@@ -62,6 +65,14 @@ export const SearchTool = () => {
               <SelectItem value="mixedbread-ai/mxbai-embed-xsmall-v1">MixedBread xSmall (High Quality)</SelectItem>
             </SelectContent>
           </Select>
+          
+          {/* Download Progress */}
+          {isDownloading && (
+            <div className="space-y-2">
+              <Label>Downloading model... {Math.round(downloadProgress * 100)}%</Label>
+              <Progress value={downloadProgress * 100} />
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import { Upload, Scissors, Download, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
@@ -51,6 +52,8 @@ export const BackgroundRemoverTool = () => {
   const [exportFormat, setExportFormat] = useState<'png' | 'jpg'>('png');
   const [jpgFillColor, setJpgFillColor] = useState('#ffffff');
   const [selectedModel, setSelectedModel] = useState<ModelId>('briaai/RMBG-1.4');
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,11 +99,20 @@ export const BackgroundRemoverTool = () => {
       }
       processingAbortRef.current = new AbortController();
 
+      setIsDownloading(true);
+      setDownloadProgress(0);
       toast.info("Loading AI model (first time only - will be cached)...");
       
       const segmenter = await pipeline('image-segmentation', selectedModel, {
         device: 'webgpu',
+        progress_callback: (progress: any) => {
+          if (progress.status === 'progress' && progress.progress) {
+            setDownloadProgress(progress.progress);
+          }
+        },
       });
+      
+      setIsDownloading(false);
       
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -345,6 +357,14 @@ export const BackgroundRemoverTool = () => {
                 <Upload className="w-4 h-4 mr-2" />
                 {isProcessing ? "Processing..." : "Select Image"}
               </Button>
+              
+              {/* Download Progress */}
+              {isDownloading && (
+                <div className="space-y-2">
+                  <Label>Downloading model... {Math.round(downloadProgress * 100)}%</Label>
+                  <Progress value={downloadProgress * 100} />
+                </div>
+              )}
               
               {/* Model selection */}
               <div className="space-y-2">

@@ -27,9 +27,11 @@ interface SearchResult {
 
 let embeddingPipeline: any = null;
 
-const getEmbeddingPipeline = async (modelName: string) => {
+const getEmbeddingPipeline = async (modelName: string, progressCallback?: (progress: any) => void) => {
   if (!embeddingPipeline) {
-    embeddingPipeline = await pipeline("feature-extraction", modelName);
+    embeddingPipeline = await pipeline("feature-extraction", modelName, {
+      progress_callback: progressCallback,
+    });
   }
   return embeddingPipeline;
 };
@@ -97,9 +99,20 @@ export const useSearchHandler = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedModel, setSelectedModel] = useState("Xenova/all-MiniLM-L6-v2");
   const [pastedText, setPastedText] = useState("");
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const generateEmbeddings = async (texts: string[], modelName: string): Promise<number[][]> => {
-    const extractor = await getEmbeddingPipeline(modelName);
+    setIsDownloading(true);
+    setDownloadProgress(0);
+    
+    const extractor = await getEmbeddingPipeline(modelName, (progress: any) => {
+      if (progress.status === 'progress' && progress.progress) {
+        setDownloadProgress(progress.progress);
+      }
+    });
+    
+    setIsDownloading(false);
     const embeddings = await extractor(texts, { pooling: "mean", normalize: true });
     return embeddings.tolist();
   };
@@ -243,6 +256,8 @@ export const useSearchHandler = () => {
       isProcessing,
       selectedModel,
       pastedText,
+      downloadProgress,
+      isDownloading,
     },
     setters: {
       setQuery,
