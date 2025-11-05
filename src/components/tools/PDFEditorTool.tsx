@@ -13,7 +13,7 @@ import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
 import { SignaturePad } from "@/components/shared/SignaturePad";
 import { useEffect, useRef, useState } from "react";
-import { Canvas as FabricCanvas, FabricObject } from "fabric";
+import { Canvas as FabricCanvas, FabricObject, IText, Image as FabricImage } from "fabric";
 import { toast } from "sonner";
 
 type OverlayAction = {
@@ -142,7 +142,7 @@ export const PDFEditorTool = () => {
   const handleAddText = () => {
     if (!editorCanvas || !textValue.trim()) return;
     
-    const text = new (require("fabric").IText)(textValue, {
+    const text = new IText(textValue, {
       left: viewSize.width / 2 - 50,
       top: viewSize.height / 2,
       fontSize: parseInt(fontSize),
@@ -176,7 +176,6 @@ export const PDFEditorTool = () => {
     imgEl.crossOrigin = "anonymous";
     imgEl.onload = () => {
       try {
-        const FabricImage = require("fabric").Image;
         const img = new FabricImage(imgEl, {
           left: viewSize.width / 2 - (imgEl.naturalWidth * 0.3) / 2,
           top: viewSize.height / 2 - (imgEl.naturalHeight * 0.3) / 2,
@@ -205,7 +204,6 @@ export const PDFEditorTool = () => {
     
     const imgEl = new Image();
     imgEl.onload = () => {
-      const FabricImage = require("fabric").Image;
       const img = new FabricImage(imgEl, {
         left: viewSize.width / 2 - (imgEl.naturalWidth * 0.5) / 2,
         top: viewSize.height / 2 - (imgEl.naturalHeight * 0.5) / 2,
