@@ -5,14 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { 
-  Upload, FileText, Trash2, Download, Save, Type, PenTool, 
+  Upload, FileText, Trash2, Save, Type, PenTool, 
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
-  Grid3x3, ZoomIn, ZoomOut
+  Grid3x3
 } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
 import { SignaturePad } from "@/components/shared/SignaturePad";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Canvas as FabricCanvas, FabricObject, IText, Image as FabricImage } from "fabric";
 import { toast } from "sonner";
 
@@ -34,7 +34,6 @@ export const PDFEditorTool = () => {
   const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
   const [showOverlays, setShowOverlays] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
-  const [zoom, setZoom] = useState(1);
   
   // Text formatting
   const [fontSize, setFontSize] = useState("20");
@@ -47,6 +46,7 @@ export const PDFEditorTool = () => {
   const [history, setHistory] = useState<OverlayAction[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
+  // Measure viewer size
   useEffect(() => {
     if (!viewerWrapperRef.current) return;
     const el = viewerWrapperRef.current;
@@ -57,6 +57,64 @@ export const PDFEditorTool = () => {
     return () => ro.disconnect();
   }, []);
 
+  const addToHistory = useCallback((action: OverlayAction) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(action);
+      if (newHistory.length > 20) newHistory.shift();
+      return newHistory;
+    });
+    setHistoryIndex(prev => prev + 1);
+  }, [historyIndex]);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex < 0 || !editorCanvas) return;
+    
+    setHistory(prev => {
+      const action = prev[historyIndex];
+      
+      if (action.type === 'add') {
+        editorCanvas.remove(action.object);
+      } else if (action.type === 'remove') {
+        editorCanvas.add(action.object);
+      } else if (action.type === 'modify' && action.previousState) {
+        action.object.set(action.previousState);
+      }
+      
+      editorCanvas.renderAll();
+      return prev;
+    });
+    
+    setHistoryIndex(prev => prev - 1);
+    toast.success("Undone");
+  }, [historyIndex, editorCanvas]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex >= history.length - 1 || !editorCanvas) return;
+    
+    const action = history[historyIndex + 1];
+    
+    if (action.type === 'add') {
+      editorCanvas.add(action.object);
+    } else if (action.type === 'remove') {
+      editorCanvas.remove(action.object);
+    }
+    
+    editorCanvas.renderAll();
+    setHistoryIndex(prev => prev + 1);
+    toast.success("Redone");
+  }, [historyIndex, history, editorCanvas]);
+
+  const handleDeleteSelected = useCallback(() => {
+    if (!editorCanvas || !selectedObject) return;
+    editorCanvas.remove(selectedObject);
+    addToHistory({ type: 'remove', object: selectedObject });
+    editorCanvas.renderAll();
+    setSelectedObject(null);
+    toast.success("Overlay deleted");
+  }, [editorCanvas, selectedObject, addToHistory]);
+
+  // Setup canvas event listeners
   useEffect(() => {
     if (!editorCanvas) return;
     
@@ -65,14 +123,16 @@ export const PDFEditorTool = () => {
       setSelectedObject(active || null);
     };
 
-    editorCanvas.on('selection:created', handleSelection);
-    editorCanvas.on('selection:updated', handleSelection);
-    editorCanvas.on('selection:cleared', () => setSelectedObject(null));
-
-    // Keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Delete' && selectedObject) {
-        handleDeleteSelected();
+      if (e.key === 'Delete' && editorCanvas.getActiveObject()) {
+        const obj = editorCanvas.getActiveObject();
+        if (obj) {
+          editorCanvas.remove(obj);
+          addToHistory({ type: 'remove', object: obj });
+          editorCanvas.renderAll();
+          setSelectedObject(null);
+          toast.success("Overlay deleted");
+        }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
@@ -84,6 +144,9 @@ export const PDFEditorTool = () => {
       }
     };
 
+    editorCanvas.on('selection:created', handleSelection);
+    editorCanvas.on('selection:updated', handleSelection);
+    editorCanvas.on('selection:cleared', () => setSelectedObject(null));
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
@@ -92,47 +155,7 @@ export const PDFEditorTool = () => {
       editorCanvas.off('selection:cleared');
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [editorCanvas, selectedObject, historyIndex]);
-
-  const addToHistory = (action: OverlayAction) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(action);
-    if (newHistory.length > 20) newHistory.shift();
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  };
-
-  const handleUndo = () => {
-    if (historyIndex < 0 || !editorCanvas) return;
-    const action = history[historyIndex];
-    
-    if (action.type === 'add') {
-      editorCanvas.remove(action.object);
-    } else if (action.type === 'remove') {
-      editorCanvas.add(action.object);
-    } else if (action.type === 'modify' && action.previousState) {
-      action.object.set(action.previousState);
-    }
-    
-    editorCanvas.renderAll();
-    setHistoryIndex(historyIndex - 1);
-    toast.success("Undone");
-  };
-
-  const handleRedo = () => {
-    if (historyIndex >= history.length - 1 || !editorCanvas) return;
-    const action = history[historyIndex + 1];
-    
-    if (action.type === 'add') {
-      editorCanvas.add(action.object);
-    } else if (action.type === 'remove') {
-      editorCanvas.remove(action.object);
-    }
-    
-    editorCanvas.renderAll();
-    setHistoryIndex(historyIndex + 1);
-    toast.success("Redone");
-  };
+  }, [editorCanvas, addToHistory, handleUndo, handleRedo]);
 
   const handleSaveEdited = async () => {
     if (!editorCanvas) return;
@@ -240,15 +263,6 @@ export const PDFEditorTool = () => {
     editorCanvas.renderAll();
   };
 
-  const handleDeleteSelected = () => {
-    if (!editorCanvas || !selectedObject) return;
-    editorCanvas.remove(selectedObject);
-    addToHistory({ type: 'remove', object: selectedObject });
-    editorCanvas.renderAll();
-    setSelectedObject(null);
-    toast.success("Overlay deleted");
-  };
-
   const handleBringToFront = () => {
     if (!editorCanvas || !selectedObject) return;
     editorCanvas.bringObjectToFront(selectedObject);
@@ -323,7 +337,7 @@ export const PDFEditorTool = () => {
                   size="sm"
                   onClick={() => setShowTextInput(!showTextInput)}
                 >
-                  <Type className="w-4 h-4" />
+                  <Type className="w-4 h-4 mr-1" />
                   Text
                 </Button>
                 
@@ -333,8 +347,8 @@ export const PDFEditorTool = () => {
                   size="sm"
                   onClick={() => setShowSignaturePad(!showSignaturePad)}
                 >
-                  <PenTool className="w-4 h-4" />
-                  Draw Signature
+                  <PenTool className="w-4 h-4 mr-1" />
+                  Draw
                 </Button>
                 <input
                   ref={signatureInputRef}
@@ -348,8 +362,8 @@ export const PDFEditorTool = () => {
                   size="sm"
                   onClick={handleSignatureUploadClick}
                 >
-                  <Upload className="w-4 h-4" />
-                  Upload Signature
+                  <Upload className="w-4 h-4 mr-1" />
+                  Upload
                 </Button>
 
                 {/* Object Controls */}
@@ -359,6 +373,7 @@ export const PDFEditorTool = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleBringToFront}
+                      title="Bring to front"
                     >
                       <ArrowUpToLine className="w-4 h-4" />
                     </Button>
@@ -366,6 +381,7 @@ export const PDFEditorTool = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleSendToBack}
+                      title="Send to back"
                     >
                       <ArrowDownToLine className="w-4 h-4" />
                     </Button>
@@ -373,6 +389,7 @@ export const PDFEditorTool = () => {
                       variant="destructive"
                       size="sm"
                       onClick={handleDeleteSelected}
+                      title="Delete selected"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -385,6 +402,7 @@ export const PDFEditorTool = () => {
                   size="sm"
                   onClick={handleUndo}
                   disabled={historyIndex < 0}
+                  title="Undo (Ctrl+Z)"
                 >
                   <Undo2 className="w-4 h-4" />
                 </Button>
@@ -393,6 +411,7 @@ export const PDFEditorTool = () => {
                   size="sm"
                   onClick={handleRedo}
                   disabled={historyIndex >= history.length - 1}
+                  title="Redo (Ctrl+Y)"
                 >
                   <Redo2 className="w-4 h-4" />
                 </Button>
@@ -402,6 +421,7 @@ export const PDFEditorTool = () => {
                   variant="outline"
                   size="sm"
                   onClick={toggleOverlays}
+                  title="Toggle overlays"
                 >
                   {showOverlays ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                 </Button>
@@ -410,6 +430,7 @@ export const PDFEditorTool = () => {
                   size="sm"
                   onClick={() => setSnapToGrid(!snapToGrid)}
                   className={snapToGrid ? "bg-primary text-primary-foreground" : ""}
+                  title="Snap to grid"
                 >
                   <Grid3x3 className="w-4 h-4" />
                 </Button>
@@ -420,7 +441,7 @@ export const PDFEditorTool = () => {
                   size="sm"
                   onClick={handleClearCanvas}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 mr-1" />
                   Clear {selectedObject ? "Selected" : "All"}
                 </Button>
                 <Button
@@ -462,8 +483,8 @@ export const PDFEditorTool = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Arial">Arial</SelectItem>
-                          <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                          <SelectItem value="Courier New">Courier New</SelectItem>
+                          <SelectItem value="Times New Roman">Times</SelectItem>
+                          <SelectItem value="Courier New">Courier</SelectItem>
                           <SelectItem value="Georgia">Georgia</SelectItem>
                           <SelectItem value="Verdana">Verdana</SelectItem>
                         </SelectContent>
@@ -523,14 +544,15 @@ export const PDFEditorTool = () => {
             <div ref={viewerWrapperRef} className="relative border rounded-lg overflow-hidden bg-muted" style={{ minHeight: '600px' }}>
               <PDFCanvasViewer url={state.pdfUrl} />
               {viewSize.width > 0 && viewSize.height > 0 && (
-                <div className="absolute inset-0 z-20">
-                  <PDFEditorCanvas
-                    width={viewSize.width}
-                    height={viewSize.height}
-                    onExport={setEditorCanvas}
-                    snapToGrid={snapToGrid}
-                    zoom={zoom}
-                  />
+                <div className="absolute inset-0 z-20 pointer-events-none">
+                  <div className="pointer-events-auto w-full h-full">
+                    <PDFEditorCanvas
+                      width={viewSize.width}
+                      height={viewSize.height}
+                      onExport={setEditorCanvas}
+                      snapToGrid={snapToGrid}
+                    />
+                  </div>
                 </div>
               )}
             </div>
