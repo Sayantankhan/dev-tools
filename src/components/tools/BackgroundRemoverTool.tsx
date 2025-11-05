@@ -6,8 +6,9 @@ import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { pipeline, env } from '@huggingface/transformers';
 
+// Enable caching to store models locally
 env.allowLocalModels = false;
-env.useBrowserCache = false;
+env.useBrowserCache = true;
 
 const MAX_IMAGE_DIMENSION = 1024;
 
@@ -98,27 +99,20 @@ export const BackgroundRemoverTool = () => {
         const mask = result[0].mask.data;
         
         // Slider: 0% = remove nothing, 100% = remove all background
-        // Convert slider (0-100) to threshold (0-1)
-        // Higher slider = lower threshold = more removal
-        const removalIntensity = bgRemovalIntensity[0] / 100;
-        const threshold = 1 - removalIntensity; // Invert so 100% slider = 0 threshold
+        const removalPercent = bgRemovalIntensity[0] / 100; // p in [0,1]
         
         const bytesPerEl = (mask as any)?.BYTES_PER_ELEMENT ?? 4;
         
         for (let i = 0; i < mask.length; i++) {
-          // Normalize mask to 0..1 regardless of underlying dtype
+          // Normalize matte m to 0..1: 0=background, 1=foreground
           const raw = mask[i] as number;
-          const m = bytesPerEl === 1 ? raw / 255 : raw; // Uint8 -> [0..1]
-          const value = Math.min(1, Math.max(0, m));
+          const m = bytesPerEl === 1 ? raw / 255 : raw;
+          const matte = Math.min(1, Math.max(0, m));
           
-          if (value < threshold) {
-            // Below threshold: make transparent
-            data[i * 4 + 3] = 0;
-          } else {
-            // Above threshold: keep with graduated alpha
-            const normalizedAlpha = (value - threshold) / (1 - threshold);
-            data[i * 4 + 3] = Math.round(normalizedAlpha * 255);
-          }
+          // New alpha: keep foreground, reduce background proportionally to slider
+          // alpha = 1 - (1 - matte) * p
+          const alpha01 = 1 - (1 - matte) * removalPercent;
+          data[i * 4 + 3] = Math.round(alpha01 * 255);
         }
         
         outputCtx.putImageData(outputImageData, 0, 0);
