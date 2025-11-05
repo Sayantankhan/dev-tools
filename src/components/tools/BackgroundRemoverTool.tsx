@@ -16,9 +16,7 @@ export const BackgroundRemoverTool = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [maskData, setMaskData] = useState<any>(null);
-  const [originalCanvas, setOriginalCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [bgRemovalIntensity, setBgRemovalIntensity] = useState([100]);
+  const [bgRemovalIntensity, setBgRemovalIntensity] = useState([50]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,11 +93,34 @@ export const BackgroundRemoverTool = () => {
         
         outputCtx.drawImage(canvas, 0, 0);
         
-        // Store mask and canvas for later adjustments
-        setMaskData(result[0].mask.data);
-        setOriginalCanvas(canvas);
+        const outputImageData = outputCtx.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
+        const data = outputImageData.data;
+        const mask = result[0].mask.data;
         
-        applyMask(canvas, result[0].mask.data, 100);
+        // Use the slider value as threshold (0-100 -> 0-1)
+        const threshold = bgRemovalIntensity[0] / 100;
+        
+        for (let i = 0; i < mask.length; i++) {
+          const maskValue = mask[i];
+          
+          if (maskValue < threshold) {
+            data[i * 4 + 3] = 0;
+          } else {
+            const normalizedAlpha = (maskValue - threshold) / (1 - threshold);
+            data[i * 4 + 3] = Math.round(normalizedAlpha * 255);
+          }
+        }
+        
+        outputCtx.putImageData(outputImageData, 0, 0);
+        
+        outputCanvas.toBlob((blob) => {
+          if (blob) {
+            const pngUrl = URL.createObjectURL(blob);
+            setProcessedImage(pngUrl);
+            toast.success("Background removed!");
+            setIsProcessing(false);
+          }
+        }, 'image/png', 1.0);
         
         URL.revokeObjectURL(url);
       };
@@ -118,67 +139,12 @@ export const BackgroundRemoverTool = () => {
     }
   };
 
-  const applyMask = (canvas: HTMLCanvasElement, mask: any, intensity: number) => {
-    const outputCanvas = document.createElement('canvas');
-    outputCanvas.width = canvas.width;
-    outputCanvas.height = canvas.height;
-    const outputCtx = outputCanvas.getContext('2d');
-    
-    if (!outputCtx) return;
-    
-    outputCtx.drawImage(canvas, 0, 0);
-    
-    const outputImageData = outputCtx.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
-    const data = outputImageData.data;
-    
-    // Convert intensity (0-100) to threshold (0-1)
-    // Lower intensity = remove more (lower threshold)
-    const threshold = intensity / 100;
-    
-    for (let i = 0; i < mask.length; i++) {
-      const maskValue = mask[i]; // Value between 0 and 1
-      
-      if (maskValue < threshold) {
-        // Below threshold: make transparent
-        data[i * 4 + 3] = 0;
-      } else {
-        // Above threshold: apply graduated transparency
-        // Scale the remaining range to full opacity
-        const normalizedAlpha = (maskValue - threshold) / (1 - threshold);
-        data[i * 4 + 3] = Math.round(normalizedAlpha * 255);
-      }
-    }
-    
-    outputCtx.putImageData(outputImageData, 0, 0);
-    
-    outputCanvas.toBlob((blob) => {
-      if (blob) {
-        const pngUrl = URL.createObjectURL(blob);
-        if (processedImage) {
-          URL.revokeObjectURL(processedImage);
-        }
-        setProcessedImage(pngUrl);
-        if (intensity === 100) {
-          toast.success("Background removed!");
-        }
-        setIsProcessing(false);
-      }
-    }, 'image/png', 1.0);
-  };
-
-  useEffect(() => {
-    if (maskData && originalCanvas) {
-      applyMask(originalCanvas, maskData, bgRemovalIntensity[0]);
-    }
-  }, [bgRemovalIntensity]);
 
   const handleClear = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setProcessedImage(null);
-    setMaskData(null);
-    setOriginalCanvas(null);
-    setBgRemovalIntensity([100]);
+    setBgRemovalIntensity([50]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -233,30 +199,29 @@ export const BackgroundRemoverTool = () => {
               </div>
               
               {!processedImage && (
-                <Button 
-                  onClick={removeBackground} 
-                  disabled={isProcessing}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isProcessing ? "Processing..." : "Remove Background"}
-                </Button>
-              )}
-              
-              {processedImage && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 px-1">
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">Remove background</span>
-                    <Slider
-                      value={bgRemovalIntensity}
-                      onValueChange={setBgRemovalIntensity}
-                      min={0}
-                      max={100}
-                      step={1}
-                      className="flex-1"
-                    />
+                <>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 px-1">
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">Remove background</span>
+                      <Slider
+                        value={bgRemovalIntensity}
+                        onValueChange={setBgRemovalIntensity}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
-                </div>
+                  <Button 
+                    onClick={removeBackground} 
+                    disabled={isProcessing}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isProcessing ? "Processing..." : "Remove Background"}
+                  </Button>
+                </>
               )}
               
               <div className="flex gap-2">
