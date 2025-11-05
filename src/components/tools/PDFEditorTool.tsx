@@ -34,7 +34,9 @@ const [viewSize, setViewSize] = useState({ width: 0, height: 0 });
   };
 
   const handleAddText = () => {
-    if (!editorCanvas || !textValue.trim()) return;
+    if (!editorCanvas || !textValue.trim()) {
+      return;
+    }
     const text = new IText(textValue, {
       left: viewSize.width / 2 - 50,
       top: viewSize.height / 2,
@@ -46,6 +48,7 @@ const [viewSize, setViewSize] = useState({ width: 0, height: 0 });
     editorCanvas.setActiveObject(text);
     editorCanvas.renderAll();
     setTextValue("");
+    setShowTextInput(false);
   };
 
   const handleSignatureUploadClick = () => {
