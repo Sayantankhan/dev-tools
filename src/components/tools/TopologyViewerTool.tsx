@@ -608,6 +608,12 @@ export function TopologyViewerTool() {
                 fill: currentColor !important; 
                 stroke: currentColor !important; 
               }
+
+              /* Ensure VPC containers don't block clicks on inner nodes */
+              .react-flow__node-container { z-index: 0 !important; }
+              .react-flow__node-topology { z-index: 1 !important; }
+              /* Keep resize handles above for usability */
+              .react-flow__resize-control { z-index: 5 !important; }
             `}</style>
             <div ref={reactFlowWrapper} className="w-full h-full">
               <ReactFlow
