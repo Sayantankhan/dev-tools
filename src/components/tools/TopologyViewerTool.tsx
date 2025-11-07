@@ -446,7 +446,7 @@ export function TopologyViewerTool() {
       </div>
 
       {/* Center Canvas */}
-      <div className="flex-1 min-h-0 flex flex-col gap-4" style={{ maxWidth: '80vw' }}>
+      <div className="flex-1 min-h-0 flex flex-col gap-4" style={{ width: '85%' }}>
         <Tabs defaultValue="editor" className="flex-1 min-h-0 flex flex-col">
           <div className="flex items-center justify-between">
             <TabsList>
