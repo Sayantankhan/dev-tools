@@ -20,7 +20,7 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
   const containsCount = nodeData.contains?.length || 0;
 
   return (
-    <>
+    <div className="group w-full h-full">
       <NodeResizer
         minWidth={200}
         minHeight={150}
@@ -32,7 +32,7 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
       />
       
       <div
-        className="group w-full h-full rounded-lg border-2 transition-all"
+        className="w-full h-full rounded-lg border-2 transition-all"
         style={{
           borderColor: isHovered 
             ? 'hsl(var(--primary))' 
@@ -166,6 +166,6 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
         isConnectableEnd={true}
         style={{ left: -6, zIndex: 20, opacity: selected ? 1 : undefined }}
       />
-    </>
+    </div>
   );
 });
