@@ -54,7 +54,7 @@ export function TopologyViewerTool() {
       ...edge,
       style: {
         strokeWidth: 2,
-        stroke: edge.selected ? 'hsl(var(--primary))' : '#64748b',
+        stroke: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b'),
         strokeDasharray: edge.data?.lineStyle === 'dotted' ? '5,5' : undefined,
       },
       label: edge.data?.label || edge.label,
@@ -64,7 +64,7 @@ export function TopologyViewerTool() {
       labelBgBorderRadius: 4,
       markerEnd: edge.data?.edgeType === 'undirected' ? undefined : { 
         type: MarkerType.ArrowClosed, 
-        color: edge.selected ? 'hsl(var(--primary))' : '#64748b' 
+        color: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b') 
       },
     }))
   , [edges]);

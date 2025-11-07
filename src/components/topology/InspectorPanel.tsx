@@ -393,6 +393,18 @@ function EdgeInspector({
       </div>
 
       <div>
+        <Label>Color</Label>
+        <div className="mt-2">
+          <Input
+            type="color"
+            value={String(edge.data?.color || '#64748b')}
+            onChange={(e) => onUpdateEdge(edge.id, { ...edge.data, color: e.target.value })}
+            className="h-9 w-16 p-1 bg-transparent border-muted"
+          />
+        </div>
+      </div>
+
+      <div>
         <Label>Line Style</Label>
         <Select
           value={String(edge.data?.lineStyle || 'solid')}
