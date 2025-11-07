@@ -24,7 +24,6 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2 } from 'lucide-react';
-import { toPng, toSvg } from 'html-to-image';
 import { toast } from 'sonner';
 import { SymbolPalette, SymbolType, getSymbolConfig } from '@/components/topology/SymbolPalette';
 import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNode';
@@ -151,54 +150,7 @@ export function TopologyViewerTool() {
     [nodes, setEdges, saveToHistory]
   );
 
-  // Export functions
-  const exportPNG = useCallback(async () => {
-    if (!reactFlowWrapper.current) return;
-    try {
-      const dataUrl = await toPng(reactFlowWrapper.current, {
-        backgroundColor: '#0a0a0a',
-        pixelRatio: 2,
-        filter: (node) => {
-          // Filter out all UI controls
-          return !node.classList?.contains('react-flow__controls') &&
-                 !node.classList?.contains('react-flow__minimap') &&
-                 !node.classList?.contains('react-flow__panel') &&
-                 !node.classList?.contains('react-flow__attribution');
-        },
-      });
-      const link = document.createElement('a');
-      link.download = `topology-${Date.now()}.png`;
-      link.href = dataUrl;
-      link.click();
-      toast.success('Exported as PNG');
-    } catch (error) {
-      toast.error('Failed to export PNG');
-    }
-  }, []);
-
-  const exportSVG = useCallback(async () => {
-    if (!reactFlowWrapper.current) return;
-    try {
-      const svgData = await toSvg(reactFlowWrapper.current, {
-        backgroundColor: '#0a0a0a',
-        filter: (node) => {
-          // Filter out all UI controls
-          return !node.classList?.contains('react-flow__controls') &&
-                 !node.classList?.contains('react-flow__minimap') &&
-                 !node.classList?.contains('react-flow__panel') &&
-                 !node.classList?.contains('react-flow__attribution');
-        },
-      });
-      const link = document.createElement('a');
-      link.download = `topology-${Date.now()}.svg`;
-      link.href = svgData;
-      link.click();
-      toast.success('Exported as SVG');
-    } catch (error) {
-      toast.error('Failed to export SVG');
-    }
-  }, []);
-
+  // Export function
   const exportJSON = useCallback(() => {
     const data = {
       nodes: nodes.map((n) => {
@@ -480,20 +432,10 @@ export function TopologyViewerTool() {
                 <Controls />
                 <MiniMap />
                 <Panel position="top-right">
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={exportPNG}>
-                      <Download className="w-3 h-3 mr-2" />
-                      PNG
-                    </Button>
-                    <Button size="sm" variant="secondary" onClick={exportSVG}>
-                      <Download className="w-3 h-3 mr-2" />
-                      SVG
-                    </Button>
-                    <Button size="sm" variant="secondary" onClick={exportJSON}>
-                      <Download className="w-3 h-3 mr-2" />
-                      JSON
-                    </Button>
-                  </div>
+                  <Button size="sm" variant="secondary" onClick={exportJSON}>
+                    <Download className="w-3 h-3 mr-2" />
+                    JSON
+                  </Button>
                 </Panel>
               </ReactFlow>
             </div>
