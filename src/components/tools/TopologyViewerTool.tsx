@@ -743,136 +743,25 @@ export function TopologyViewerTool() {
               
                 onNodesChange={(changes) => {
                   onNodesChange(changes);
-                  
-          // Handle containment logic when node finishes dragging
-          if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
-            let result: Node[] | null = null;
-            const movedIds = changes.filter((c: any) => c.type === 'position').map((c: any) => c.id);
-            
-            setNodes((currentNodes) => {
-              let updated = [...currentNodes];
-              const containers = updated.filter((n) => n.type === 'container');
-              const byId = new Map(updated.map((n) => [n.id, n] as const));
 
-              const getAbsPos = (node: any) => {
-                if (node.parentNode) {
-                  const parent = byId.get(node.parentNode);
-                  if (parent) {
-                    return {
-                      x: node.position.x + parent.position.x,
-                      y: node.position.y + parent.position.y,
-                    };
-                  }
-                }
-                return { x: node.position.x, y: node.position.y };
-              };
-
-              const getContainerBounds = (c: any) => {
-                const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
-                const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
-                return {
-                  left: c.position.x,
-                  right: c.position.x + w,
-                  top: c.position.y,
-                  bottom: c.position.y + h,
-                };
-              };
-
-              const containsCenter = (c: any, absX: number, absY: number, n: any) => {
-                const b = getContainerBounds(c);
-                const centerX = absX + ((n.style?.width as number) || 160) / 2;
-                const centerY = absY + ((n.style?.height as number) || 60) / 2;
-                return centerX >= b.left && centerX <= b.right && centerY >= b.top && centerY <= b.bottom;
-              };
-
-              // process only moved nodes
-              movedIds.forEach((id: string) => {
-                const node = byId.get(id);
-                if (!node || node.type === 'container') return;
-
-                const abs = getAbsPos(node);
-                const currentParent = node.parentNode ? byId.get(node.parentNode) : undefined;
-                const target = containers.find((c) => containsCenter(c, abs.x, abs.y, node));
-
-                if (target) {
-                  if (node.parentNode !== target.id) {
-                    // move under new parent with relative coords
-                    const rel = { x: abs.x - target.position.x, y: abs.y - target.position.y };
-                    updated = updated.map((n) => n.id === node.id ? { ...n, position: rel, parentNode: target.id, extent: 'parent' as const } : n);
-                  }
-                } else {
-                  if (node.parentNode) {
-                    // detach from parent: convert to absolute coords and clear extent
-                    updated = updated.map((n) => n.id === node.id ? { ...n, position: { x: abs.x, y: abs.y }, parentNode: undefined, extent: undefined as any } : n);
-                  }
-                }
-              });
-
-              // sync containers' contains arrays
-              const recomputed = updated.map((n) => {
-                if (n.type !== 'container') return n;
-                const contains = updated.filter((x) => x.parentNode === n.id).map((x) => x.id);
-                const cData = n.data as any;
-                if (JSON.stringify((cData.contains || []).sort()) !== JSON.stringify(contains.sort())) {
-                  return { ...n, data: { ...n.data, contains } };
-                }
-                return n;
-              });
-
-              return recomputed;
-              result = recomputed;
-              return recomputed;
-            });
-
-            if (result) saveToHistory(result, edges);
-          }
-                  
-                  // Visual feedback during dragging over containers
+                  // While dragging, set visual hover on containers (no mutations on drop here)
                   if (changes.some((c: any) => c.type === 'position' && c.dragging === true)) {
-                    const draggedNodeIds = changes
-                      .filter((c: any) => c.type === 'position' && c.dragging)
-                      .map((c: any) => c.id);
-                    
+                    const draggedIds = changes.filter((c: any) => c.type === 'position' && c.dragging).map((c: any) => c.id);
                     setNodes((currentNodes) => {
-                      const containerNodes = currentNodes.filter((n) => n.type === 'container');
-                      const draggedNodes = currentNodes.filter((n) => draggedNodeIds.includes(n.id));
-                      
+                      const draggedNodes = currentNodes.filter((n) => draggedIds.includes(n.id));
                       return currentNodes.map((node) => {
                         if (node.type !== 'container') return node;
-                        
                         const cData = node.data as ContainerNodeData;
-                        let isHovered = false;
-                        
-                        // Check if any dragged node is over this container
-                        draggedNodes.forEach((draggedNode) => {
-                          if (draggedNode.type === 'container') return; // Don't check container over container
-                          
-                          const containerBounds = {
-                            left: node.position.x,
-                            right: node.position.x + (node.measured?.width || (node.style?.width as number) || node.width || 400),
-                            top: node.position.y,
-                            bottom: node.position.y + (node.measured?.height || (node.style?.height as number) || node.height || 300),
-                          };
-                          
-                          const nodeBounds = {
-                            x: draggedNode.position.x,
-                            y: draggedNode.position.y,
-                          };
-                          
-                          if (
-                            nodeBounds.x >= containerBounds.left &&
-                            nodeBounds.x <= containerBounds.right &&
-                            nodeBounds.y >= containerBounds.top &&
-                            nodeBounds.y <= containerBounds.bottom
-                          ) {
-                            isHovered = true;
-                          }
+                        const w = node.measured?.width || (node.style?.width as number) || node.width || 400;
+                        const h = node.measured?.height || (node.style?.height as number) || node.height || 300;
+                        const b = { left: node.position.x, right: node.position.x + w, top: node.position.y, bottom: node.position.y + h };
+                        const isHovered = draggedNodes.some((dn) => {
+                          if (dn.type === 'container') return false;
+                          const cx = dn.position.x + ((dn.style?.width as number) || 160) / 2;
+                          const cy = dn.position.y + ((dn.style?.height as number) || 60) / 2;
+                          return cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom;
                         });
-                        
-                        if (cData.isHovered !== isHovered) {
-                          return { ...node, data: { ...node.data, isHovered } };
-                        }
-                        
+                        if (cData.isHovered !== isHovered) return { ...node, data: { ...node.data, isHovered } };
                         return node;
                       });
                     });
