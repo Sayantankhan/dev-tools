@@ -345,14 +345,14 @@ export function TopologyViewerTool() {
   const hasSelection = selectedNodes.length > 0 || selectedEdges.length > 0;
 
   return (
-    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen' : 'h-[80vh]'} min-h-0 relative`}>
+    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen' : 'h-[calc(100vh-120px)]'} min-h-0 relative`}>
       {/* Left Palette */}
-      <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-56' : 'w-64'}`}>
+      <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-56' : 'w-48'}`}>
         <SymbolPalette onSymbolDragStart={() => {}} />
       </div>
 
       {/* Center Canvas */}
-      <div className="flex-1 min-h-0 flex flex-col gap-4">
+      <div className="flex-1 min-h-0 flex flex-col gap-4" style={{ maxWidth: '80vw' }}>
         <Tabs defaultValue="editor" className="flex-1 min-h-0 flex flex-col">
           <div className="flex items-center justify-between">
             <TabsList>
