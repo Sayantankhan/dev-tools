@@ -107,7 +107,7 @@ export function TopologyViewerTool() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 min-h-[70vh]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Network className="w-6 h-6" />
@@ -241,8 +241,8 @@ export function TopologyViewerTool() {
             </div>
           </div>
 
-          <div className="flex-1 border rounded-lg">
-            <ReactFlow
+          <div className="border rounded-lg h-[70vh] min-h-[400px]">
+            <ReactFlow style={{ width: '100%', height: '100%' }}
               nodes={state.nodes}
               edges={state.edges}
               onNodesChange={(changes) => {

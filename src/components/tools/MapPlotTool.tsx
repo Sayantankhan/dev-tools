@@ -152,7 +152,7 @@ export function MapPlotTool() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 min-h-[70vh]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MapIcon className="w-6 h-6" />
@@ -329,7 +329,7 @@ export function MapPlotTool() {
             </div>
           </div>
 
-          <div ref={mapContainer} className="flex-1 rounded-lg border" />
+          <div ref={mapContainer} className="rounded-lg border h-[70vh] min-h-[400px]" />
         </TabsContent>
 
         <TabsContent value="controls" className="flex-1 overflow-auto">
