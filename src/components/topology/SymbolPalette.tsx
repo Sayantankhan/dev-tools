@@ -137,11 +137,11 @@ const SymbolGroup = ({ title, symbols, onSymbolDragStart }: { title: string, sym
               e.dataTransfer.effectAllowed = 'move';
               onSymbolDragStart(symbol.type);
             }}
-            className="flex items-center gap-2 p-2 rounded-md border bg-card hover:bg-accent cursor-grab active:cursor-grabbing transition-colors text-xs"
+            className="flex items-center gap-2 p-2 rounded-md border bg-background hover:bg-accent cursor-grab active:cursor-grabbing transition-colors text-xs"
             style={{ borderLeftColor: symbol.color, borderLeftWidth: '2px' }}
           >
-            <Icon className="w-4 h-4 flex-shrink-0" style={{ color: symbol.color }} />
-            <span className="font-medium">{symbol.label}</span>
+            <Icon className="w-4 h-4 flex-shrink-0 text-foreground" style={{ color: symbol.color }} />
+            <span className="font-medium text-foreground">{symbol.label}</span>
           </div>
         );
       })}
@@ -167,9 +167,9 @@ export function SymbolPalette({ onSymbolDragStart }: SymbolPaletteProps) {
   const filteredBase = filterSymbols(baseSymbols);
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col bg-muted/30">
       <div className="p-3 border-b space-y-2">
-        <h3 className="font-semibold text-sm">Symbol Palette</h3>
+        <h3 className="font-semibold text-sm text-foreground">Symbol Palette</h3>
         <Input
           placeholder="Search symbols..."
           value={searchQuery}
