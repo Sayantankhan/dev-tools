@@ -24,7 +24,7 @@ interface InspectorPanelProps {
   onAddMetadata: (nodeId: string, key: string, value: string) => void;
   onRemoveMetadata: (nodeId: string, key: string) => void;
   onCreateConnection: (sourceId: string, targetId: string) => void;
-  onReattachEdge: (edgeId: string, updates: { source?: string; target?: string }) => void;
+  onReattachEdge: (edgeId: string, updates: { source?: string; target?: string; sourceHandle?: string; targetHandle?: string }) => void;
   portalContainer?: HTMLElement | null;
 }
 
@@ -400,47 +400,108 @@ function EdgeInspector({
   allNodes: Node[];
   onUpdateEdge: (edgeId: string, data: any) => void;
   onDeleteEdge: (edgeId: string) => void;
-  onReattachEdge: (edgeId: string, updates: { source?: string; target?: string }) => void;
+  onReattachEdge: (edgeId: string, updates: { source?: string; target?: string; sourceHandle?: string; targetHandle?: string }) => void;
   portalContainer?: HTMLElement | null;
 }) {
   const nodeLabel = (id: string) => (allNodes.find(n => n.id === id)?.data as TopologyNodeData)?.label || id;
+  
+  // Position mapping: 1=top(12h), 2=right(3h), 3=bottom(6h), 4=left(9h)
+  const positionMap = {
+    '1': { label: 'Top (12h)', source: 's-top', target: 't-top' },
+    '2': { label: 'Right (3h)', source: 's-right', target: 't-right' },
+    '3': { label: 'Bottom (6h)', source: 's-bottom', target: 't-bottom' },
+    '4': { label: 'Left (9h)', source: 's-left', target: 't-left' },
+  };
+  
+  // Parse current handles to position numbers
+  const getPositionFromHandle = (handle: string | null | undefined): string => {
+    if (!handle) return '1'; // Default to top
+    if (handle.includes('top')) return '1';
+    if (handle.includes('right')) return '2';
+    if (handle.includes('bottom')) return '3';
+    if (handle.includes('left')) return '4';
+    return '1';
+  };
+  
+  const currentSourcePosition = getPositionFromHandle(edge.sourceHandle);
+  const currentTargetPosition = getPositionFromHandle(edge.targetHandle);
+  
+  // Generate combined value for dropdowns
+  const getConnectionValue = (nodeId: string, position: string): string => {
+    return `${nodeId}:${position}`;
+  };
+  
+  const parseConnectionValue = (value: string): { nodeId: string; position: string } => {
+    const [nodeId, position] = value.split(':');
+    return { nodeId, position: position || '1' };
+  };
   
   console.log('[EdgeInspector] Rendering with edge:', edge.id, 'data:', edge.data);
   return (
     <div className="space-y-4">
       <div>
-        <Label>From Node</Label>
+        <Label>From (Node + Position)</Label>
         <Select
-          value={edge.source}
-          onValueChange={(newSource) => onReattachEdge(edge.id, { source: newSource })}
+          value={getConnectionValue(edge.source, currentSourcePosition)}
+          onValueChange={(value) => {
+            const { nodeId, position } = parseConnectionValue(value);
+            const handle = positionMap[position as keyof typeof positionMap].source;
+            onReattachEdge(edge.id, { source: nodeId, sourceHandle: handle });
+          }}
         >
           <SelectTrigger className="mt-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent container={portalContainer} sideOffset={5}>
-            {allNodes.map((node) => (
-              <SelectItem key={node.id} value={node.id}>
-                {nodeLabel(node.id)}
-              </SelectItem>
+          <SelectContent container={portalContainer} sideOffset={5} className="z-[9999] bg-background">
+            {allNodes.filter(n => n.type !== 'text').map((node) => (
+              <React.Fragment key={node.id}>
+                <SelectItem value={getConnectionValue(node.id, '1')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['1'].label}
+                </SelectItem>
+                <SelectItem value={getConnectionValue(node.id, '2')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['2'].label}
+                </SelectItem>
+                <SelectItem value={getConnectionValue(node.id, '3')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['3'].label}
+                </SelectItem>
+                <SelectItem value={getConnectionValue(node.id, '4')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['4'].label}
+                </SelectItem>
+              </React.Fragment>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div>
-        <Label>To Node</Label>
+        <Label>To (Node + Position)</Label>
         <Select
-          value={edge.target}
-          onValueChange={(newTarget) => onReattachEdge(edge.id, { target: newTarget })}
+          value={getConnectionValue(edge.target, currentTargetPosition)}
+          onValueChange={(value) => {
+            const { nodeId, position } = parseConnectionValue(value);
+            const handle = positionMap[position as keyof typeof positionMap].target;
+            onReattachEdge(edge.id, { target: nodeId, targetHandle: handle });
+          }}
         >
           <SelectTrigger className="mt-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent container={portalContainer} sideOffset={5}>
-            {allNodes.map((node) => (
-              <SelectItem key={node.id} value={node.id}>
-                {nodeLabel(node.id)}
-              </SelectItem>
+          <SelectContent container={portalContainer} sideOffset={5} className="z-[9999] bg-background">
+            {allNodes.filter(n => n.type !== 'text').map((node) => (
+              <React.Fragment key={node.id}>
+                <SelectItem value={getConnectionValue(node.id, '1')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['1'].label}
+                </SelectItem>
+                <SelectItem value={getConnectionValue(node.id, '2')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['2'].label}
+                </SelectItem>
+                <SelectItem value={getConnectionValue(node.id, '3')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['3'].label}
+                </SelectItem>
+                <SelectItem value={getConnectionValue(node.id, '4')} className="bg-background">
+                  {nodeLabel(node.id)} - {positionMap['4'].label}
+                </SelectItem>
+              </React.Fragment>
             ))}
           </SelectContent>
         </Select>
