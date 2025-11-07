@@ -3,13 +3,13 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary, Type, GalleryVerticalEnd } from 'lucide-react';
+import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary, Type, GalleryVerticalEnd, Router, ArrowLeftRight, GitBranch, ServerCog } from 'lucide-react';
 
 export type SymbolType = 
   | 'mysql' | 'postgres' | 'mongodb' | 'cassandra' | 'timeseries' | 'graphdb'
   | 'cache' | 'redis' | 'memcached' | 'hazelcast' | 'compute' | 'gpu-compute'
   | 'firewall' | 'lb-l4' | 'lb-l7' | 'storage' | 'message-queue' | 'rabbitmq'
-  | 'kubernetes' | 'custom' | 'text' | 'gateway'
+  | 'kubernetes' | 'custom' | 'text' | 'gateway' | 'nat-gateway' | 'bgp-router' | 'transit-gateway' | 'proxy'
   | 'kafka' | 'elasticsearch' | 'splunk' | 'spark' | 'hadoop' | 'grafana'
   | 'aws-s3' | 'aws-ec2' | 'aws-ecs' | 'aws-eks' | 'aws-vpc' | 'aws-lambda' 
   | 'aws-sagemaker' | 'aws-dynamodb' | 'aws-opensearch' | 'aws-sns' | 'aws-sqs' 
@@ -96,6 +96,10 @@ const baseSymbols: Symbol[] = [
   { type: 'gpu-compute', label: 'GPU Compute', icon: Cpu, color: '#8b5cf6' },
   { type: 'firewall', label: 'Firewall', icon: Shield, color: '#ef4444' },
   { type: 'gateway', label: 'API Gateway', icon: GalleryVerticalEnd, color: '#10b981' },
+  { type: 'nat-gateway', label: 'NAT Gateway', icon: ArrowLeftRight, color: '#14b8a6' },
+  { type: 'bgp-router', label: 'BGP Router', icon: Router, color: '#06b6d4' },
+  { type: 'transit-gateway', label: 'Transit Gateway', icon: GitBranch, color: '#8b5cf6' },
+  { type: 'proxy', label: 'Proxy Server', icon: ServerCog, color: '#ec4899' },
   { type: 'lb-l4', label: 'L4 Load Balancer', icon: Network, color: '#06b6d4' },
   { type: 'lb-l7', label: 'L7 Load Balancer', icon: Layers, color: '#0891b2' },
   { type: 'storage', label: 'Object Storage', icon: Box, color: '#84cc16' },
