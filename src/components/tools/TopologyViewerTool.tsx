@@ -849,7 +849,7 @@ export function TopologyViewerTool() {
 
       {/* Floating Inspector Panel - Only visible when something is selected */}
       {hasSelection && (
-        <div className={`absolute top-4 right-4 ${isFullscreen ? 'w-72' : 'w-80'} h-[calc(100%-2rem)] z-50 animate-slide-in-right`}>
+        <div className={`absolute top-4 right-4 ${isFullscreen ? 'w-72' : 'w-80'} h-[calc(100%-2rem)] z-[3000] pointer-events-auto animate-slide-in-right`}>
           <InspectorPanel
             selectedNodes={selectedNodes}
             selectedEdges={selectedEdges}
