@@ -227,50 +227,48 @@ export function TopologyViewerTool() {
     toast.success('Exported topology JSON');
   }, [nodes, edges]);
 
-  // Export as JPG using React Flow's built-in method
+  // Export as JPG using html-to-image (better SVG support)
   const exportAsJPG = useCallback(() => {
     if (!reactFlowInstance) {
       toast.error('Canvas not ready');
       return;
     }
     
-    const imageWidth = 1920;
-    const imageHeight = 1080;
+    toast.info('Generating image...');
     
-    reactFlowInstance.getViewport();
-    const nodesBounds = {
-      x: Math.min(...nodes.map(n => n.position.x)),
-      y: Math.min(...nodes.map(n => n.position.y)),
-      x2: Math.max(...nodes.map(n => n.position.x + 200)),
-      y2: Math.max(...nodes.map(n => n.position.y + 200)),
-    };
+    // Fit view to ensure all nodes are visible
+    reactFlowInstance.fitView({ padding: 0.2 });
     
-    const width = nodesBounds.x2 - nodesBounds.x;
-    const height = nodesBounds.y2 - nodesBounds.y;
-    
-    import('html2canvas').then((html2canvas) => {
-      const canvasElement = reactFlowWrapper.current?.querySelector('.react-flow__viewport');
-      if (!canvasElement) return;
-      
-      html2canvas.default(canvasElement as HTMLElement, {
-        backgroundColor: '#0f1419',
-        width,
-        height,
-        scale: 2,
-      }).then((canvas) => {
-        canvas.toBlob((blob) => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
+    // Wait for fitView to complete, then capture
+    setTimeout(() => {
+      import('html-to-image').then(({ toJpeg }) => {
+        const reactFlowElement = reactFlowWrapper.current?.querySelector('.react-flow__viewport') as HTMLElement;
+        if (!reactFlowElement) {
+          toast.error('Canvas not found');
+          return;
+        }
+        
+        toJpeg(reactFlowElement, {
+          backgroundColor: '#0f1419',
+          quality: 0.95,
+          pixelRatio: 2,
+        })
+        .then((dataUrl) => {
           const link = document.createElement('a');
           link.download = `topology-${Date.now()}.jpg`;
-          link.href = url;
+          link.href = dataUrl;
           link.click();
-          URL.revokeObjectURL(url);
           toast.success('Exported as JPG');
-        }, 'image/jpeg', 0.95);
-      }).catch(() => toast.error('Export failed'));
-    });
-  }, [reactFlowInstance, nodes]);
+        })
+        .catch((error) => {
+          console.error('Export error:', error);
+          toast.error('Export failed - try again');
+        });
+      }).catch(() => {
+        toast.error('Failed to load export library');
+      });
+    }, 300);
+  }, [reactFlowInstance]);
 
   // Import JSON
   const importJSON = useCallback(async (jsonString: string) => {
