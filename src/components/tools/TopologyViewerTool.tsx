@@ -855,7 +855,12 @@ export function TopologyViewerTool() {
                 const idMap = new Map<string, string>();
                 const newContainedNodes: Node[] = [];
                 
-                // Duplicate all contained nodes
+                // Calculate offset for side-by-side placement
+                const containerWidth = (node.style?.width as number) || node.width || 400;
+                const horizontalOffset = containerWidth + 50; // Container width + spacing
+                const verticalOffset = 0; // Keep same Y position for side-by-side
+                
+                // Duplicate all contained nodes with same offset
                 containedNodeIds.forEach((containedId) => {
                   const containedNode = nodes.find((n) => n.id === containedId);
                   if (containedNode) {
@@ -865,20 +870,20 @@ export function TopologyViewerTool() {
                       ...containedNode,
                       id: newId,
                       position: { 
-                        x: containedNode.position.x + 50, 
-                        y: containedNode.position.y + 50 
+                        x: containedNode.position.x + horizontalOffset, 
+                        y: containedNode.position.y + verticalOffset 
                       },
                       data: { ...containedNode.data },
                     });
                   }
                 });
                 
-                // Create new container
+                // Create new container with same offset
                 const newContainerId = getId();
                 const newContainer: Node = {
                   ...node,
                   id: newContainerId,
-                  position: { x: node.position.x + 50, y: node.position.y + 50 },
+                  position: { x: node.position.x + horizontalOffset, y: node.position.y + verticalOffset },
                   data: { 
                     ...node.data, 
                     label: `${node.data.label} (copy)`,
