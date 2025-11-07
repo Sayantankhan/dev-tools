@@ -40,42 +40,82 @@ export function TopologyViewerTool() {
   const [nodes, setNodes, rfOnNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   
+  // Helper: Check if a point is inside container bounds
+  const isPointInsideContainer = useCallback((point: { x: number; y: number }, container: Node) => {
+    const containerWidth = container.measured?.width || (container.style?.width as number) || container.width || 400;
+    const containerHeight = container.measured?.height || (container.style?.height as number) || container.height || 300;
+    
+    return (
+      point.x >= container.position.x &&
+      point.x <= container.position.x + containerWidth &&
+      point.y >= container.position.y &&
+      point.y <= container.position.y + containerHeight
+    );
+  }, []);
+
+  // Helper: Get node center point
+  const getNodeCenter = useCallback((node: Node) => {
+    const nodeWidth = (node.style?.width as number) || node.width || 160;
+    const nodeHeight = (node.style?.height as number) || node.height || 60;
+    return {
+      x: node.position.x + nodeWidth / 2,
+      y: node.position.y + nodeHeight / 2,
+    };
+  }, []);
+
+  // Helper: Update container children based on containment
+  const updateContainment = useCallback((allNodes: Node[]) => {
+    const containers = allNodes.filter(n => n.type === 'container');
+    const regularNodes = allNodes.filter(n => n.type !== 'container');
+    
+    let updated = [...allNodes];
+    
+    // For each container, recompute its children list
+    containers.forEach(container => {
+      const newChildren: string[] = [];
+      
+      regularNodes.forEach(node => {
+        const center = getNodeCenter(node);
+        if (isPointInsideContainer(center, container)) {
+          newChildren.push(node.id);
+        }
+      });
+      
+      // Update container's contains array
+      const currentContains = (container.data as ContainerNodeData).contains || [];
+      if (JSON.stringify(currentContains.sort()) !== JSON.stringify(newChildren.sort())) {
+        updated = updated.map(n => 
+          n.id === container.id
+            ? { ...n, data: { ...n.data, contains: newChildren } }
+            : n
+        );
+      }
+    });
+    
+    return updated;
+  }, [isPointInsideContainer, getNodeCenter]);
+
   const onNodesChange = useCallback(
     (changes: any) => {
-      // First, let React Flow apply the changes correctly
+      // Apply React Flow's changes first
       rfOnNodesChange(changes);
 
-      // Then, if a locked container is being dragged, move its children by the delta
-      setNodes((nds) => {
-        const changeById = new Map<string, any>(changes.map((c: any) => [c.id, c]));
-        const lockedMoves = nds
-          .map((n) => ({ n, ch: changeById.get(n.id) }))
-          .filter(({ n, ch }) => ch?.type === 'position' && ch.dragging && n.type === 'container' && (n.data as ContainerNodeData).locked)
-          .map(({ n, ch }) => ({
-            containerId: n.id,
-            deltaX: (ch.position?.x ?? n.position.x) - n.position.x,
-            deltaY: (ch.position?.y ?? n.position.y) - n.position.y,
-            children: ((n.data as ContainerNodeData).contains || []).slice(),
-          }));
-
-        if (!lockedMoves.length) return nds;
-
-        const updated = nds.map((node) => {
-          const move = lockedMoves.find((m) => m.children.includes(node.id));
-          if (!move) return node;
-          const original = nds.find((x) => x.id === node.id) || node;
-          return { ...node, position: { x: original.position.x + move.deltaX, y: original.position.y + move.deltaY } };
+      // After position changes, update container containment
+      const hasPositionChange = changes.some((c: any) => c.type === 'position');
+      
+      if (hasPositionChange) {
+        setNodes((nds) => {
+          // Update containment for all nodes
+          return updateContainment(nds);
         });
-        return updated;
-      });
+      }
     },
-    [rfOnNodesChange, setNodes]
+    [rfOnNodesChange, setNodes, updateContainment]
   );
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [snapToGrid, setSnapToGrid] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
   const [rawInput, setRawInput] = useState('');
   const [copiedNodes, setCopiedNodes] = useState<Node[]>([]);
   const [copiedEdges, setCopiedEdges] = useState<Edge[]>([]);
@@ -229,9 +269,9 @@ export function TopologyViewerTool() {
           metadata: { allowTypeEdit: type === 'custom' },
           ...(isContainer && { 
             contains: [],
-            style: { width: 400, height: 300 }
           }),
         },
+        zIndex: isContainer ? 0 : 10, // Containers below, regular nodes above
         ...(isContainer 
           ? { style: { width: 400, height: 300 } }
           : { style: { width: 160, height: 60 } }
@@ -239,83 +279,7 @@ export function TopologyViewerTool() {
       };
 
       setNodes((nds) => {
-        let updated = nds.concat(newNode);
-        
-        // Check if new node was dropped inside a container
-        if (!isContainer) {
-          const containerNodes = updated.filter((n) => n.type === 'container');
-          
-          // DEBUG: Log bounds for all containers vs new node
-          try {
-            const nodeW = (newNode.style?.width as number) || newNode.width || 160;
-            const nodeH = (newNode.style?.height as number) || newNode.height || 60;
-            const cx = newNode.position.x + nodeW / 2;
-            const cy = newNode.position.y + nodeH / 2;
-            console.groupCollapsed('[DROP NEW] Container bounds vs node center', { newNodeId: newNode.id });
-            console.log('Node position', newNode.position, 'size', { w: nodeW, h: nodeH }, 'center', { cx, cy });
-            containerNodes.forEach((container) => {
-              const w = container.measured?.width || (container.style?.width as number) || container.width || 400;
-              const h = container.measured?.height || (container.style?.height as number) || container.height || 300;
-              const left = container.position.x, top = container.position.y, right = left + w, bottom = top + h;
-              const inside = cx >= left && cx <= right && cy >= top && cy <= bottom;
-              console.table({ containerId: container.id, left, top, right, bottom, inside });
-            });
-            console.groupEnd();
-          } catch {}
-          
-          for (const container of containerNodes) {
-            const containerWidth = container.measured?.width || (container.style?.width as number) || container.width || 400;
-            const containerHeight = container.measured?.height || (container.style?.height as number) || container.height || 300;
-            
-            const containerBounds = {
-              left: container.position.x,
-              right: container.position.x + containerWidth,
-              top: container.position.y,
-              bottom: container.position.y + containerHeight,
-            };
-            
-            // Use node center for better drop detection
-            const nodeCenterX = newNode.position.x + (newNode.style?.width as number || 80) / 2;
-            const nodeCenterY = newNode.position.y + (newNode.style?.height as number || 30) / 2;
-            
-            if (
-              nodeCenterX >= containerBounds.left &&
-              nodeCenterX <= containerBounds.right &&
-              nodeCenterY >= containerBounds.top &&
-              nodeCenterY <= containerBounds.bottom
-            ) {
-              // Calculate relative position to parent
-              const relativePosition = {
-                x: newNode.position.x - container.position.x,
-                y: newNode.position.y - container.position.y,
-              };
-              console.log('[DROP NEW] attach', { nodeId: newNode.id, to: container.id, relativePosition });
-              
-              // Update the new node to be a child of this container (no extent on first attach)
-              updated = updated.map((n) =>
-                n.id === newNode.id
-                  ? { 
-                      ...n,
-                      position: relativePosition,
-                      parentNode: container.id,
-                    }
-                  : n
-              );
-              
-              // Add to container's contains array
-              const cData = container.data as ContainerNodeData;
-              const newContains = [...(cData.contains || []), newNode.id];
-              updated = updated.map((n) =>
-                n.id === container.id
-                  ? { ...n, data: { ...n.data, contains: newContains } }
-                  : n
-              );
-              
-              break; // Only add to first matching container
-            }
-          }
-        }
-        
+        const updated = updateContainment([...nds, newNode]);
         saveToHistory(updated, edges);
         return updated;
       });
@@ -717,16 +681,24 @@ export function TopologyViewerTool() {
                 stroke: currentColor !important; 
               }
 
-              /* Ensure VPC containers don't block clicks on inner nodes */
-              .react-flow__node-container { z-index: 0 !important; }
-              .react-flow__node-topology { z-index: 1 !important; }
-              /* Keep resize handles above for usability and connection handles */
-              .react-flow__resize-control { z-index: 2002 !important; }
+              /* Ensure containers render below regular nodes */
+              .react-flow__node-container { 
+                z-index: 0 !important; 
+                pointer-events: all !important;
+              }
+              .react-flow__node-topology { 
+                z-index: 10 !important; 
+              }
+              /* Keep resize handles above for usability */
+              .react-flow__resize-control { 
+                z-index: 100 !important; 
+                pointer-events: all !important;
+              }
               /* Edges should render above nodes */
-              .react-flow__edges { z-index: 1000 !important; }
-              .react-flow__edge { z-index: 1000 !important; }
+              .react-flow__edges { z-index: 50 !important; }
+              .react-flow__edge { z-index: 50 !important; }
               /* Connection line during dragging */
-              .react-flow__connectionline { z-index: 1001 !important; }
+              .react-flow__connectionline { z-index: 60 !important; }
             `}</style>
             <div ref={reactFlowWrapper} className="w-full h-full">
               <ReactFlow
@@ -738,140 +710,7 @@ export function TopologyViewerTool() {
                 zoomOnScroll={false}
                 zoomOnPinch
               
-                onNodesChange={(changes) => {
-                  onNodesChange(changes);
-
-                  // Drag end: attach/detach to containers (no extent on first attach)
-                  if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
-                    let newState: Node[] = [];
-                    setNodes((current) => {
-                      let updated = [...current];
-                      const byId = new Map(updated.map((n) => [n.id, n] as const));
-                      const containers = updated.filter((n) => n.type === 'container');
-
-                      const getAbs = (n: any) => {
-                        if (n.parentNode) {
-                          const p = byId.get(n.parentNode);
-                          if (p) return { x: n.position.x + p.position.x, y: n.position.y + p.position.y };
-                        }
-                        return { x: n.position.x, y: n.position.y };
-                      };
-
-                      const movedIds = changes.filter((c: any) => c.type === 'position').map((c: any) => c.id);
-
-                      movedIds.forEach((id: string) => {
-                        const n = byId.get(id);
-                        if (!n || n.type === 'container') return;
-                        const abs = getAbs(n);
-
-                        // DEBUG: container bounds vs node position at drop
-                        try {
-                          const nodeW = (n.style?.width as number) || n.width || 160;
-                          const nodeH = (n.style?.height as number) || n.height || 60;
-                          const cx = abs.x + nodeW / 2;
-                          const cy = abs.y + nodeH / 2;
-                          console.groupCollapsed('[DROP] Node->Container check', { nodeId: n.id });
-                          console.log('Node abs position', abs, 'size', { w: nodeW, h: nodeH }, 'center', { cx, cy });
-                          containers.forEach((c: any) => {
-                            const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
-                            const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
-                            const left = c.position.x, top = c.position.y, right = left + w, bottom = top + h;
-                            const inside = cx >= left && cx <= right && cy >= top && cy <= bottom;
-                            console.table({ containerId: c.id, left, top, right, bottom, inside });
-                          });
-                          console.groupEnd();
-                        } catch {}
-
-                        const target = containers.find((c: any) => {
-                          const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
-                          const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
-                          const left = c.position.x, top = c.position.y, right = left + w, bottom = top + h;
-                          const cx = abs.x + (((n.style?.width as number) || 160) / 2);
-                          const cy = abs.y + (((n.style?.height as number) || 60) / 2);
-                          return cx >= left && cx <= right && cy >= top && cy <= bottom;
-                        });
-
-                        if (target && n.parentNode !== target.id) {
-                          const rel = { x: abs.x - target.position.x, y: abs.y - target.position.y };
-                          console.log('[DROP] attach', { nodeId: n.id, to: target.id, rel });
-                          updated = updated.map((nn) => (nn.id === n.id ? { ...nn, position: rel, parentNode: target.id } : nn));
-                        } else if (!target && n.parentNode) {
-                          console.log('[DROP] detach', { nodeId: n.id, from: n.parentNode, newAbs: abs });
-                          updated = updated.map((nn) => (nn.id === n.id ? { ...nn, position: { x: abs.x, y: abs.y }, parentNode: undefined } : nn));
-                        }
-                      });
-
-                      // recompute contains arrays
-                      const recomputed = updated.map((nn) => {
-                        if (nn.type !== 'container') return nn;
-                        const contains = updated.filter((x) => x.parentNode === nn.id).map((x) => x.id);
-                        const cData = nn.data as any;
-                        if (JSON.stringify((cData.contains || []).sort()) !== JSON.stringify(contains.sort())) {
-                          return { ...nn, data: { ...nn.data, contains } };
-                        }
-                        return nn;
-                      });
-
-                      newState = recomputed;
-                      return recomputed;
-                    });
-                    if (newState.length) saveToHistory(newState, edges);
-                  }
-
-                  // While dragging, set visual hover on containers (no mutations on drop here)
-                  if (changes.some((c: any) => c.type === 'position' && c.dragging === true)) {
-                    const draggedIds = changes.filter((c: any) => c.type === 'position' && c.dragging).map((c: any) => c.id);
-                    setNodes((currentNodes) => {
-                      const byId = new Map(currentNodes.map((n) => [n.id, n] as const));
-                      const getAbs = (n: any) => {
-                        if (n.parentNode) {
-                          const p = byId.get(n.parentNode);
-                          if (p) return { x: n.position.x + p.position.x, y: n.position.y + p.position.y };
-                        }
-                        return { x: n.position.x, y: n.position.y };
-                      };
-                      const draggedNodes = currentNodes.filter((n) => draggedIds.includes(n.id));
-
-                      // DEBUG: live hover bounds check
-                      try {
-                        draggedNodes.forEach((dn) => {
-                          if (dn.type === 'container') return;
-                          const abs = getAbs(dn);
-                          const nodeW = (dn.style?.width as number) || dn.width || 160;
-                          const nodeH = (dn.style?.height as number) || dn.height || 60;
-                          const cx = abs.x + nodeW / 2;
-                          const cy = abs.y + nodeH / 2;
-                          console.groupCollapsed('[DRAG] Hover check for node', dn.id);
-                          currentNodes.filter((x) => x.type === 'container').forEach((c: any) => {
-                            const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
-                            const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
-                            const left = c.position.x, top = c.position.y, right = left + w, bottom = top + h;
-                            const inside = cx >= left && cx <= right && cy >= top && cy <= bottom;
-                            console.table({ containerId: c.id, left, top, right, bottom, nodeCx: cx, nodeCy: cy, inside });
-                          });
-                          console.groupEnd();
-                        });
-                      } catch {}
-
-                      return currentNodes.map((node) => {
-                        if (node.type !== 'container') return node;
-                        const cData = node.data as ContainerNodeData;
-                        const w = node.measured?.width || (node.style?.width as number) || node.width || 400;
-                        const h = node.measured?.height || (node.style?.height as number) || node.height || 300;
-                        const b = { left: node.position.x, right: node.position.x + w, top: node.position.y, bottom: node.position.y + h };
-                        const isHovered = draggedNodes.some((dn) => {
-                          if (dn.type === 'container') return false;
-                          const abs = getAbs(dn);
-                          const cx = abs.x + (((dn.style?.width as number) || 160) / 2);
-                          const cy = abs.y + (((dn.style?.height as number) || 60) / 2);
-                          return cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom;
-                        });
-                        if (cData.isHovered !== isHovered) return { ...node, data: { ...node.data, isHovered } };
-                        return node;
-                      });
-                    });
-                  }
-                }}
+                onNodesChange={onNodesChange}
                 onEdgesChange={(changes) => {
                   setEdges((eds) => {
                     const next = applyEdgeChanges(changes, eds);

@@ -7,7 +7,7 @@ export interface ContainerNodeData extends Record<string, unknown> {
   label: string;
   symbolType: SymbolType;
   metadata?: Record<string, any>;
-  contains?: string[]; // Array of node IDs contained in this container
+  contains?: string[]; // Array of node IDs contained in this container (global coordinates)
   isHovered?: boolean; // Visual feedback when dragging over
 }
 
@@ -46,7 +46,6 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
             : selected 
               ? `0 0 0 2px ${config.color}40` 
               : undefined,
-          pointerEvents: 'none',
         }}
       >
         {/* Container header */}
@@ -55,7 +54,6 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
           style={{
             borderColor: config.color,
             borderLeftWidth: '3px',
-            pointerEvents: 'auto',
           }}
         >
           <Box className="w-4 h-4 flex-shrink-0" style={{ color: config.color }} />
@@ -71,7 +69,7 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
 
         {/* Metadata display */}
         {nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 && (
-          <div className="absolute top-12 left-2 text-xs text-muted-foreground space-y-0.5 bg-card px-2 py-1 rounded border" style={{ pointerEvents: 'auto' }}>
+          <div className="absolute top-12 left-2 text-xs text-muted-foreground space-y-0.5 bg-card px-2 py-1 rounded border">
             {Object.entries(nodeData.metadata)
               .filter(([key]) => key !== 'allowTypeEdit')
               .slice(0, 2)
