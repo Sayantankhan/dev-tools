@@ -711,8 +711,8 @@ export function TopologyViewerTool() {
               /* Ensure VPC containers don't block clicks on inner nodes */
               .react-flow__node-container { z-index: 0 !important; }
               .react-flow__node-topology { z-index: 1 !important; }
-              /* Keep resize handles above for usability */
-              .react-flow__resize-control { z-index: 5 !important; }
+              /* Keep resize handles above for usability and connection handles */
+              .react-flow__resize-control { z-index: 30 !important; }
               /* Edges should render above nodes */
               .react-flow__edges { z-index: 1000 !important; }
               .react-flow__edge { z-index: 1000 !important; }
