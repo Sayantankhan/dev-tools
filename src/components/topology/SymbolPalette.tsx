@@ -7,10 +7,10 @@ import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, Me
 
 export type SymbolType = 
   | 'mysql' | 'postgres' | 'mongodb' | 'cassandra' | 'timeseries' | 'graphdb'
-  | 'cache' | 'compute' | 'gpu-compute'
-  | 'firewall' | 'lb-l4' | 'lb-l7' | 'storage' | 'message-queue' 
+  | 'cache' | 'redis' | 'memcached' | 'hazelcast' | 'compute' | 'gpu-compute'
+  | 'firewall' | 'lb-l4' | 'lb-l7' | 'storage' | 'message-queue' | 'rabbitmq'
   | 'kubernetes' | 'custom'
-  | 'kafka' | 'elasticsearch' | 'splunk' | 'spark' | 'hadoop'
+  | 'kafka' | 'elasticsearch' | 'splunk' | 'spark' | 'hadoop' | 'grafana'
   | 'aws-s3' | 'aws-ec2' | 'aws-ecs' | 'aws-eks' | 'aws-vpc' | 'aws-lambda' 
   | 'aws-sagemaker' | 'aws-dynamodb' | 'aws-opensearch' | 'aws-sns' | 'aws-sqs' 
   | 'aws-eventbridge' | 'aws-elb' | 'aws-ebs' | 'aws-elasticache'
@@ -91,6 +91,9 @@ const gcpSymbols: Symbol[] = [
 
 const baseSymbols: Symbol[] = [
   { type: 'cache', label: 'Cache', icon: Zap, color: '#f59e0b' },
+  { type: 'redis', label: 'Redis', icon: Zap, color: '#dc2626' },
+  { type: 'memcached', label: 'Memcached', icon: Zap, color: '#0891b2' },
+  { type: 'hazelcast', label: 'Hazelcast', icon: Zap, color: '#f97316' },
   { type: 'compute', label: 'Compute Server', icon: Server, color: '#3b82f6' },
   { type: 'gpu-compute', label: 'GPU Compute', icon: Cpu, color: '#8b5cf6' },
   { type: 'firewall', label: 'Firewall', icon: Shield, color: '#ef4444' },
@@ -98,12 +101,14 @@ const baseSymbols: Symbol[] = [
   { type: 'lb-l7', label: 'L7 Load Balancer', icon: Layers, color: '#0891b2' },
   { type: 'storage', label: 'Object Storage', icon: Box, color: '#84cc16' },
   { type: 'message-queue', label: 'Message Queue', icon: MessageSquare, color: '#f97316' },
+  { type: 'rabbitmq', label: 'RabbitMQ', icon: MessageSquare, color: '#ff6600' },
   { type: 'kubernetes', label: 'Kubernetes', icon: Container, color: '#326ce5' },
-  { type: 'kafka', label: 'Apache Kafka', icon: Workflow, color: '#231f20' },
+  { type: 'kafka', label: 'Apache Kafka', icon: Workflow, color: '#ffffff' },
   { type: 'elasticsearch', label: 'Elasticsearch', icon: Search, color: '#005571' },
-  { type: 'splunk', label: 'Splunk', icon: BarChart3, color: '#000000' },
+  { type: 'splunk', label: 'Splunk', icon: BarChart3, color: '#00ff00' },
   { type: 'spark', label: 'Apache Spark', icon: Flame, color: '#e25a1c' },
   { type: 'hadoop', label: 'Apache Hadoop', icon: Binary, color: '#66ccff' },
+  { type: 'grafana', label: 'Grafana', icon: BarChart3, color: '#f46800' },
   { type: 'custom', label: 'Custom Node', icon: Circle, color: '#6b7280' },
 ];
 
