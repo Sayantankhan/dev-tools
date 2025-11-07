@@ -156,8 +156,15 @@ export function TopologyViewerTool() {
     if (!reactFlowWrapper.current) return;
     try {
       const dataUrl = await toPng(reactFlowWrapper.current, {
-        backgroundColor: '#ffffff',
-        filter: (node) => !node.classList?.contains('react-flow__controls'),
+        backgroundColor: '#0a0a0a',
+        pixelRatio: 2,
+        filter: (node) => {
+          // Filter out all UI controls
+          return !node.classList?.contains('react-flow__controls') &&
+                 !node.classList?.contains('react-flow__minimap') &&
+                 !node.classList?.contains('react-flow__panel') &&
+                 !node.classList?.contains('react-flow__attribution');
+        },
       });
       const link = document.createElement('a');
       link.download = `topology-${Date.now()}.png`;
@@ -173,8 +180,14 @@ export function TopologyViewerTool() {
     if (!reactFlowWrapper.current) return;
     try {
       const svgData = await toSvg(reactFlowWrapper.current, {
-        backgroundColor: '#ffffff',
-        filter: (node) => !node.classList?.contains('react-flow__controls'),
+        backgroundColor: '#0a0a0a',
+        filter: (node) => {
+          // Filter out all UI controls
+          return !node.classList?.contains('react-flow__controls') &&
+                 !node.classList?.contains('react-flow__minimap') &&
+                 !node.classList?.contains('react-flow__panel') &&
+                 !node.classList?.contains('react-flow__attribution');
+        },
       });
       const link = document.createElement('a');
       link.download = `topology-${Date.now()}.svg`;
