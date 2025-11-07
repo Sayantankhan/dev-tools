@@ -171,13 +171,16 @@ export function TopologyViewerTool() {
 
   const exportJSON = useCallback(() => {
     const data = {
-      nodes: nodes.map((n) => ({
-        id: n.id,
-        label: n.data.label,
-        type: n.data.symbolType,
-        metadata: n.data.metadata,
-        position: n.position,
-      })),
+      nodes: nodes.map((n) => {
+        const { allowTypeEdit, ...userMetadata } = n.data.metadata || {};
+        return {
+          id: n.id,
+          label: n.data.label,
+          type: n.data.symbolType,
+          metadata: userMetadata,
+          position: n.position,
+        };
+      }),
       edges: edges.map((e) => ({
         id: e.id,
         from: e.source,

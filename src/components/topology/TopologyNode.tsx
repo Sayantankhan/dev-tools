@@ -122,9 +122,12 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         </div>
       </div>
       
-      {nodeData.metadata && Object.keys(nodeData.metadata).length > 0 && (
+      {nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 && (
         <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
-          {Object.entries(nodeData.metadata).slice(0, 3).map(([key, value]) => (
+          {Object.entries(nodeData.metadata)
+            .filter(([key]) => key !== 'allowTypeEdit')
+            .slice(0, 3)
+            .map(([key, value]) => (
             <div key={key} className="truncate">
               <span className="font-medium">{key}:</span> {String(value)}
             </div>

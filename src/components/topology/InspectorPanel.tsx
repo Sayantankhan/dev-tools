@@ -164,7 +164,9 @@ function NodeInspector({
       <div>
         <Label>Metadata</Label>
         <div className="mt-2 space-y-2">
-          {nodeData.metadata && Object.entries(nodeData.metadata).map(([key, value]) => (
+          {nodeData.metadata && Object.entries(nodeData.metadata)
+            .filter(([key]) => key !== 'allowTypeEdit')
+            .map(([key, value]) => (
             <div key={key} className="flex gap-2">
               <Input value={key} disabled className="flex-1 text-xs" />
               <Input
