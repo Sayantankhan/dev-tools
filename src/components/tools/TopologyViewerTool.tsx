@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2, Image, Lock, Unlock, Expand, Minimize } from 'lucide-react';
+import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2, Image, Expand, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { SymbolPalette, SymbolType, getSymbolConfig } from '@/components/topology/SymbolPalette';
 import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNode';
@@ -685,15 +685,6 @@ export function TopologyViewerTool() {
                 <Grid3x3 className="w-4 h-4 mr-2" />
                 Snap: {snapToGrid ? 'On' : 'Off'}
               </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setIsLocked(!isLocked)}
-                className={isLocked ? 'bg-primary/10' : ''}
-              >
-                {isLocked ? <Lock className="w-4 h-4 mr-2" /> : <Unlock className="w-4 h-4 mr-2" />}
-                {isLocked ? 'Locked' : 'Unlocked'}
-              </Button>
               <Button size="sm" variant="outline" onClick={fitView}>
                 <Maximize2 className="w-4 h-4 mr-2" />
                 Fit
@@ -905,12 +896,12 @@ export function TopologyViewerTool() {
                 snapGrid={[15, 15]}
                 fitView
                 connectionMode={ConnectionMode.Loose}
-                nodesDraggable={!isLocked}
+                nodesDraggable={true}
                 nodesConnectable={true}
                 elementsSelectable={true}
                 selectNodesOnDrag={true}
-                panOnDrag={isLocked ? true : [1, 2]}
-                selectionOnDrag={!isLocked}
+                panOnDrag={[1, 2]}
+                selectionOnDrag={true}
                 multiSelectionKeyCode="Shift"
                 proOptions={{ hideAttribution: true }}
                 connectionLineStyle={{ stroke: '#10b981', strokeWidth: 3, strokeDasharray: '5,5' }}

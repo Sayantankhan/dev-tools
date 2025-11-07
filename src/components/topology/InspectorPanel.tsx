@@ -4,13 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Plus, Copy, ArrowRight, ArrowLeft, Box, Lock, Unlock } from 'lucide-react';
+import { Trash2, Plus, Copy, ArrowRight, ArrowLeft, Box } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 import { SymbolType, allSymbols } from './SymbolPalette';
 import { TopologyNodeData } from './TopologyNode';
 import { ContainerNodeData } from './ContainerNode';
 import React from 'react';
-import { Switch } from '@/components/ui/switch';
 
 interface InspectorPanelProps {
   selectedNodes: Node[];
@@ -196,27 +195,9 @@ function NodeInspector({
         )}
       </div>
 
-      {/* Container-specific: Lock and Contains */}
+      {/* Container-specific: Contains */}
       {isContainer && (
         <>
-          <div>
-            <Label className="flex items-center gap-2">
-              {(nodeData as ContainerNodeData).locked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-              Lock Container
-            </Label>
-            <div className="mt-2 flex items-center justify-between bg-muted/30 rounded px-3 py-2">
-              <span className="text-xs text-muted-foreground">
-                {(nodeData as ContainerNodeData).locked 
-                  ? 'Container and children move together' 
-                  : 'Container and children move independently'}
-              </span>
-              <Switch
-                checked={Boolean((nodeData as ContainerNodeData).locked)}
-                onCheckedChange={(checked: boolean) => onUpdateNode(node.id, { locked: checked } as Partial<ContainerNodeData>)}
-              />
-            </div>
-          </div>
-          
           <div>
             <Label className="flex items-center gap-2">
               <Box className="w-4 h-4" />

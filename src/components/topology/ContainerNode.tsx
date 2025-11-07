@@ -9,7 +9,6 @@ export interface ContainerNodeData extends Record<string, unknown> {
   metadata?: Record<string, any>;
   contains?: string[]; // Array of node IDs contained in this container
   isHovered?: boolean; // Visual feedback when dragging over
-  locked?: boolean; // Whether container and children move together
 }
 
 export const ContainerNode = memo(({ data, selected }: NodeProps) => {
