@@ -85,14 +85,7 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
           </div>
         )}
 
-        {/* Hover instruction */}
-        {isHovered && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="px-4 py-2 bg-primary/90 text-primary-foreground rounded-md shadow-lg text-sm font-medium animate-fade-in">
-              Drop to add to container
-            </div>
-          </div>
-        )}
+        {/* Visual feedback on hover - no text */}
       </div>
 
       {/* Connection handles */}
