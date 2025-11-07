@@ -187,9 +187,10 @@ export function TopologyViewerTool() {
             style: { width: 400, height: 300 }
           }),
         },
-        ...(isContainer && {
-          style: { width: 400, height: 300 },
-        }),
+        ...(isContainer 
+          ? { style: { width: 400, height: 300 } }
+          : { style: { width: 160, height: 60 } }
+        ),
       };
 
       setNodes((nds) => {

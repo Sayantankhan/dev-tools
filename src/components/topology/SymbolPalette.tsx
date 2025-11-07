@@ -3,13 +3,13 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary, Type } from 'lucide-react';
+import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary, Type, GalleryVerticalEnd } from 'lucide-react';
 
 export type SymbolType = 
   | 'mysql' | 'postgres' | 'mongodb' | 'cassandra' | 'timeseries' | 'graphdb'
   | 'cache' | 'redis' | 'memcached' | 'hazelcast' | 'compute' | 'gpu-compute'
   | 'firewall' | 'lb-l4' | 'lb-l7' | 'storage' | 'message-queue' | 'rabbitmq'
-  | 'kubernetes' | 'custom' | 'text'
+  | 'kubernetes' | 'custom' | 'text' | 'gateway'
   | 'kafka' | 'elasticsearch' | 'splunk' | 'spark' | 'hadoop' | 'grafana'
   | 'aws-s3' | 'aws-ec2' | 'aws-ecs' | 'aws-eks' | 'aws-vpc' | 'aws-lambda' 
   | 'aws-sagemaker' | 'aws-dynamodb' | 'aws-opensearch' | 'aws-sns' | 'aws-sqs' 
@@ -98,6 +98,7 @@ const baseSymbols: Symbol[] = [
   { type: 'compute', label: 'Compute Server', icon: Server, color: '#3b82f6' },
   { type: 'gpu-compute', label: 'GPU Compute', icon: Cpu, color: '#8b5cf6' },
   { type: 'firewall', label: 'Firewall', icon: Shield, color: '#ef4444' },
+  { type: 'gateway', label: 'API Gateway', icon: GalleryVerticalEnd, color: '#10b981' },
   { type: 'lb-l4', label: 'L4 Load Balancer', icon: Network, color: '#06b6d4' },
   { type: 'lb-l7', label: 'L7 Load Balancer', icon: Layers, color: '#0891b2' },
   { type: 'storage', label: 'Object Storage', icon: Box, color: '#84cc16' },
