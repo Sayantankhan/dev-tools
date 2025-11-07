@@ -262,7 +262,7 @@ export function TopologyViewerTool() {
           { id: 'app1', label: 'App Server 1', type: 'compute', position: { x: 100, y: 250 } },
           { id: 'app2', label: 'App Server 2', type: 'compute', position: { x: 400, y: 250 } },
           { id: 'cache1', label: 'Redis Cache', type: 'cache', position: { x: 250, y: 380 } },
-          { id: 'db1', label: 'PostgreSQL', type: 'database-sql', position: { x: 250, y: 510 } },
+          { id: 'db1', label: 'PostgreSQL', type: 'postgres', position: { x: 250, y: 510 } },
         ],
         edges: [
           { from: 'fw1', to: 'lb1', label: 'HTTPS' },
@@ -276,13 +276,13 @@ export function TopologyViewerTool() {
       },
       'cloud-3tier': {
         nodes: [
-          { id: 'gcp1', label: 'GCP Region', type: 'gcp', position: { x: 250, y: 0 } },
-          { id: 'lb1', label: 'Cloud LB', type: 'lb-l7', position: { x: 250, y: 120 } },
-          { id: 'web1', label: 'Web Tier', type: 'compute', position: { x: 100, y: 250 } },
-          { id: 'web2', label: 'Web Tier', type: 'compute', position: { x: 400, y: 250 } },
+          { id: 'gcp1', label: 'GCP Region', type: 'gcp-vpc', position: { x: 250, y: 0 } },
+          { id: 'lb1', label: 'Cloud LB', type: 'aws-elb', position: { x: 250, y: 120 } },
+          { id: 'web1', label: 'Web Tier', type: 'aws-ec2', position: { x: 100, y: 250 } },
+          { id: 'web2', label: 'Web Tier', type: 'aws-ec2', position: { x: 400, y: 250 } },
           { id: 'app1', label: 'App Tier', type: 'compute', position: { x: 100, y: 380 } },
           { id: 'app2', label: 'App Tier', type: 'compute', position: { x: 400, y: 380 } },
-          { id: 'db1', label: 'Cloud SQL', type: 'database-sql', position: { x: 250, y: 510 } },
+          { id: 'db1', label: 'Cloud SQL', type: 'mysql', position: { x: 250, y: 510 } },
         ],
         edges: [
           { from: 'gcp1', to: 'lb1' },
@@ -302,7 +302,7 @@ export function TopologyViewerTool() {
           { id: 'svc2', label: 'API Service', type: 'compute', position: { x: 400, y: 250 } },
           { id: 'cache1', label: 'Redis', type: 'cache', position: { x: 250, y: 380 } },
           { id: 'mq1', label: 'RabbitMQ', type: 'message-queue', position: { x: 100, y: 510 } },
-          { id: 'db1', label: 'PostgreSQL', type: 'database-sql', position: { x: 400, y: 510 } },
+          { id: 'db1', label: 'PostgreSQL', type: 'postgres', position: { x: 400, y: 510 } },
         ],
         edges: [
           { from: 'k8s1', to: 'ing1' },
@@ -337,12 +337,16 @@ export function TopologyViewerTool() {
     }
   }, [reactFlowInstance]);
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   return (
-    <div className="flex gap-4 h-[calc(100vh-120px)] p-4">
+    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-120px)]'}`}>
       {/* Left Palette */}
-      <div className="w-64 flex-shrink-0">
-        <SymbolPalette onSymbolDragStart={() => {}} />
-      </div>
+      {!isFullscreen && (
+        <div className="w-64 flex-shrink-0">
+          <SymbolPalette onSymbolDragStart={() => {}} />
+        </div>
+      )}
 
       {/* Center Canvas */}
       <div className="flex-1 flex flex-col gap-4">
@@ -370,6 +374,10 @@ export function TopologyViewerTool() {
               </Button>
               <Button size="sm" variant="outline" onClick={clearCanvas}>
                 <Trash2 className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setIsFullscreen(!isFullscreen)}>
+                <Maximize2 className="w-4 h-4 mr-2" />
+                {isFullscreen ? 'Exit' : 'Expand'}
               </Button>
             </div>
           </div>
@@ -478,8 +486,9 @@ export function TopologyViewerTool() {
       </div>
 
       {/* Right Inspector */}
-      <div className="w-80 flex-shrink-0">
-        <InspectorPanel
+      {!isFullscreen && (
+        <div className="w-80 flex-shrink-0">
+          <InspectorPanel
           selectedNodes={nodes.filter((n) => n.selected)}
           selectedEdges={edges.filter((e) => e.selected)}
           onUpdateNode={(id, data) => {
@@ -552,7 +561,8 @@ export function TopologyViewerTool() {
             });
           }}
         />
-      </div>
+        </div>
+      )}
     </div>
   );
 }
