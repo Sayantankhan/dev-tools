@@ -4,12 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Plus, Copy, ArrowRight, ArrowLeft, Box } from 'lucide-react';
+import { Trash2, Plus, Copy, ArrowRight, ArrowLeft, Box, Lock, Unlock } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 import { SymbolType, allSymbols } from './SymbolPalette';
 import { TopologyNodeData } from './TopologyNode';
 import { ContainerNodeData } from './ContainerNode';
 import React from 'react';
+import { Switch } from '@/components/ui/switch';
 
 interface InspectorPanelProps {
   selectedNodes: Node[];
@@ -57,6 +58,7 @@ export function InspectorPanel({
         <h3 className="font-semibold text-sm">Inspector</h3>
         <p className="text-xs text-muted-foreground mt-1">
           {selectedNodes.length > 0 && `${selectedNodes.length} node(s) selected`}
+          {selectedNodes.length > 0 && selectedEdges.length > 0 && ', '}
           {selectedEdges.length > 0 && `${selectedEdges.length} edge(s) selected`}
         </p>
       </div>
@@ -194,33 +196,53 @@ function NodeInspector({
         )}
       </div>
 
-      {/* Container-specific: Show contained nodes */}
+      {/* Container-specific: Lock and Contains */}
       {isContainer && (
-        <div>
-          <Label className="flex items-center gap-2">
-            <Box className="w-4 h-4" />
-            Contains
-          </Label>
-          <div className="mt-2 space-y-1">
-            {(nodeData as ContainerNodeData).contains?.length === 0 && (
-              <div className="text-xs text-muted-foreground bg-muted/30 rounded px-3 py-2">
-                No nodes inside this container
-              </div>
-            )}
-            {(nodeData as ContainerNodeData).contains?.map((nodeId) => (
-              <div
-                key={nodeId}
-                className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-1.5"
-              >
-                <span className="font-medium">{nodeLabel(nodeId)}</span>
-                <span className="text-muted-foreground">#{nodeId}</span>
-              </div>
-            ))}
+        <>
+          <div>
+            <Label className="flex items-center gap-2">
+              {(nodeData as ContainerNodeData).locked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+              Lock Container
+            </Label>
+            <div className="mt-2 flex items-center justify-between bg-muted/30 rounded px-3 py-2">
+              <span className="text-xs text-muted-foreground">
+                {(nodeData as ContainerNodeData).locked 
+                  ? 'Container and children move together' 
+                  : 'Container and children move independently'}
+              </span>
+              <Switch
+                checked={Boolean((nodeData as ContainerNodeData).locked)}
+                onCheckedChange={(checked: boolean) => onUpdateNode(node.id, { locked: checked } as Partial<ContainerNodeData>)}
+              />
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Drag nodes into the container area to add them
-          </p>
-        </div>
+          
+          <div>
+            <Label className="flex items-center gap-2">
+              <Box className="w-4 h-4" />
+              Contains
+            </Label>
+            <div className="mt-2 space-y-1">
+              {(nodeData as ContainerNodeData).contains?.length === 0 && (
+                <div className="text-xs text-muted-foreground bg-muted/30 rounded px-3 py-2">
+                  No nodes inside this container
+                </div>
+              )}
+              {(nodeData as ContainerNodeData).contains?.map((nodeId) => (
+                <div
+                  key={nodeId}
+                  className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-1.5"
+                >
+                  <span className="font-medium">{nodeLabel(nodeId)}</span>
+                  <span className="text-muted-foreground">#{nodeId}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Drag nodes into the container area to add them
+            </p>
+          </div>
+        </>
       )}
 
       <div>

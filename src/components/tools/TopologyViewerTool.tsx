@@ -37,8 +37,45 @@ const getId = () => `node_${nodeId++}`;
 export function TopologyViewerTool() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const fullscreenContainerRef = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [nodes, setNodes] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  
+  // Custom node change handler with locked container support
+  const onNodesChange = useCallback(
+    (changes: any) => {
+      setNodes((nds) => {
+        const updated = nds.map(n => {
+          const change = changes.find((c: any) => c.id === n.id);
+          if (change?.type === 'position' && change.dragging && n.type === 'container' && (n.data as ContainerNodeData).locked) {
+            const deltaX = (change.position?.x || n.position.x) - n.position.x;
+            const deltaY = (change.position?.y || n.position.y) - n.position.y;
+            const childIds = (n.data as ContainerNodeData).contains || [];
+            
+            // Update all children positions
+            const updatedWithChildren = nds.map(node => {
+              if (childIds.includes(node.id)) {
+                return { ...node, position: { x: node.position.x + deltaX, y: node.position.y + deltaY } };
+              }
+              return node.id === n.id ? { ...n, position: change.position } : node;
+            });
+            return updatedWithChildren;
+          }
+          return n;
+        });
+        
+        return updated.map(n => {
+          const change = changes.find((c: any) => c.id === n.id);
+          if (change) {
+            if (change.type === 'position' && change.position) return { ...n, position: change.position };
+            if (change.type === 'select') return { ...n, selected: change.selected };
+            if (change.type === 'remove') return undefined as any;
+          }
+          return n;
+        }).filter(Boolean);
+      });
+    },
+    [setNodes]
+  );
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -285,40 +322,41 @@ export function TopologyViewerTool() {
     });
   }, [nodes, setEdges, saveToHistory]);
 
-  // Connect nodes - works for all node types including containers
+  // Connect nodes with edge reconnection support
   const onConnect = useCallback(
     (connection: Connection) => {
-      const startId = connectStartRef.current?.nodeId;
-      console.log('Connection attempt:', connection, 'startId:', startId);
       if (!connection.source || !connection.target) return;
       
+      const newEdge: Edge = {
+        ...connection,
+        id: `edge-${Date.now()}-${connection.source}-${connection.target}`,
+        type: 'smoothstep',
+        animated: false,
+        style: { stroke: 'hsl(var(--primary))', strokeWidth: 2, zIndex: 1000 },
+        data: { color: '#64748b', lineStyle: 'solid' },
+      };
       setEdges((eds) => {
-        let source = connection.source as string;
-        let target = connection.target as string;
-        let sourceHandle = connection.sourceHandle;
-        let targetHandle = connection.targetHandle;
-        // Force the node we started from to be the source
-        if (startId && connection.source !== startId) {
-          [source, target] = [target, source];
-          [sourceHandle, targetHandle] = [targetHandle, sourceHandle];
-        }
-        const newEdge = {
-          ...connection,
-          source,
-          target,
-          sourceHandle,
-          targetHandle,
-          id: `edge_${Date.now()}_${Math.random()}`,
-          type: 'smoothstep',
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b' },
-          data: { edgeType: 'directed', lineStyle: 'solid', color: '#64748b' },
-          zIndex: 1000,
-        };
         const updated = addEdge(newEdge, eds);
         saveToHistory(nodes, updated);
-        toast.success('Connection created');
         return updated;
       });
+      toast.success('Connection created');
+    },
+    [nodes, setEdges, saveToHistory]
+  );
+
+  const onEdgeUpdate = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      setEdges((els) => {
+        const updated = els.map((edge) =>
+          edge.id === oldEdge.id
+            ? { ...edge, source: newConnection.source!, target: newConnection.target!, sourceHandle: newConnection.sourceHandle, targetHandle: newConnection.targetHandle }
+            : edge
+        );
+        saveToHistory(nodes, updated);
+        return updated;
+      });
+      toast.success('Connection updated');
     },
     [nodes, setEdges, saveToHistory]
   );
