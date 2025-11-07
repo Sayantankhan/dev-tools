@@ -89,7 +89,12 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         boxShadow: selected ? `0 0 0 2px ${config.color}40` : undefined,
       }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" />
+      <Handle 
+        type="target" 
+        position={Position.Top} 
+        className="w-3 h-3 bg-primary border-2 border-background hover:scale-150 transition-transform cursor-crosshair" 
+        isConnectable={true}
+      />
       
       <div className="flex items-center gap-2 mb-1">
         <Icon className="w-5 h-5 flex-shrink-0" style={{ color: config.color }} />
@@ -108,7 +113,12 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         </div>
       )}
       
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
+      <Handle 
+        type="source" 
+        position={Position.Bottom} 
+        className="w-3 h-3 bg-primary border-2 border-background hover:scale-150 transition-transform cursor-crosshair" 
+        isConnectable={true}
+      />
     </div>
   );
 });

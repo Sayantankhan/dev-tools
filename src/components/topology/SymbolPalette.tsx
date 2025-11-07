@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary } from 'lucide-react';
 
@@ -142,20 +144,44 @@ const SymbolGroup = ({ title, symbols, onSymbolDragStart }: { title: string, sym
 );
 
 export function SymbolPalette({ onSymbolDragStart }: SymbolPaletteProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filterSymbols = (symbols: Symbol[]) => {
+    if (!searchQuery.trim()) return symbols;
+    return symbols.filter(s => 
+      s.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.type.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+
+  const filteredDb = filterSymbols(databaseSymbols);
+  const filteredAws = filterSymbols(awsSymbols);
+  const filteredAzure = filterSymbols(azureSymbols);
+  const filteredGcp = filterSymbols(gcpSymbols);
+  const filteredBase = filterSymbols(baseSymbols);
+
   return (
     <Card className="h-full flex flex-col">
-      <div className="p-3 border-b">
+      <div className="p-3 border-b space-y-2">
         <h3 className="font-semibold text-sm">Symbol Palette</h3>
-        <p className="text-xs text-muted-foreground mt-1">Drag symbols to canvas</p>
+        <Input
+          placeholder="Search symbols..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-8 text-xs"
+        />
       </div>
       
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-3">
-          <SymbolGroup title="Databases" symbols={databaseSymbols} onSymbolDragStart={onSymbolDragStart} />
-          <SymbolGroup title="AWS Services" symbols={awsSymbols} onSymbolDragStart={onSymbolDragStart} />
-          <SymbolGroup title="Azure Services" symbols={azureSymbols} onSymbolDragStart={onSymbolDragStart} />
-          <SymbolGroup title="GCP Services" symbols={gcpSymbols} onSymbolDragStart={onSymbolDragStart} />
-          <SymbolGroup title="Infrastructure" symbols={baseSymbols} onSymbolDragStart={onSymbolDragStart} />
+          {filteredDb.length > 0 && <SymbolGroup title="Databases" symbols={filteredDb} onSymbolDragStart={onSymbolDragStart} />}
+          {filteredAws.length > 0 && <SymbolGroup title="AWS Services" symbols={filteredAws} onSymbolDragStart={onSymbolDragStart} />}
+          {filteredAzure.length > 0 && <SymbolGroup title="Azure Services" symbols={filteredAzure} onSymbolDragStart={onSymbolDragStart} />}
+          {filteredGcp.length > 0 && <SymbolGroup title="GCP Services" symbols={filteredGcp} onSymbolDragStart={onSymbolDragStart} />}
+          {filteredBase.length > 0 && <SymbolGroup title="Infrastructure" symbols={filteredBase} onSymbolDragStart={onSymbolDragStart} />}
+          {filteredDb.length === 0 && filteredAws.length === 0 && filteredAzure.length === 0 && filteredGcp.length === 0 && filteredBase.length === 0 && (
+            <div className="text-center text-sm text-muted-foreground py-4">No symbols found</div>
+          )}
         </div>
       </ScrollArea>
     </Card>

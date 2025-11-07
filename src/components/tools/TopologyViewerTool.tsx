@@ -338,13 +338,14 @@ export function TopologyViewerTool() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Handle fullscreen mode changes
+  // Handle fullscreen mode changes and resize
   useEffect(() => {
-    if (reactFlowInstance && isFullscreen) {
+    if (reactFlowInstance) {
       // Delay to allow DOM to update
-      setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.1 });
-      }, 100);
+      const timer = setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.1, duration: 200 });
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [reactFlowInstance, isFullscreen]);
 
@@ -410,6 +411,12 @@ export function TopologyViewerTool() {
                 snapGrid={[15, 15]}
                 fitView
                 attributionPosition="bottom-right"
+                connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
+                defaultEdgeOptions={{
+                  type: 'default',
+                  markerEnd: { type: MarkerType.ArrowClosed },
+                  style: { strokeWidth: 2 },
+                }}
               >
                 <Background />
                 <Controls />
