@@ -20,6 +20,7 @@ export function MapPlotTool() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const [activeTab, setActiveTab] = useState<'data' | 'map' | 'controls'>('data');
 
   // Initialize map
   useEffect(() => {
@@ -57,7 +58,25 @@ export function MapPlotTool() {
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+}, []);
+
+// Ensure map resizes when tab becomes visible or container size changes
+useEffect(() => {
+  if (!map.current) return;
+  if (activeTab === 'map') {
+    // Delay to let panel render
+    setTimeout(() => map.current?.resize(), 50);
+  }
+}, [activeTab]);
+
+useEffect(() => {
+  if (!map.current || !mapContainer.current) return;
+  const ro = new ResizeObserver(() => {
+    map.current?.resize();
+  });
+  ro.observe(mapContainer.current);
+  return () => ro.disconnect();
+}, []);
 
   // Update map when data changes
   useEffect(() => {
@@ -172,7 +191,7 @@ export function MapPlotTool() {
         </div>
       </div>
 
-      <Tabs defaultValue="data" className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col">
         <TabsList>
           <TabsTrigger value="data">Data Input</TabsTrigger>
           <TabsTrigger value="map">Map View</TabsTrigger>
