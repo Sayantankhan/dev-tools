@@ -345,7 +345,7 @@ export function TopologyViewerTool() {
   const hasSelection = selectedNodes.length > 0 || selectedEdges.length > 0;
 
   return (
-    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen' : 'h-[calc(100vh-120px)]'} min-h-0`}>
+    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen' : 'h-[calc(100vh-120px)]'} min-h-0 relative`}>
       {/* Left Palette */}
       <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-56' : 'w-64'}`}>
         <SymbolPalette onSymbolDragStart={() => {}} />
@@ -503,9 +503,9 @@ export function TopologyViewerTool() {
         </Tabs>
       </div>
 
-      {/* Right Inspector - Only visible when something is selected */}
+      {/* Floating Inspector Panel - Only visible when something is selected */}
       {hasSelection && (
-        <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-72' : 'w-80'}`}>
+        <div className={`absolute top-4 right-4 ${isFullscreen ? 'w-72' : 'w-80'} h-[calc(100%-2rem)] z-50 animate-slide-in-right`}>
           <InspectorPanel
             selectedNodes={selectedNodes}
             selectedEdges={selectedEdges}
