@@ -894,11 +894,35 @@ export function TopologyViewerTool() {
                 // Add all new nodes
                 setNodes((nds) => {
                   const updated = [...nds, newContainer, ...newContainedNodes];
-                  saveToHistory(updated, edges);
+                  // history will be saved after edges are duplicated
                   return updated;
                 });
                 
-                toast.success(`Duplicated container with ${newContainedNodes.length} nodes`);
+                // Duplicate internal edges (connections between contained nodes and container)
+                const containedSet = new Set(containedNodeIds);
+                const edgesToCopy = edges.filter((e) => {
+                  const sourceIn = containedSet.has(e.source as string) || e.source === node.id;
+                  const targetIn = containedSet.has(e.target as string) || e.target === node.id;
+                  return sourceIn && targetIn; // both ends inside the group (or container)
+                });
+
+                const newEdges = edgesToCopy.map((e) => ({
+                  ...e,
+                  id: `edge_${Date.now()}_${Math.random()}`,
+                  source: e.source === node.id ? newContainerId : (idMap.get(e.source as string) || e.source),
+                  target: e.target === node.id ? newContainerId : (idMap.get(e.target as string) || e.target),
+                  data: { ...e.data },
+                }));
+
+                // Append edges and save combined state
+                setEdges((eds) => {
+                  const finalEdges = [...eds, ...newEdges];
+                  const finalNodes = [...nodes, newContainer, ...newContainedNodes];
+                  saveToHistory(finalNodes, finalEdges);
+                  return finalEdges;
+                });
+                
+                toast.success(`Duplicated container with ${newContainedNodes.length} nodes and ${newEdges.length} connections`);
               } else {
                 // Regular node duplication
                 const newNode = {
