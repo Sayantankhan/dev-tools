@@ -24,6 +24,7 @@ interface InspectorPanelProps {
   onAddMetadata: (nodeId: string, key: string, value: string) => void;
   onRemoveMetadata: (nodeId: string, key: string) => void;
   onCreateConnection: (sourceId: string, targetId: string) => void;
+  onReattachEdge: (edgeId: string, updates: { source?: string; target?: string }) => void;
   portalContainer?: HTMLElement | null;
 }
 
@@ -40,6 +41,7 @@ export function InspectorPanel({
   onAddMetadata,
   onRemoveMetadata,
   onCreateConnection,
+  onReattachEdge,
   portalContainer,
 }: InspectorPanelProps) {
   if (selectedNodes.length === 0 && selectedEdges.length === 0) {
@@ -107,6 +109,7 @@ export function InspectorPanel({
               allNodes={allNodes}
               onUpdateEdge={onUpdateEdge}
               onDeleteEdge={onDeleteEdge}
+              onReattachEdge={onReattachEdge}
               portalContainer={portalContainer}
             />
           )}
@@ -390,12 +393,14 @@ function EdgeInspector({
   allNodes,
   onUpdateEdge,
   onDeleteEdge,
+  onReattachEdge,
   portalContainer,
 }: {
   edge: Edge;
   allNodes: Node[];
   onUpdateEdge: (edgeId: string, data: any) => void;
   onDeleteEdge: (edgeId: string) => void;
+  onReattachEdge: (edgeId: string, updates: { source?: string; target?: string }) => void;
   portalContainer?: HTMLElement | null;
 }) {
   const nodeLabel = (id: string) => (allNodes.find(n => n.id === id)?.data as TopologyNodeData)?.label || id;
@@ -404,17 +409,41 @@ function EdgeInspector({
   return (
     <div className="space-y-4">
       <div>
-        <Label>Connection</Label>
-        <div className="mt-2 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">From:</span>
-            <span className="font-medium">{nodeLabel(edge.source)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">To:</span>
-            <span className="font-medium">{nodeLabel(edge.target)}</span>
-          </div>
-        </div>
+        <Label>From Node</Label>
+        <Select
+          value={edge.source}
+          onValueChange={(newSource) => onReattachEdge(edge.id, { source: newSource })}
+        >
+          <SelectTrigger className="mt-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent container={portalContainer} sideOffset={5}>
+            {allNodes.map((node) => (
+              <SelectItem key={node.id} value={node.id}>
+                {nodeLabel(node.id)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label>To Node</Label>
+        <Select
+          value={edge.target}
+          onValueChange={(newTarget) => onReattachEdge(edge.id, { target: newTarget })}
+        >
+          <SelectTrigger className="mt-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent container={portalContainer} sideOffset={5}>
+            {allNodes.map((node) => (
+              <SelectItem key={node.id} value={node.id}>
+                {nodeLabel(node.id)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

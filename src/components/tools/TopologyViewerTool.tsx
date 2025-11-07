@@ -878,6 +878,13 @@ export function TopologyViewerTool() {
               return updated;
             });
           }}
+          onReattachEdge={(id, updates) => {
+            setEdges((eds) => {
+              const updated = eds.map((e) => (e.id === id ? { ...e, ...updates } : e));
+              saveToHistory(nodes, updated);
+              return updated;
+            });
+          }}
           onDeleteNode={(id) => {
             setNodes((nds) => {
               const updated = nds.filter((n) => n.id !== id);
