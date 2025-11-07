@@ -96,6 +96,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Top} 
         className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={true}
+        isConnectableEnd={false}
         style={{ background: '#10b981', opacity: 1 }}
       />
       <Handle 
@@ -104,6 +106,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Left} 
         className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={true}
+        isConnectableEnd={false}
         style={{ background: '#10b981', opacity: 1 }}
       />
       <Handle 
@@ -112,6 +116,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Right} 
         className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={true}
+        isConnectableEnd={false}
         style={{ background: '#10b981', opacity: 1 }}
       />
       <Handle 
@@ -120,6 +126,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Bottom} 
         className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={true}
+        isConnectableEnd={false}
         style={{ background: '#10b981', opacity: 1 }}
       />
       
@@ -130,6 +138,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Top} 
         className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={false}
+        isConnectableEnd={true}
         style={{ background: '#3b82f6', opacity: 1 }}
       />
       <Handle 
@@ -138,6 +148,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Left} 
         className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={false}
+        isConnectableEnd={true}
         style={{ background: '#3b82f6', opacity: 1 }}
       />
       <Handle 
@@ -146,6 +158,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Right} 
         className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={false}
+        isConnectableEnd={true}
         style={{ background: '#3b82f6', opacity: 1 }}
       />
       <Handle 
@@ -154,6 +168,8 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         position={Position.Bottom} 
         className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        isConnectableStart={false}
+        isConnectableEnd={true}
         style={{ background: '#3b82f6', opacity: 1 }}
       />
       
