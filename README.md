@@ -2,59 +2,6 @@
 
 A modern, privacy-focused collection of essential developer utilities — all running locally in your browser. No server uploads, no data tracking, just pure client-side tools.
 
-## ✨ Features
-
-### 🔧 Available Tools
-
-#### 1. **JSON Tool**
-- **Prettify & Minify**: Format or compress JSON with one click
-- **Validate**: Check JSON syntax with detailed error messages
-- **Destructure**: Extract all JSON paths with type information
-- **JSONPath Query**: Advanced querying with JSONPath syntax
-- **Multi-line Support**: Handle newline-delimited JSON streams
-
-#### 2. **Image Tool**
-- **Smart Scaling**: Resize images with aspect ratio preservation
-- **Format Conversion**: Convert PNG, WEBP, GIF, TIFF to JPEG
-- **Quality Control**: Adjustable compression (1-100%)
-- **Drag & Drop**: Easy file upload interface
-- **Before/After Preview**: Compare original vs converted images
-- **File Size Optimization**: See exact size reduction percentages
-
-#### 3. **JWT Tool**
-- **Instant Decode**: Auto-parse JWT tokens on paste
-- **Header & Payload**: Beautiful tabbed view of token components
-- **Expiry Detection**: Human-readable expiration times with countdown
-- **Claims Display**: Highlight standard JWT claims (iss, sub, aud, exp, etc.)
-- **Signature Validation**: Optional secret/public key verification
-- **Security Warnings**: Built-in alerts for production safety
-
-#### 4. **API Client**
-- **Full HTTP Support**: GET, POST, PUT, PATCH, DELETE, OPTIONS
-- **Headers Management**: Add custom headers with Bearer token helper
-- **Query Parameters**: Visual key-value editor
-- **Request Body**: JSON and raw text support with syntax highlighting
-- **Response Viewer**: Status codes, timing, size metrics
-- **Pretty Print**: Automatic JSON formatting in responses
-- **Request History**: Save and replay previous requests
-
-#### 5. **Base64 Tool**
-- **Encode/Decode**: Text and binary file support
-- **URL-Safe Mode**: RFC 4648 compliant base64url encoding
-- **Auto-Detection**: Smart identification of encoded vs plain text
-- **File Upload**: Encode images and documents to base64
-- **Image Preview**: Instant preview for base64-encoded images
-- **Download Support**: Export decoded files
-
-## 🚀 Tech Stack
-
-- **React 18** - Modern UI with hooks
-- **TypeScript** - Type-safe development
-- **Vite** - Lightning-fast builds
-- **Tailwind CSS** - Utility-first styling
-- **shadcn/ui** - Beautiful, accessible components
-- **Radix UI** - Unstyled, accessible primitives
-
 ## 📦 Installation
 
 ```bash
