@@ -42,6 +42,8 @@ export function TopologyViewerTool() {
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [rawInput, setRawInput] = useState('');
   
+  const connectStartRef = useRef<{ nodeId?: string; handleType?: 'source' | 'target' }>({});
+  
   const nodeTypes = { topology: TopologyNode };
 
   // Save to history
@@ -122,12 +124,19 @@ export function TopologyViewerTool() {
       }
       
       setEdges((eds) => {
+        // ensure direction follows the node where the connection started
+        let { source, target, sourceHandle, targetHandle } = connection;
+        if (connectStartRef.current?.handleType === 'target') {
+          const s = source; const sh = sourceHandle;
+          source = target as string; sourceHandle = targetHandle;
+          target = s as string; targetHandle = sh;
+        }
         const newEdge = {
           ...connection,
-          source: connection.source,
-          target: connection.target,
-          sourceHandle: connection.sourceHandle,
-          targetHandle: connection.targetHandle,
+          source,
+          target,
+          sourceHandle,
+          targetHandle,
           id: `edge_${Date.now()}`,
           type: 'default',
           markerEnd: { type: MarkerType.ArrowClosed },
@@ -423,10 +432,10 @@ export function TopologyViewerTool() {
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onConnectStart={(e, params) => {
-                  console.log('onConnectStart', params);
+                  connectStartRef.current = { nodeId: params.nodeId, handleType: params.handleType } as any;
                 }}
-                onConnectEnd={(e) => {
-                  console.log('onConnectEnd');
+                onConnectEnd={() => {
+                  connectStartRef.current = {};
                 }}
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
