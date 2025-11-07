@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Plus, Copy, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Copy, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 import { SymbolType, allSymbols } from './SymbolPalette';
 import { TopologyNodeData } from './TopologyNode';
@@ -14,6 +14,7 @@ interface InspectorPanelProps {
   selectedNodes: Node[];
   selectedEdges: Edge[];
   allNodes: Node[];
+  allEdges: Edge[];
   onUpdateNode: (nodeId: string, data: Partial<TopologyNodeData>) => void;
   onUpdateEdge: (edgeId: string, data: any) => void;
   onDeleteNode: (nodeId: string) => void;
@@ -28,6 +29,7 @@ export function InspectorPanel({
   selectedNodes,
   selectedEdges,
   allNodes,
+  allEdges,
   onUpdateNode,
   onUpdateEdge,
   onDeleteNode,
@@ -65,12 +67,14 @@ export function InspectorPanel({
             <NodeInspector
               node={selectedNodes[0]}
               allNodes={allNodes}
+              allEdges={allEdges}
               onUpdateNode={onUpdateNode}
               onDeleteNode={onDeleteNode}
               onDuplicateNode={onDuplicateNode}
               onAddMetadata={onAddMetadata}
               onRemoveMetadata={onRemoveMetadata}
               onCreateConnection={onCreateConnection}
+              onDeleteEdge={onDeleteEdge}
             />
           )}
 
@@ -108,27 +112,36 @@ export function InspectorPanel({
 function NodeInspector({
   node,
   allNodes,
+  allEdges,
   onUpdateNode,
   onDeleteNode,
   onDuplicateNode,
   onAddMetadata,
   onRemoveMetadata,
   onCreateConnection,
+  onDeleteEdge,
 }: {
   node: Node;
   allNodes: Node[];
+  allEdges: Edge[];
   onUpdateNode: (nodeId: string, data: Partial<TopologyNodeData>) => void;
   onDeleteNode: (nodeId: string) => void;
   onDuplicateNode: (nodeId: string) => void;
   onAddMetadata: (nodeId: string, key: string, value: string) => void;
   onRemoveMetadata: (nodeId: string, key: string) => void;
   onCreateConnection: (sourceId: string, targetId: string) => void;
+  onDeleteEdge: (edgeId: string) => void;
 }) {
   const nodeData = node.data as TopologyNodeData;
   const [connectionDirection, setConnectionDirection] = React.useState<'to' | 'from'>('to');
   const [selectedNodeId, setSelectedNodeId] = React.useState<string>('');
   
   const availableNodes = allNodes.filter(n => n.id !== node.id);
+  const nodeLabel = (id: string) => (allNodes.find(n => n.id === id)?.data as TopologyNodeData)?.label || id;
+  const existing = [
+    ...allEdges.filter(e => e.source === node.id).map(e => ({ e, dir: 'to' as const, other: nodeLabel(e.target) })),
+    ...allEdges.filter(e => e.target === node.id).map(e => ({ e, dir: 'from' as const, other: nodeLabel(e.source) })),
+  ];
   
   return (
     <div className="space-y-4">
@@ -261,6 +274,26 @@ function NodeInspector({
             <ArrowRight className="w-3 h-3 mr-2" />
             Create Connection
           </Button>
+        </div>
+      </div>
+
+      <div>
+        <Label>Existing Connections</Label>
+        <div className="mt-2 space-y-2">
+          {existing.length === 0 && (
+            <div className="text-xs text-muted-foreground">No connections</div>
+          )}
+          {existing.map(({ e, dir, other }) => (
+            <div key={e.id} className="flex items-center justify-between text-xs bg-muted/30 rounded px-2 py-1">
+              <div className="flex items-center gap-2">
+                {dir === 'to' ? <ArrowRight className="w-3 h-3" /> : <ArrowLeft className="w-3 h-3" />}
+                <span>{dir === 'to' ? 'to' : 'from'} {other}</span>
+              </div>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDeleteEdge(e.id)}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
 

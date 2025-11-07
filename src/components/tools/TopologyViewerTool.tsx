@@ -550,6 +550,7 @@ export function TopologyViewerTool() {
           selectedNodes={nodes.filter((n) => n.selected)}
           selectedEdges={edges.filter((e) => e.selected)}
           allNodes={nodes}
+          allEdges={edges}
           onUpdateNode={(id, data) => {
             setNodes((nds) => {
               const updated = nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...data } } : n));
