@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Plus, Copy } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
-import { SymbolType } from './SymbolPalette';
+import { SymbolType, allSymbols } from './SymbolPalette';
 import { TopologyNodeData } from './TopologyNode';
 
 interface InspectorPanelProps {
@@ -130,31 +130,35 @@ function NodeInspector({
 
       <div>
         <Label>Node Type</Label>
-        <Select
-          value={nodeData.symbolType}
-          onValueChange={(v) => onUpdateNode(node.id, { symbolType: v as SymbolType })}
-        >
-          <SelectTrigger className="mt-2">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="database-sql">SQL Database</SelectItem>
-            <SelectItem value="database-nosql">NoSQL Database</SelectItem>
-            <SelectItem value="cache">Cache</SelectItem>
-            <SelectItem value="compute">Compute Server</SelectItem>
-            <SelectItem value="gpu-compute">GPU Compute</SelectItem>
-            <SelectItem value="firewall">Firewall</SelectItem>
-            <SelectItem value="lb-l4">L4 Load Balancer</SelectItem>
-            <SelectItem value="lb-l7">L7 Load Balancer</SelectItem>
-            <SelectItem value="storage">Object Storage</SelectItem>
-            <SelectItem value="message-queue">Message Queue</SelectItem>
-            <SelectItem value="kubernetes">Kubernetes</SelectItem>
-            <SelectItem value="aws">AWS</SelectItem>
-            <SelectItem value="azure">Azure</SelectItem>
-            <SelectItem value="gcp">GCP</SelectItem>
-            <SelectItem value="custom">Custom</SelectItem>
-          </SelectContent>
-        </Select>
+        {((nodeData.metadata as any)?.allowTypeEdit === true) ? (
+          <Select
+            value={nodeData.symbolType}
+            onValueChange={(v) =>
+              onUpdateNode(node.id, { 
+                symbolType: v as SymbolType,
+                metadata: { ...(nodeData.metadata || {}), allowTypeEdit: true }
+              })
+            }
+          >
+            <SelectTrigger className="mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {allSymbols.map((s) => (
+                <SelectItem key={s.type} value={s.type}>{s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Select value={nodeData.symbolType} disabled>
+            <SelectTrigger className="mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={nodeData.symbolType}>{nodeData.symbolType}</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div>

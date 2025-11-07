@@ -12,6 +12,7 @@ import {
   Edge,
   Connection,
   MarkerType,
+  ConnectionMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
@@ -96,7 +97,7 @@ export function TopologyViewerTool() {
         data: {
           label: `${config.label} ${nodeId}`,
           symbolType: type,
-          metadata: {},
+          metadata: { allowTypeEdit: type === 'custom' },
         },
       };
 
@@ -215,7 +216,7 @@ export function TopologyViewerTool() {
         data: {
           label: node.label || node.name || node.id,
           symbolType: (node.type || 'custom') as SymbolType,
-          metadata: node.metadata || {},
+          metadata: { ...(node.metadata || {}), allowTypeEdit: (node.type === 'custom') || (node.metadata?.allowTypeEdit === true) },
         },
       }));
 
@@ -340,13 +341,15 @@ export function TopologyViewerTool() {
 
   // Handle fullscreen mode changes and resize
   useEffect(() => {
-    if (reactFlowInstance) {
-      // Delay to allow DOM to update
-      const timer = setTimeout(() => {
-        reactFlowInstance.fitView({ padding: 0.1, duration: 200 });
-      }, 150);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      try {
+        window.dispatchEvent(new Event('resize'));
+        if (reactFlowInstance) {
+          reactFlowInstance.fitView({ padding: 0.1, duration: 200 });
+        }
+      } catch {}
+    }, 150);
+    return () => clearTimeout(timer);
   }, [reactFlowInstance, isFullscreen]);
 
   return (
@@ -357,8 +360,8 @@ export function TopologyViewerTool() {
       </div>
 
       {/* Center Canvas */}
-      <div className="flex-1 flex flex-col gap-4">
-        <Tabs defaultValue="editor" className="flex-1 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col gap-4">
+        <Tabs defaultValue="editor" className="flex-1 min-h-0 flex flex-col">
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="editor">Editor</TabsTrigger>
@@ -390,9 +393,11 @@ export function TopologyViewerTool() {
             </div>
           </div>
 
-          <TabsContent value="editor" className="flex-1 border rounded-lg overflow-hidden mt-4">
+          <TabsContent value="editor" className="flex-1 min-h-0 border rounded-lg overflow-hidden mt-4">
             <div ref={reactFlowWrapper} className="w-full h-full">
               <ReactFlow
+                key={isFullscreen ? 'fullscreen' : 'windowed'}
+                style={{ width: '100%', height: '100%' }}
                 nodes={nodes}
                 edges={edges}
                 onNodesChange={(changes) => {
@@ -410,6 +415,8 @@ export function TopologyViewerTool() {
                 snapToGrid={snapToGrid}
                 snapGrid={[15, 15]}
                 fitView
+                connectionMode={ConnectionMode.Loose}
+                connectOnClick
                 attributionPosition="bottom-right"
                 connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
                 defaultEdgeOptions={{

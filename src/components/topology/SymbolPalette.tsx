@@ -107,7 +107,7 @@ const baseSymbols: Symbol[] = [
   { type: 'custom', label: 'Custom Node', icon: Circle, color: '#6b7280' },
 ];
 
-const allSymbols = [...databaseSymbols, ...awsSymbols, ...azureSymbols, ...gcpSymbols, ...baseSymbols];
+export const allSymbols = [...databaseSymbols, ...awsSymbols, ...azureSymbols, ...gcpSymbols, ...baseSymbols];
 
 interface SymbolPaletteProps {
   onSymbolDragStart: (type: SymbolType) => void;
