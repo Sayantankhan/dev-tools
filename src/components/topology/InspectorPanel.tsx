@@ -4,14 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Plus, Copy } from 'lucide-react';
+import { Trash2, Plus, Copy, ArrowRight } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 import { SymbolType, allSymbols } from './SymbolPalette';
 import { TopologyNodeData } from './TopologyNode';
+import React from 'react';
 
 interface InspectorPanelProps {
   selectedNodes: Node[];
   selectedEdges: Edge[];
+  allNodes: Node[];
   onUpdateNode: (nodeId: string, data: Partial<TopologyNodeData>) => void;
   onUpdateEdge: (edgeId: string, data: any) => void;
   onDeleteNode: (nodeId: string) => void;
@@ -19,11 +21,13 @@ interface InspectorPanelProps {
   onDuplicateNode: (nodeId: string) => void;
   onAddMetadata: (nodeId: string, key: string, value: string) => void;
   onRemoveMetadata: (nodeId: string, key: string) => void;
+  onCreateConnection: (sourceId: string, targetId: string) => void;
 }
 
 export function InspectorPanel({
   selectedNodes,
   selectedEdges,
+  allNodes,
   onUpdateNode,
   onUpdateEdge,
   onDeleteNode,
@@ -31,6 +35,7 @@ export function InspectorPanel({
   onDuplicateNode,
   onAddMetadata,
   onRemoveMetadata,
+  onCreateConnection,
 }: InspectorPanelProps) {
   if (selectedNodes.length === 0 && selectedEdges.length === 0) {
     return (
@@ -59,11 +64,13 @@ export function InspectorPanel({
           {selectedNodes.length === 1 && (
             <NodeInspector
               node={selectedNodes[0]}
+              allNodes={allNodes}
               onUpdateNode={onUpdateNode}
               onDeleteNode={onDeleteNode}
               onDuplicateNode={onDuplicateNode}
               onAddMetadata={onAddMetadata}
               onRemoveMetadata={onRemoveMetadata}
+              onCreateConnection={onCreateConnection}
             />
           )}
 
@@ -100,20 +107,28 @@ export function InspectorPanel({
 
 function NodeInspector({
   node,
+  allNodes,
   onUpdateNode,
   onDeleteNode,
   onDuplicateNode,
   onAddMetadata,
   onRemoveMetadata,
+  onCreateConnection,
 }: {
   node: Node;
+  allNodes: Node[];
   onUpdateNode: (nodeId: string, data: Partial<TopologyNodeData>) => void;
   onDeleteNode: (nodeId: string) => void;
   onDuplicateNode: (nodeId: string) => void;
   onAddMetadata: (nodeId: string, key: string, value: string) => void;
   onRemoveMetadata: (nodeId: string, key: string) => void;
+  onCreateConnection: (sourceId: string, targetId: string) => void;
 }) {
   const nodeData = node.data as TopologyNodeData;
+  const [connectionDirection, setConnectionDirection] = React.useState<'to' | 'from'>('to');
+  const [selectedNodeId, setSelectedNodeId] = React.useState<string>('');
+  
+  const availableNodes = allNodes.filter(n => n.id !== node.id);
   
   return (
     <div className="space-y-4">
@@ -198,6 +213,53 @@ function NodeInspector({
           >
             <Plus className="w-3 h-3 mr-2" />
             Add Metadata
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <Label>Connection</Label>
+        <div className="mt-2 space-y-2">
+          <Select value={connectionDirection} onValueChange={(v: 'to' | 'from') => setConnectionDirection(v)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="z-50 bg-popover">
+              <SelectItem value="to">Connect To</SelectItem>
+              <SelectItem value="from">Connect From</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={selectedNodeId} onValueChange={setSelectedNodeId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a node..." />
+            </SelectTrigger>
+            <SelectContent className="z-50 bg-popover">
+              {availableNodes.map((n) => (
+                <SelectItem key={n.id} value={n.id}>
+                  {(n.data as TopologyNodeData).label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (!selectedNodeId) return;
+              if (connectionDirection === 'to') {
+                onCreateConnection(node.id, selectedNodeId);
+              } else {
+                onCreateConnection(selectedNodeId, node.id);
+              }
+              setSelectedNodeId('');
+            }}
+            disabled={!selectedNodeId}
+            className="w-full"
+          >
+            <ArrowRight className="w-3 h-3 mr-2" />
+            Create Connection
           </Button>
         </div>
       </div>

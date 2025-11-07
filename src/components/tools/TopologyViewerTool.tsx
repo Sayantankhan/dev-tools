@@ -549,6 +549,7 @@ export function TopologyViewerTool() {
         <InspectorPanel
           selectedNodes={nodes.filter((n) => n.selected)}
           selectedEdges={edges.filter((e) => e.selected)}
+          allNodes={nodes}
           onUpdateNode={(id, data) => {
             setNodes((nds) => {
               const updated = nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...data } } : n));
@@ -615,6 +616,22 @@ export function TopologyViewerTool() {
                 return n;
               });
               saveToHistory(updated, edges);
+              return updated;
+            });
+          }}
+          onCreateConnection={(sourceId, targetId) => {
+            setEdges((eds) => {
+              const newEdge = {
+                id: `edge_${Date.now()}`,
+                source: sourceId,
+                target: targetId,
+                type: 'smoothstep',
+                markerEnd: { type: MarkerType.ArrowClosed },
+                data: { edgeType: 'directed' },
+              };
+              const updated = addEdge(newEdge, eds);
+              saveToHistory(nodes, updated);
+              toast.success('Connection created');
               return updated;
             });
           }}
