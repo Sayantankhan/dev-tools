@@ -47,7 +47,6 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
             : selected 
               ? `0 0 0 2px ${config.color}40` 
               : undefined,
-          pointerEvents: 'none',
         }}
       >
         {/* Container header */}

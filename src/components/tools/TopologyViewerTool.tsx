@@ -40,38 +40,45 @@ export function TopologyViewerTool() {
   const [nodes, setNodes] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   
-  // Custom node change handler with locked container support
   const onNodesChange = useCallback(
     (changes: any) => {
       setNodes((nds) => {
-        const updated = nds.map(n => {
-          const change = changes.find((c: any) => c.id === n.id);
-          if (change?.type === 'position' && change.dragging && n.type === 'container' && (n.data as ContainerNodeData).locked) {
-            const deltaX = (change.position?.x || n.position.x) - n.position.x;
-            const deltaY = (change.position?.y || n.position.y) - n.position.y;
-            const childIds = (n.data as ContainerNodeData).contains || [];
-            
-            // Update all children positions
-            const updatedWithChildren = nds.map(node => {
-              if (childIds.includes(node.id)) {
-                return { ...node, position: { x: node.position.x + deltaX, y: node.position.y + deltaY } };
-              }
-              return node.id === n.id ? { ...n, position: change.position } : node;
-            });
-            return updatedWithChildren;
-          }
-          return n;
-        });
-        
-        return updated.map(n => {
-          const change = changes.find((c: any) => c.id === n.id);
-          if (change) {
-            if (change.type === 'position' && change.position) return { ...n, position: change.position };
-            if (change.type === 'select') return { ...n, selected: change.selected };
-            if (change.type === 'remove') return undefined as any;
-          }
-          return n;
-        }).filter(Boolean);
+        const changeById = new Map<string, any>(changes.map((c: any) => [c.id, c]));
+
+        // Apply base changes (position/select/remove) first
+        let next = nds
+          .map((n) => {
+            const ch = changeById.get(n.id);
+            if (!ch) return n;
+            if (ch.type === 'position' && ch.position) return { ...n, position: ch.position };
+            if (ch.type === 'select') return { ...n, selected: ch.selected };
+            if (ch.type === 'remove') return undefined as any;
+            return n;
+          })
+          .filter(Boolean) as Node[];
+
+        // Handle locked container drag: move children by delta
+        const lockedMoves = nds
+          .map((n) => ({ n, ch: changeById.get(n.id) }))
+          .filter(({ n, ch }) => ch?.type === 'position' && ch.dragging && n.type === 'container' && (n.data as ContainerNodeData).locked)
+          .map(({ n, ch }) => ({
+            containerId: n.id,
+            deltaX: (ch.position?.x ?? n.position.x) - n.position.x,
+            deltaY: (ch.position?.y ?? n.position.y) - n.position.y,
+            children: ((n.data as ContainerNodeData).contains || []).slice(),
+          }));
+
+        if (lockedMoves.length) {
+          next = next.map((node) => {
+            const move = lockedMoves.find((m) => m.children.includes(node.id));
+            if (!move) return node;
+            // use original position as base to avoid compounding
+            const original = nds.find((x) => x.id === node.id) || node;
+            return { ...node, position: { x: original.position.x + move.deltaX, y: original.position.y + move.deltaY } };
+          });
+        }
+
+        return next;
       });
     },
     [setNodes]
@@ -1177,15 +1184,18 @@ export function TopologyViewerTool() {
           }}
           onCreateConnection={(sourceId, targetId) => {
             setEdges((eds) => {
+              const uniqueId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+                ? (crypto as any).randomUUID()
+                : Math.random().toString(36).slice(2) + Date.now().toString(36);
               const newEdge = {
-                id: `edge_${Date.now()}`,
+                id: `edge-${uniqueId}`,
                 source: sourceId,
                 target: targetId,
-                type: 'smoothstep',
+                type: 'smoothstep' as const,
                 markerEnd: { type: MarkerType.ArrowClosed },
                 data: { edgeType: 'directed' },
               };
-              const updated = addEdge(newEdge, eds);
+              const updated = addEdge(newEdge as any, eds);
               saveToHistory(nodes, updated);
               toast.success('Connection created');
               return updated;
