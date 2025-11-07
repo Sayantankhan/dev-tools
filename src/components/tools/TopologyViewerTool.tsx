@@ -436,10 +436,28 @@ export function TopologyViewerTool() {
                 <Controls />
                 
                 <Panel position="top-right">
-                  <Button size="sm" variant="secondary" onClick={exportJSON}>
-                    <Download className="w-3 h-3 mr-2" />
-                    JSON
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      onClick={() => reactFlowInstance?.zoomIn()}
+                      disabled={!reactFlowInstance}
+                    >
+                      +
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      onClick={() => reactFlowInstance?.zoomOut()}
+                      disabled={!reactFlowInstance}
+                    >
+                      -
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={exportJSON}>
+                      <Download className="w-3 h-3 mr-2" />
+                      JSON
+                    </Button>
+                  </div>
                 </Panel>
               </ReactFlow>
             </div>
