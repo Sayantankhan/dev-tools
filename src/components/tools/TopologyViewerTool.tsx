@@ -206,7 +206,49 @@ export function TopologyViewerTool() {
       };
 
       setNodes((nds) => {
-        const updated = nds.concat(newNode);
+        let updated = nds.concat(newNode);
+        
+        // Check if new node was dropped inside a container
+        if (!isContainer) {
+          const containerNodes = updated.filter((n) => n.type === 'container');
+          
+          containerNodes.forEach((container) => {
+            const containerBounds = {
+              left: container.position.x,
+              right: container.position.x + (container.style?.width as number || container.width || 400),
+              top: container.position.y,
+              bottom: container.position.y + (container.style?.height as number || container.height || 300),
+            };
+            
+            if (
+              newNode.position.x >= containerBounds.left &&
+              newNode.position.x <= containerBounds.right &&
+              newNode.position.y >= containerBounds.top &&
+              newNode.position.y <= containerBounds.bottom
+            ) {
+              // Update the new node to be a child of this container
+              updated = updated.map((n) =>
+                n.id === newNode.id
+                  ? { 
+                      ...n, 
+                      parentNode: container.id,
+                      extent: 'parent' as const,
+                    }
+                  : n
+              );
+              
+              // Add to container's contains array
+              const cData = container.data as ContainerNodeData;
+              const newContains = [...(cData.contains || []), newNode.id];
+              updated = updated.map((n) =>
+                n.id === container.id
+                  ? { ...n, data: { ...n.data, contains: newContains } }
+                  : n
+              );
+            }
+          });
+        }
+        
         saveToHistory(updated, edges);
         return updated;
       });
