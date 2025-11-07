@@ -257,6 +257,24 @@ export function TopologyViewerTool() {
         if (!isContainer) {
           const containerNodes = updated.filter((n) => n.type === 'container');
           
+          // DEBUG: Log bounds for all containers vs new node
+          try {
+            const nodeW = (newNode.style?.width as number) || newNode.width || 160;
+            const nodeH = (newNode.style?.height as number) || newNode.height || 60;
+            const cx = newNode.position.x + nodeW / 2;
+            const cy = newNode.position.y + nodeH / 2;
+            console.groupCollapsed('[DROP NEW] Container bounds vs node center', { newNodeId: newNode.id });
+            console.log('Node position', newNode.position, 'size', { w: nodeW, h: nodeH }, 'center', { cx, cy });
+            containerNodes.forEach((container) => {
+              const w = container.measured?.width || (container.style?.width as number) || container.width || 400;
+              const h = container.measured?.height || (container.style?.height as number) || container.height || 300;
+              const left = container.position.x, top = container.position.y, right = left + w, bottom = top + h;
+              const inside = cx >= left && cx <= right && cy >= top && cy <= bottom;
+              console.table({ containerId: container.id, left, top, right, bottom, inside });
+            });
+            console.groupEnd();
+          } catch {}
+          
           for (const container of containerNodes) {
             const containerWidth = container.measured?.width || (container.style?.width as number) || container.width || 400;
             const containerHeight = container.measured?.height || (container.style?.height as number) || container.height || 300;
@@ -283,6 +301,7 @@ export function TopologyViewerTool() {
                 x: newNode.position.x - container.position.x,
                 y: newNode.position.y - container.position.y,
               };
+              console.log('[DROP NEW] attach', { nodeId: newNode.id, to: container.id, relativePosition });
               
               // Update the new node to be a child of this container (no extent on first attach)
               updated = updated.map((n) =>
@@ -765,6 +784,25 @@ export function TopologyViewerTool() {
                         const n = byId.get(id);
                         if (!n || n.type === 'container') return;
                         const abs = getAbs(n);
+
+                        // DEBUG: container bounds vs node position at drop
+                        try {
+                          const nodeW = (n.style?.width as number) || n.width || 160;
+                          const nodeH = (n.style?.height as number) || n.height || 60;
+                          const cx = abs.x + nodeW / 2;
+                          const cy = abs.y + nodeH / 2;
+                          console.groupCollapsed('[DROP] Node->Container check', { nodeId: n.id });
+                          console.log('Node abs position', abs, 'size', { w: nodeW, h: nodeH }, 'center', { cx, cy });
+                          containers.forEach((c: any) => {
+                            const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
+                            const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
+                            const left = c.position.x, top = c.position.y, right = left + w, bottom = top + h;
+                            const inside = cx >= left && cx <= right && cy >= top && cy <= bottom;
+                            console.table({ containerId: c.id, left, top, right, bottom, inside });
+                          });
+                          console.groupEnd();
+                        } catch {}
+
                         const target = containers.find((c: any) => {
                           const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
                           const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
@@ -776,8 +814,10 @@ export function TopologyViewerTool() {
 
                         if (target && n.parentNode !== target.id) {
                           const rel = { x: abs.x - target.position.x, y: abs.y - target.position.y };
+                          console.log('[DROP] attach', { nodeId: n.id, to: target.id, rel });
                           updated = updated.map((nn) => (nn.id === n.id ? { ...nn, position: rel, parentNode: target.id } : nn));
                         } else if (!target && n.parentNode) {
+                          console.log('[DROP] detach', { nodeId: n.id, from: n.parentNode, newAbs: abs });
                           updated = updated.map((nn) => (nn.id === n.id ? { ...nn, position: { x: abs.x, y: abs.y }, parentNode: undefined } : nn));
                         }
                       });
@@ -803,7 +843,37 @@ export function TopologyViewerTool() {
                   if (changes.some((c: any) => c.type === 'position' && c.dragging === true)) {
                     const draggedIds = changes.filter((c: any) => c.type === 'position' && c.dragging).map((c: any) => c.id);
                     setNodes((currentNodes) => {
+                      const byId = new Map(currentNodes.map((n) => [n.id, n] as const));
+                      const getAbs = (n: any) => {
+                        if (n.parentNode) {
+                          const p = byId.get(n.parentNode);
+                          if (p) return { x: n.position.x + p.position.x, y: n.position.y + p.position.y };
+                        }
+                        return { x: n.position.x, y: n.position.y };
+                      };
                       const draggedNodes = currentNodes.filter((n) => draggedIds.includes(n.id));
+
+                      // DEBUG: live hover bounds check
+                      try {
+                        draggedNodes.forEach((dn) => {
+                          if (dn.type === 'container') return;
+                          const abs = getAbs(dn);
+                          const nodeW = (dn.style?.width as number) || dn.width || 160;
+                          const nodeH = (dn.style?.height as number) || dn.height || 60;
+                          const cx = abs.x + nodeW / 2;
+                          const cy = abs.y + nodeH / 2;
+                          console.groupCollapsed('[DRAG] Hover check for node', dn.id);
+                          currentNodes.filter((x) => x.type === 'container').forEach((c: any) => {
+                            const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
+                            const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
+                            const left = c.position.x, top = c.position.y, right = left + w, bottom = top + h;
+                            const inside = cx >= left && cx <= right && cy >= top && cy <= bottom;
+                            console.table({ containerId: c.id, left, top, right, bottom, nodeCx: cx, nodeCy: cy, inside });
+                          });
+                          console.groupEnd();
+                        });
+                      } catch {}
+
                       return currentNodes.map((node) => {
                         if (node.type !== 'container') return node;
                         const cData = node.data as ContainerNodeData;
@@ -812,8 +882,9 @@ export function TopologyViewerTool() {
                         const b = { left: node.position.x, right: node.position.x + w, top: node.position.y, bottom: node.position.y + h };
                         const isHovered = draggedNodes.some((dn) => {
                           if (dn.type === 'container') return false;
-                          const cx = dn.position.x + ((dn.style?.width as number) || 160) / 2;
-                          const cy = dn.position.y + ((dn.style?.height as number) || 60) / 2;
+                          const abs = getAbs(dn);
+                          const cx = abs.x + (((dn.style?.width as number) || 160) / 2);
+                          const cy = abs.y + (((dn.style?.height as number) || 60) / 2);
                           return cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom;
                         });
                         if (cData.isHovered !== isHovered) return { ...node, data: { ...node.data, isHovered } };
