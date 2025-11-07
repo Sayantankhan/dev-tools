@@ -83,10 +83,9 @@ export function TopologyViewerTool() {
       const type = event.dataTransfer.getData('application/reactflow') as SymbolType;
       if (!type || !reactFlowWrapper.current || !reactFlowInstance) return;
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+        x: event.clientX,
+        y: event.clientY,
       });
 
       const config = getSymbolConfig(type);
