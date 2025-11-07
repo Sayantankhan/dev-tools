@@ -108,10 +108,15 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className="px-4 py-3 rounded-lg border-2 bg-background shadow-md min-w-[160px] transition-all"
+      className="rounded-lg border-2 bg-background shadow-md transition-all flex flex-col relative"
       style={{
         borderColor: selected ? config.color : '#e5e7eb',
         boxShadow: selected ? `0 0 0 2px ${config.color}40` : undefined,
+        width: '100%',
+        height: '100%',
+        minWidth: '160px',
+        minHeight: '80px',
+        padding: '4%',
       }}
     >
       <NodeResizer
@@ -205,15 +210,15 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         style={{ background: '#3b82f6', opacity: 1 }}
       />
       
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className="w-5 h-5 flex-shrink-0" style={{ color: config.color }} />
-        <div className="font-semibold text-sm text-foreground flex-1 truncate">
+      <div className="flex items-center gap-2 mb-1 min-h-0">
+        <Icon className="flex-shrink-0" style={{ color: config.color, width: '20%', height: 'auto', maxWidth: '32px', minWidth: '16px' }} />
+        <div className="font-semibold text-foreground flex-1 truncate" style={{ fontSize: 'clamp(0.75rem, 3vw, 0.875rem)' }}>
           {nodeData.label}
         </div>
       </div>
       
       {nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 && (
-        <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+        <div className="text-muted-foreground mt-1 space-y-0.5 overflow-hidden" style={{ fontSize: 'clamp(0.625rem, 2.5vw, 0.75rem)' }}>
           {Object.entries(nodeData.metadata)
             .filter(([key]) => key !== 'allowTypeEdit')
             .slice(0, 3)
