@@ -340,6 +340,10 @@ export function TopologyViewerTool() {
     return () => clearTimeout(timer);
   }, [reactFlowInstance, isFullscreen]);
 
+  const selectedNodes = nodes.filter((n) => n.selected);
+  const selectedEdges = edges.filter((e) => e.selected);
+  const hasSelection = selectedNodes.length > 0 || selectedEdges.length > 0;
+
   return (
     <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen' : 'h-[calc(100vh-120px)]'} min-h-0`}>
       {/* Left Palette */}
@@ -499,11 +503,12 @@ export function TopologyViewerTool() {
         </Tabs>
       </div>
 
-      {/* Right Inspector */}
-      <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-72' : 'w-80'}`}>
-        <InspectorPanel
-          selectedNodes={nodes.filter((n) => n.selected)}
-          selectedEdges={edges.filter((e) => e.selected)}
+      {/* Right Inspector - Only visible when something is selected */}
+      {hasSelection && (
+        <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-72' : 'w-80'}`}>
+          <InspectorPanel
+            selectedNodes={selectedNodes}
+            selectedEdges={selectedEdges}
           allNodes={nodes}
           allEdges={edges}
           onUpdateNode={(id, data) => {
@@ -591,8 +596,9 @@ export function TopologyViewerTool() {
               return updated;
             });
           }}
-        />
-      </div>
+          />
+        </div>
+      )}
     </div>
   );
 }
