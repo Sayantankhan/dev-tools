@@ -37,6 +37,7 @@ const getId = () => `node_${nodeId++}`;
 export function TopologyViewerTool() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const fullscreenContainerRef = useRef<HTMLDivElement>(null);
+  const portalContainerRef = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, rfOnNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   
@@ -619,6 +620,8 @@ export function TopologyViewerTool() {
       ref={fullscreenContainerRef}
       className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'h-screen w-screen bg-background' : 'h-[calc(100vh-120px)]'} min-h-0 relative`}
     >
+      {/* Portal container for dropdowns in fullscreen mode */}
+      <div ref={portalContainerRef} className="absolute inset-0 pointer-events-none z-[9999]" />
       {/* Left Palette */}
       <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-64' : 'w-48'}`}>
         <SymbolPalette onSymbolDragStart={() => {}} />
@@ -855,6 +858,7 @@ export function TopologyViewerTool() {
             selectedEdges={selectedEdges}
           allNodes={nodes}
           allEdges={edges}
+          portalContainer={portalContainerRef.current}
           onUpdateNode={(id, data) => {
             setNodes((nds) => {
               const updated = nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...data } } : n));
@@ -863,8 +867,10 @@ export function TopologyViewerTool() {
             });
           }}
           onUpdateEdge={(id, data) => {
+            console.log('[TopologyViewerTool] onUpdateEdge called:', id, data);
             setEdges((eds) => {
               const updated = eds.map((e) => (e.id === id ? { ...e, data, label: data.label } : e));
+              console.log('[TopologyViewerTool] Updated edges:', updated);
               saveToHistory(nodes, updated);
               return updated;
             });

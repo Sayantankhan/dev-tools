@@ -24,6 +24,7 @@ interface InspectorPanelProps {
   onAddMetadata: (nodeId: string, key: string, value: string) => void;
   onRemoveMetadata: (nodeId: string, key: string) => void;
   onCreateConnection: (sourceId: string, targetId: string) => void;
+  portalContainer?: HTMLElement | null;
 }
 
 export function InspectorPanel({
@@ -39,6 +40,7 @@ export function InspectorPanel({
   onAddMetadata,
   onRemoveMetadata,
   onCreateConnection,
+  portalContainer,
 }: InspectorPanelProps) {
   if (selectedNodes.length === 0 && selectedEdges.length === 0) {
     return (
@@ -77,6 +79,7 @@ export function InspectorPanel({
               onRemoveMetadata={onRemoveMetadata}
               onCreateConnection={onCreateConnection}
               onDeleteEdge={onDeleteEdge}
+              portalContainer={portalContainer}
             />
           )}
 
@@ -104,6 +107,7 @@ export function InspectorPanel({
               allNodes={allNodes}
               onUpdateEdge={onUpdateEdge}
               onDeleteEdge={onDeleteEdge}
+              portalContainer={portalContainer}
             />
           )}
         </div>
@@ -123,6 +127,7 @@ function NodeInspector({
   onRemoveMetadata,
   onCreateConnection,
   onDeleteEdge,
+  portalContainer,
 }: {
   node: Node;
   allNodes: Node[];
@@ -134,6 +139,7 @@ function NodeInspector({
   onRemoveMetadata: (nodeId: string, key: string) => void;
   onCreateConnection: (sourceId: string, targetId: string) => void;
   onDeleteEdge: (edgeId: string) => void;
+  portalContainer?: HTMLElement | null;
 }) {
   const nodeData = node.data as TopologyNodeData | ContainerNodeData;
   const isContainer = node.type === 'container';
@@ -177,7 +183,7 @@ function NodeInspector({
             <SelectTrigger className="mt-2">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
+            <SelectContent container={portalContainer} sideOffset={5}>
               {allSymbols.map((s) => (
                 <SelectItem key={s.type} value={s.type}>{s.label}</SelectItem>
               ))}
@@ -188,7 +194,7 @@ function NodeInspector({
             <SelectTrigger className="mt-2">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
+            <SelectContent container={portalContainer} sideOffset={5}>
               <SelectItem value={nodeData.symbolType}>{nodeData.symbolType}</SelectItem>
             </SelectContent>
           </Select>
@@ -295,7 +301,7 @@ function NodeInspector({
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
+            <SelectContent container={portalContainer} sideOffset={5}>
               <SelectItem value="to">Connect To</SelectItem>
               <SelectItem value="from">Connect From</SelectItem>
             </SelectContent>
@@ -305,7 +311,7 @@ function NodeInspector({
             <SelectTrigger>
               <SelectValue placeholder="Select a node..." />
             </SelectTrigger>
-            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
+            <SelectContent container={portalContainer} sideOffset={5}>
               {availableNodes.map((n) => (
                 <SelectItem key={n.id} value={n.id}>
                   {(n.data as TopologyNodeData).label}
@@ -384,13 +390,17 @@ function EdgeInspector({
   allNodes,
   onUpdateEdge,
   onDeleteEdge,
+  portalContainer,
 }: {
   edge: Edge;
   allNodes: Node[];
   onUpdateEdge: (edgeId: string, data: any) => void;
   onDeleteEdge: (edgeId: string) => void;
+  portalContainer?: HTMLElement | null;
 }) {
   const nodeLabel = (id: string) => (allNodes.find(n => n.id === id)?.data as TopologyNodeData)?.label || id;
+  
+  console.log('[EdgeInspector] Rendering with edge:', edge.id, 'data:', edge.data);
   return (
     <div className="space-y-4">
       <div>
@@ -434,12 +444,15 @@ function EdgeInspector({
         <Label>Line Style</Label>
         <Select
           value={String(edge.data?.lineStyle || 'solid')}
-          onValueChange={(v) => onUpdateEdge(edge.id, { ...edge.data, lineStyle: v })}
+          onValueChange={(v) => {
+            console.log('[EdgeInspector] Line style changed to:', v);
+            onUpdateEdge(edge.id, { ...edge.data, lineStyle: v });
+          }}
         >
           <SelectTrigger className="mt-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
+          <SelectContent container={portalContainer} sideOffset={5}>
             <SelectItem value="solid">Solid Line</SelectItem>
             <SelectItem value="dotted">Dotted Line</SelectItem>
           </SelectContent>
@@ -450,12 +463,15 @@ function EdgeInspector({
         <Label>Direction</Label>
         <Select
           value={String(edge.data?.edgeType || 'directed')}
-          onValueChange={(v) => onUpdateEdge(edge.id, { ...edge.data, edgeType: v })}
+          onValueChange={(v) => {
+            console.log('[EdgeInspector] Direction changed to:', v);
+            onUpdateEdge(edge.id, { ...edge.data, edgeType: v });
+          }}
         >
           <SelectTrigger className="mt-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
+          <SelectContent container={portalContainer} sideOffset={5}>
             <SelectItem value="directed">Directed (→)</SelectItem>
             <SelectItem value="bidirectional">Bidirectional (↔)</SelectItem>
             <SelectItem value="undirected">Undirected (—)</SelectItem>
