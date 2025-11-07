@@ -251,18 +251,25 @@ export function TopologyViewerTool() {
           const containerNodes = updated.filter((n) => n.type === 'container');
           
           for (const container of containerNodes) {
+            const containerWidth = container.measured?.width || (container.style?.width as number) || container.width || 400;
+            const containerHeight = container.measured?.height || (container.style?.height as number) || container.height || 300;
+            
             const containerBounds = {
               left: container.position.x,
-              right: container.position.x + (container.style?.width as number || container.width || 400),
+              right: container.position.x + containerWidth,
               top: container.position.y,
-              bottom: container.position.y + (container.style?.height as number || container.height || 300),
+              bottom: container.position.y + containerHeight,
             };
             
+            // Use node center for better drop detection
+            const nodeCenterX = newNode.position.x + (newNode.style?.width as number || 80) / 2;
+            const nodeCenterY = newNode.position.y + (newNode.style?.height as number || 30) / 2;
+            
             if (
-              newNode.position.x >= containerBounds.left &&
-              newNode.position.x <= containerBounds.right &&
-              newNode.position.y >= containerBounds.top &&
-              newNode.position.y <= containerBounds.bottom
+              nodeCenterX >= containerBounds.left &&
+              nodeCenterX <= containerBounds.right &&
+              nodeCenterY >= containerBounds.top &&
+              nodeCenterY <= containerBounds.bottom
             ) {
               // Calculate relative position to parent
               const relativePosition = {
