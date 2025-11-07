@@ -177,7 +177,7 @@ function NodeInspector({
             <SelectTrigger className="mt-2">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-50 bg-popover">
+            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
               {allSymbols.map((s) => (
                 <SelectItem key={s.type} value={s.type}>{s.label}</SelectItem>
               ))}
@@ -188,7 +188,7 @@ function NodeInspector({
             <SelectTrigger className="mt-2">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-50 bg-popover">
+            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
               <SelectItem value={nodeData.symbolType}>{nodeData.symbolType}</SelectItem>
             </SelectContent>
           </Select>
@@ -295,7 +295,7 @@ function NodeInspector({
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-50 bg-popover">
+            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
               <SelectItem value="to">Connect To</SelectItem>
               <SelectItem value="from">Connect From</SelectItem>
             </SelectContent>
@@ -305,7 +305,7 @@ function NodeInspector({
             <SelectTrigger>
               <SelectValue placeholder="Select a node..." />
             </SelectTrigger>
-            <SelectContent className="z-50 bg-popover">
+            <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
               {availableNodes.map((n) => (
                 <SelectItem key={n.id} value={n.id}>
                   {(n.data as TopologyNodeData).label}
@@ -439,7 +439,7 @@ function EdgeInspector({
           <SelectTrigger className="mt-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="z-50 bg-popover">
+          <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
             <SelectItem value="solid">Solid Line</SelectItem>
             <SelectItem value="dotted">Dotted Line</SelectItem>
           </SelectContent>
@@ -455,7 +455,7 @@ function EdgeInspector({
           <SelectTrigger className="mt-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="z-50 bg-popover">
+          <SelectContent className="z-[100] bg-popover pointer-events-auto" sideOffset={5}>
             <SelectItem value="directed">Directed (→)</SelectItem>
             <SelectItem value="bidirectional">Bidirectional (↔)</SelectItem>
             <SelectItem value="undirected">Undirected (—)</SelectItem>
