@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
 import { getSymbolConfig, SymbolType } from './SymbolPalette';
 import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, Search, BarChart3, Flame, Binary, Workflow, Type } from 'lucide-react';
 
@@ -114,6 +114,13 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         boxShadow: selected ? `0 0 0 2px ${config.color}40` : undefined,
       }}
     >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={160}
+        minHeight={80}
+        lineStyle={{ borderColor: config.color }}
+        handleStyle={{ borderColor: config.color }}
+      />
       {/* Source handles only (to start connections) */}
       <Handle 
         id="s-top"

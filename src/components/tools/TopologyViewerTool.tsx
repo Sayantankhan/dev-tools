@@ -43,6 +43,8 @@ export function TopologyViewerTool() {
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [rawInput, setRawInput] = useState('');
+  const [copiedNodes, setCopiedNodes] = useState<Node[]>([]);
+  const [copiedEdges, setCopiedEdges] = useState<Edge[]>([]);
   
   const connectStartRef = useRef<{ nodeId?: string; handleType?: 'source' | 'target' }>({});
   
@@ -95,6 +97,60 @@ export function TopologyViewerTool() {
       setHistoryIndex(historyIndex + 1);
     }
   }, [history, historyIndex, setNodes, setEdges]);
+
+  // Keyboard shortcuts for copy/paste
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length > 0) {
+          e.preventDefault();
+          setCopiedNodes(selectedNodes);
+          
+          // Copy edges between selected nodes
+          const selectedNodeIds = new Set(selectedNodes.map(n => n.id));
+          const relevantEdges = edges.filter(
+            e => selectedNodeIds.has(e.source) && selectedNodeIds.has(e.target)
+          );
+          setCopiedEdges(relevantEdges);
+          toast.success(`Copied ${selectedNodes.length} node(s)`);
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        if (copiedNodes.length > 0) {
+          e.preventDefault();
+          
+          // Create ID mapping for duplicated nodes
+          const idMap = new Map<string, string>();
+          const newNodes = copiedNodes.map(node => {
+            const newId = getId();
+            idMap.set(node.id, newId);
+            return {
+              ...node,
+              id: newId,
+              position: { x: node.position.x + 50, y: node.position.y + 50 },
+              selected: true,
+            };
+          });
+
+          // Duplicate edges with updated IDs
+          const newEdges = copiedEdges.map(edge => ({
+            ...edge,
+            id: `edge_${Date.now()}_${Math.random()}`,
+            source: idMap.get(edge.source) || edge.source,
+            target: idMap.get(edge.target) || edge.target,
+          }));
+
+          setNodes(prev => [...prev.map(n => ({ ...n, selected: false })), ...newNodes]);
+          setEdges(prev => [...prev, ...newEdges]);
+          saveToHistory([...nodes, ...newNodes], [...edges, ...newEdges]);
+          toast.success(`Pasted ${newNodes.length} node(s)`);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, edges, copiedNodes, copiedEdges, setNodes, setEdges, saveToHistory]);
 
   // Drag & drop from palette
   const onDragOver = useCallback((event: DragEvent) => {

@@ -138,6 +138,8 @@ function NodeInspector({
   const isContainer = node.type === 'container';
   const [connectionDirection, setConnectionDirection] = React.useState<'to' | 'from'>('to');
   const [selectedNodeId, setSelectedNodeId] = React.useState<string>('');
+  const [newMetadataKey, setNewMetadataKey] = React.useState('');
+  const [newMetadataValue, setNewMetadataValue] = React.useState('');
   
   const availableNodes = allNodes.filter(n => n.id !== node.id);
   const nodeLabel = (id: string) => (allNodes.find(n => n.id === id)?.data as TopologyNodeData)?.label || id;
@@ -247,18 +249,39 @@ function NodeInspector({
               </Button>
             </div>
           ))}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              const key = prompt('Enter metadata key:');
-              if (key) onAddMetadata(node.id, key, '');
-            }}
-            className="w-full"
-          >
-            <Plus className="w-3 h-3 mr-2" />
-            Add Metadata
-          </Button>
+          <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
+            <div className="text-xs font-medium text-muted-foreground">Add New Metadata</div>
+            <div className="space-y-2">
+              <Input
+                placeholder="Key (e.g., IP, Region)"
+                value={newMetadataKey}
+                onChange={(e) => setNewMetadataKey(e.target.value)}
+                className="text-xs"
+              />
+              <Input
+                placeholder="Value"
+                value={newMetadataValue}
+                onChange={(e) => setNewMetadataValue(e.target.value)}
+                className="text-xs"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (newMetadataKey.trim()) {
+                    onAddMetadata(node.id, newMetadataKey, newMetadataValue);
+                    setNewMetadataKey('');
+                    setNewMetadataValue('');
+                  }
+                }}
+                disabled={!newMetadataKey.trim()}
+                className="w-full"
+              >
+                <Plus className="w-3 h-3 mr-2" />
+                Save Metadata
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
