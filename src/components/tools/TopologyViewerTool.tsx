@@ -8,6 +8,7 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
+  applyEdgeChanges,
   Node,
   Edge,
   Connection,
@@ -427,7 +428,15 @@ export function TopologyViewerTool() {
                     saveToHistory(nodes, edges);
                   }
                 }}
-                onEdgesChange={onEdgesChange}
+                onEdgesChange={(changes) => {
+                  setEdges((eds) => {
+                    const next = applyEdgeChanges(changes, eds);
+                    if (changes.some((c: any) => c.type === 'remove' || c.type === 'add' || c.type === 'reset' || c.type === 'select')) {
+                      saveToHistory(nodes, next);
+                    }
+                    return next;
+                  });
+                }}
                 onConnect={onConnect}
                 onConnectStart={(e, params) => {
                   connectStartRef.current = { nodeId: params.nodeId, handleType: params.handleType } as any;
@@ -450,9 +459,9 @@ export function TopologyViewerTool() {
                 attributionPosition="bottom-right"
                 connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
                 defaultEdgeOptions={{
-                  type: 'default',
+                  type: 'smoothstep',
                   markerEnd: { type: MarkerType.ArrowClosed },
-                  style: { strokeWidth: 2 },
+                  style: { strokeWidth: 2, stroke: 'hsl(var(--primary))' },
                 }}
               >
                 <Background />
