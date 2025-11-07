@@ -120,6 +120,16 @@ export function TopologyViewerTool() {
         if (copiedNodes.length > 0) {
           e.preventDefault();
           
+          // Calculate proper offset based on node sizes (like duplicate)
+          let maxWidth = 0;
+          copiedNodes.forEach(node => {
+            const width = (node.style?.width as number) || node.width || (node.type === 'container' ? 400 : 160);
+            maxWidth = Math.max(maxWidth, width);
+          });
+          
+          const horizontalOffset = maxWidth + 50; // Largest width + spacing
+          const verticalOffset = 0; // Keep same Y for side-by-side placement
+          
           // Create ID mapping for duplicated nodes
           const idMap = new Map<string, string>();
           const newNodes = copiedNodes.map(node => {
@@ -128,7 +138,7 @@ export function TopologyViewerTool() {
             return {
               ...node,
               id: newId,
-              position: { x: node.position.x + 50, y: node.position.y + 50 },
+              position: { x: node.position.x + horizontalOffset, y: node.position.y + verticalOffset },
               selected: true,
             };
           });
