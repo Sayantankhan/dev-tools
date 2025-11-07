@@ -361,8 +361,8 @@ export const BackgroundRemoverTool = () => {
               {/* Download Progress */}
               {isDownloading && (
                 <div className="space-y-2">
-                  <Label>Downloading model... {Math.round(downloadProgress * 100)}%</Label>
-                  <Progress value={downloadProgress * 100} />
+                  <Label>Downloading model... {Math.round(Math.min(downloadProgress, 100))}%</Label>
+                  <Progress value={Math.min(downloadProgress, 100)} />
                 </div>
               )}
               
