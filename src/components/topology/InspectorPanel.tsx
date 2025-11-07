@@ -99,6 +99,7 @@ export function InspectorPanel({
           {selectedEdges.length === 1 && (
             <EdgeInspector
               edge={selectedEdges[0]}
+              allNodes={allNodes}
               onUpdateEdge={onUpdateEdge}
               onDeleteEdge={onDeleteEdge}
             />
@@ -323,13 +324,16 @@ function NodeInspector({
 
 function EdgeInspector({
   edge,
+  allNodes,
   onUpdateEdge,
   onDeleteEdge,
 }: {
   edge: Edge;
+  allNodes: Node[];
   onUpdateEdge: (edgeId: string, data: any) => void;
   onDeleteEdge: (edgeId: string) => void;
 }) {
+  const nodeLabel = (id: string) => (allNodes.find(n => n.id === id)?.data as TopologyNodeData)?.label || id;
   return (
     <div className="space-y-4">
       <div>
@@ -337,11 +341,11 @@ function EdgeInspector({
         <div className="mt-2 space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">From:</span>
-            <span className="font-medium">{edge.source}</span>
+            <span className="font-medium">{nodeLabel(edge.source)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">To:</span>
-            <span className="font-medium">{edge.target}</span>
+            <span className="font-medium">{nodeLabel(edge.target)}</span>
           </div>
         </div>
       </div>
