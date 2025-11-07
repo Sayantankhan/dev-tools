@@ -284,14 +284,13 @@ export function TopologyViewerTool() {
                 y: newNode.position.y - container.position.y,
               };
               
-              // Update the new node to be a child of this container
+              // Update the new node to be a child of this container (no extent on first attach)
               updated = updated.map((n) =>
                 n.id === newNode.id
                   ? { 
                       ...n,
                       position: relativePosition,
                       parentNode: container.id,
-                      extent: 'parent' as const,
                     }
                   : n
               );
@@ -743,6 +742,62 @@ export function TopologyViewerTool() {
               
                 onNodesChange={(changes) => {
                   onNodesChange(changes);
+
+                  // Drag end: attach/detach to containers (no extent on first attach)
+                  if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
+                    let newState: Node[] = [];
+                    setNodes((current) => {
+                      let updated = [...current];
+                      const byId = new Map(updated.map((n) => [n.id, n] as const));
+                      const containers = updated.filter((n) => n.type === 'container');
+
+                      const getAbs = (n: any) => {
+                        if (n.parentNode) {
+                          const p = byId.get(n.parentNode);
+                          if (p) return { x: n.position.x + p.position.x, y: n.position.y + p.position.y };
+                        }
+                        return { x: n.position.x, y: n.position.y };
+                      };
+
+                      const movedIds = changes.filter((c: any) => c.type === 'position').map((c: any) => c.id);
+
+                      movedIds.forEach((id: string) => {
+                        const n = byId.get(id);
+                        if (!n || n.type === 'container') return;
+                        const abs = getAbs(n);
+                        const target = containers.find((c: any) => {
+                          const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
+                          const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
+                          const left = c.position.x, top = c.position.y, right = left + w, bottom = top + h;
+                          const cx = abs.x + (((n.style?.width as number) || 160) / 2);
+                          const cy = abs.y + (((n.style?.height as number) || 60) / 2);
+                          return cx >= left && cx <= right && cy >= top && cy <= bottom;
+                        });
+
+                        if (target && n.parentNode !== target.id) {
+                          const rel = { x: abs.x - target.position.x, y: abs.y - target.position.y };
+                          updated = updated.map((nn) => (nn.id === n.id ? { ...nn, position: rel, parentNode: target.id } : nn));
+                        } else if (!target && n.parentNode) {
+                          updated = updated.map((nn) => (nn.id === n.id ? { ...nn, position: { x: abs.x, y: abs.y }, parentNode: undefined } : nn));
+                        }
+                      });
+
+                      // recompute contains arrays
+                      const recomputed = updated.map((nn) => {
+                        if (nn.type !== 'container') return nn;
+                        const contains = updated.filter((x) => x.parentNode === nn.id).map((x) => x.id);
+                        const cData = nn.data as any;
+                        if (JSON.stringify((cData.contains || []).sort()) !== JSON.stringify(contains.sort())) {
+                          return { ...nn, data: { ...nn.data, contains } };
+                        }
+                        return nn;
+                      });
+
+                      newState = recomputed;
+                      return recomputed;
+                    });
+                    if (newState.length) saveToHistory(newState, edges);
+                  }
 
                   // While dragging, set visual hover on containers (no mutations on drop here)
                   if (changes.some((c: any) => c.type === 'position' && c.dragging === true)) {
