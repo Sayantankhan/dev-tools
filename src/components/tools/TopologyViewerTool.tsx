@@ -396,7 +396,6 @@ export function TopologyViewerTool() {
           <TabsContent value="editor" className="flex-1 min-h-0 border rounded-lg overflow-hidden mt-4">
             <div ref={reactFlowWrapper} className="w-full h-full">
               <ReactFlow
-                key={isFullscreen ? 'fullscreen' : 'windowed'}
                 style={{ width: '100%', height: '100%' }}
                 nodes={nodes}
                 edges={edges}
@@ -416,7 +415,6 @@ export function TopologyViewerTool() {
                 snapGrid={[15, 15]}
                 fitView
                 connectionMode={ConnectionMode.Loose}
-                connectOnClick
                 attributionPosition="bottom-right"
                 connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
                 defaultEdgeOptions={{
