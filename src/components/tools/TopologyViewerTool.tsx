@@ -422,6 +422,27 @@ export function TopologyViewerTool() {
           </div>
 
           <TabsContent value="editor" className="flex-1 min-h-0 border rounded-lg overflow-hidden mt-4">
+            <style>{`
+              /* React Flow Controls - dark theme contrast fixes */
+              .react-flow__controls { 
+                background-color: hsl(var(--card)) !important; 
+                border: 1px solid hsl(var(--border)) !important; 
+                box-shadow: var(--shadow-card);
+              }
+              .react-flow__controls-button { 
+                background-color: hsl(var(--input)) !important; 
+                color: hsl(var(--foreground)) !important; 
+                border-color: hsl(var(--border)) !important;
+              }
+              .react-flow__controls-button:hover { 
+                background-color: hsl(var(--muted)) !important; 
+              }
+              .react-flow__controls-button svg,
+              .react-flow__controls-button path { 
+                fill: currentColor !important; 
+                stroke: currentColor !important; 
+              }
+            `}</style>
             <div ref={reactFlowWrapper} className="w-full h-full">
               <ReactFlow
                 style={{ width: '100%', height: '100%' }}
