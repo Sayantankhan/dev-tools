@@ -36,6 +36,7 @@ const getId = () => `node_${nodeId++}`;
 
 export function TopologyViewerTool() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const fullscreenContainerRef = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -46,6 +47,7 @@ export function TopologyViewerTool() {
   const [rawInput, setRawInput] = useState('');
   const [copiedNodes, setCopiedNodes] = useState<Node[]>([]);
   const [copiedEdges, setCopiedEdges] = useState<Edge[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const connectStartRef = useRef<{ nodeId?: string; handleType?: 'source' | 'target' }>({});
   
@@ -487,27 +489,51 @@ export function TopologyViewerTool() {
     }
   }, [reactFlowInstance]);
 
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // Fullscreen API implementation
+  const toggleFullscreen = useCallback(async () => {
+    if (!fullscreenContainerRef.current) return;
 
-  // Handle fullscreen mode changes and resize
+    try {
+      if (!document.fullscreenElement) {
+        await fullscreenContainerRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
+      toast.error('Failed to toggle fullscreen');
+    }
+  }, []);
+
+  // Listen for fullscreen changes (handles ESC key automatically)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        window.dispatchEvent(new Event('resize'));
-        if (reactFlowInstance) {
-          reactFlowInstance.fitView({ padding: 0.1, duration: 200 });
-        }
-      } catch {}
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [reactFlowInstance, isFullscreen]);
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+      
+      // Trigger resize and fit view when entering/exiting fullscreen
+      setTimeout(() => {
+        try {
+          window.dispatchEvent(new Event('resize'));
+          if (reactFlowInstance) {
+            reactFlowInstance.fitView({ padding: 0.1, duration: 200 });
+          }
+        } catch {}
+      }, 150);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [reactFlowInstance]);
 
   const selectedNodes = nodes.filter((n) => n.selected);
   const selectedEdges = edges.filter((e) => e.selected);
   const hasSelection = selectedNodes.length > 0 || selectedEdges.length > 0;
 
   return (
-    <div className={`flex gap-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen p-4' : 'h-[calc(100vh-120px)] p-4'} min-h-0 relative`}>
+    <div 
+      ref={fullscreenContainerRef}
+      className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'h-screen w-screen bg-background' : 'h-[calc(100vh-120px)]'} min-h-0 relative`}
+    >
       {/* Left Palette */}
       <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-64' : 'w-48'}`}>
         <SymbolPalette onSymbolDragStart={() => {}} />
@@ -526,7 +552,7 @@ export function TopologyViewerTool() {
               <Button 
                 size="sm" 
                 variant="outline" 
-                onClick={() => setIsFullscreen(!isFullscreen)}
+                onClick={toggleFullscreen}
                 className={isFullscreen ? 'bg-primary/10' : ''}
               >
                 {isFullscreen ? <Minimize className="w-4 h-4 mr-2" /> : <Expand className="w-4 h-4 mr-2" />}
