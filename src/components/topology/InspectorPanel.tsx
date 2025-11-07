@@ -447,7 +447,7 @@ function EdgeInspector({
       </div>
 
       <div>
-        <Label>Edge Type</Label>
+        <Label>Direction</Label>
         <Select
           value={String(edge.data?.edgeType || 'directed')}
           onValueChange={(v) => onUpdateEdge(edge.id, { ...edge.data, edgeType: v })}
@@ -456,8 +456,9 @@ function EdgeInspector({
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="z-50 bg-popover">
-            <SelectItem value="directed">Directed</SelectItem>
-            <SelectItem value="undirected">Undirected</SelectItem>
+            <SelectItem value="directed">Directed (→)</SelectItem>
+            <SelectItem value="bidirectional">Bidirectional (↔)</SelectItem>
+            <SelectItem value="undirected">Undirected (—)</SelectItem>
           </SelectContent>
         </Select>
       </div>

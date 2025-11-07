@@ -134,7 +134,7 @@ export function TopologyViewerTool() {
         stroke: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b'),
         strokeDasharray: edge.data?.lineStyle === 'dotted' ? '5,5' : undefined,
       },
-      zIndex: 1000, // Ensure edges render above nodes
+      zIndex: 1000,
       label: edge.data?.label || edge.label,
       labelStyle: { fill: 'hsl(var(--foreground))', fontWeight: 500, fontSize: 12 },
       labelBgStyle: { fill: 'hsl(var(--background))', fillOpacity: 0.8 },
@@ -144,6 +144,10 @@ export function TopologyViewerTool() {
         type: MarkerType.ArrowClosed, 
         color: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b') 
       },
+      markerStart: edge.data?.edgeType === 'bidirectional' ? {
+        type: MarkerType.ArrowClosed,
+        color: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b')
+      } : undefined,
     }))
   , [edges]);
 
