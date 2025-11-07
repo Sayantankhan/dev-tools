@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, DragEvent } from 'react';
+import { useState, useCallback, useRef, useEffect, DragEvent } from 'react';
 import {
   ReactFlow,
   Background,
@@ -339,14 +339,22 @@ export function TopologyViewerTool() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Handle fullscreen mode changes
+  useEffect(() => {
+    if (reactFlowInstance && isFullscreen) {
+      // Delay to allow DOM to update
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.1 });
+      }, 100);
+    }
+  }, [reactFlowInstance, isFullscreen]);
+
   return (
     <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-120px)]'}`}>
       {/* Left Palette */}
-      {!isFullscreen && (
-        <div className="w-64 flex-shrink-0">
-          <SymbolPalette onSymbolDragStart={() => {}} />
-        </div>
-      )}
+      <div className={`flex-shrink-0 ${isFullscreen ? 'w-56' : 'w-64'}`}>
+        <SymbolPalette onSymbolDragStart={() => {}} />
+      </div>
 
       {/* Center Canvas */}
       <div className="flex-1 flex flex-col gap-4">
@@ -486,9 +494,8 @@ export function TopologyViewerTool() {
       </div>
 
       {/* Right Inspector */}
-      {!isFullscreen && (
-        <div className="w-80 flex-shrink-0">
-          <InspectorPanel
+      <div className={`flex-shrink-0 ${isFullscreen ? 'w-72' : 'w-80'}`}>
+        <InspectorPanel
           selectedNodes={nodes.filter((n) => n.selected)}
           selectedEdges={edges.filter((e) => e.selected)}
           onUpdateNode={(id, data) => {
@@ -561,8 +568,7 @@ export function TopologyViewerTool() {
             });
           }}
         />
-        </div>
-      )}
+      </div>
     </div>
   );
 }
