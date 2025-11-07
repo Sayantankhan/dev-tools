@@ -86,71 +86,87 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
         {/* Visual feedback on hover - no text */}
       </div>
 
-      {/* Connection handles */}
+      {/* Connection handles - Increased size for better usability */}
       <Handle 
         id="s-top"
         type="source" 
         position={Position.Top} 
-        className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-green-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#10b981', opacity: 1 }}
+        isConnectableStart={true}
+        isConnectableEnd={false}
+        style={{ background: '#10b981', opacity: 1, zIndex: 20, padding: '6px' }}
       />
       <Handle 
         id="s-right"
         type="source" 
         position={Position.Right} 
-        className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-green-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#10b981', opacity: 1 }}
+        isConnectableStart={true}
+        isConnectableEnd={false}
+        style={{ background: '#10b981', opacity: 1, zIndex: 20, padding: '6px' }}
       />
       <Handle 
         id="s-bottom"
         type="source" 
         position={Position.Bottom} 
-        className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-green-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#10b981', opacity: 1 }}
+        isConnectableStart={true}
+        isConnectableEnd={false}
+        style={{ background: '#10b981', opacity: 1, zIndex: 20, padding: '6px' }}
       />
       <Handle 
         id="s-left"
         type="source" 
         position={Position.Left} 
-        className="w-4 h-4 !bg-green-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-green-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#10b981', opacity: 1 }}
+        isConnectableStart={true}
+        isConnectableEnd={false}
+        style={{ background: '#10b981', opacity: 1, zIndex: 20, padding: '6px' }}
       />
       
       <Handle 
         id="t-top"
         type="target" 
         position={Position.Top} 
-        className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-blue-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#3b82f6', opacity: 1 }}
+        isConnectableStart={false}
+        isConnectableEnd={true}
+        style={{ background: '#3b82f6', opacity: 1, zIndex: 20, padding: '6px' }}
       />
       <Handle 
         id="t-right"
         type="target" 
         position={Position.Right} 
-        className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-blue-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#3b82f6', opacity: 1 }}
+        isConnectableStart={false}
+        isConnectableEnd={true}
+        style={{ background: '#3b82f6', opacity: 1, zIndex: 20, padding: '6px' }}
       />
       <Handle 
         id="t-bottom"
         type="target" 
         position={Position.Bottom} 
-        className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-blue-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#3b82f6', opacity: 1 }}
+        isConnectableStart={false}
+        isConnectableEnd={true}
+        style={{ background: '#3b82f6', opacity: 1, zIndex: 20, padding: '6px' }}
       />
       <Handle 
         id="t-left"
         type="target" 
         position={Position.Left} 
-        className="w-4 h-4 !bg-blue-500 !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        className="!w-6 !h-6 !bg-blue-500 !border-2 !border-background hover:!scale-[1.3] transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
-        style={{ background: '#3b82f6', opacity: 1 }}
+        isConnectableStart={false}
+        isConnectableEnd={true}
+        style={{ background: '#3b82f6', opacity: 1, zIndex: 20, padding: '6px' }}
       />
     </>
   );

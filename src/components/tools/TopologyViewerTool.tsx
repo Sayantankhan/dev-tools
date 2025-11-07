@@ -53,7 +53,7 @@ export function TopologyViewerTool() {
   
   const nodeTypes = { topology: TopologyNode, container: ContainerNode };
 
-  // Apply edge styles dynamically
+  // Apply edge styles dynamically with proper z-index for visibility
   const styledEdges = useMemo(() => 
     edges.map((edge) => ({
       ...edge,
@@ -62,6 +62,7 @@ export function TopologyViewerTool() {
         stroke: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b'),
         strokeDasharray: edge.data?.lineStyle === 'dotted' ? '5,5' : undefined,
       },
+      zIndex: 1000, // Ensure edges render above nodes
       label: edge.data?.label || edge.label,
       labelStyle: { fill: 'hsl(var(--foreground))', fontWeight: 500, fontSize: 12 },
       labelBgStyle: { fill: 'hsl(var(--background))', fillOpacity: 0.8 },
@@ -212,7 +213,7 @@ export function TopologyViewerTool() {
         if (!isContainer) {
           const containerNodes = updated.filter((n) => n.type === 'container');
           
-          containerNodes.forEach((container) => {
+          for (const container of containerNodes) {
             const containerBounds = {
               left: container.position.x,
               right: container.position.x + (container.style?.width as number || container.width || 400),
@@ -226,11 +227,18 @@ export function TopologyViewerTool() {
               newNode.position.y >= containerBounds.top &&
               newNode.position.y <= containerBounds.bottom
             ) {
+              // Calculate relative position to parent
+              const relativePosition = {
+                x: newNode.position.x - container.position.x,
+                y: newNode.position.y - container.position.y,
+              };
+              
               // Update the new node to be a child of this container
               updated = updated.map((n) =>
                 n.id === newNode.id
                   ? { 
-                      ...n, 
+                      ...n,
+                      position: relativePosition,
                       parentNode: container.id,
                       extent: 'parent' as const,
                     }
@@ -245,8 +253,10 @@ export function TopologyViewerTool() {
                   ? { ...n, data: { ...n.data, contains: newContains } }
                   : n
               );
+              
+              break; // Only add to first matching container
             }
-          });
+          }
         }
         
         saveToHistory(updated, edges);
@@ -275,7 +285,7 @@ export function TopologyViewerTool() {
     });
   }, [nodes, setEdges, saveToHistory]);
 
-  // Connect nodes
+  // Connect nodes - works for all node types including containers
   const onConnect = useCallback(
     (connection: Connection) => {
       const startId = connectStartRef.current?.nodeId;
@@ -298,13 +308,15 @@ export function TopologyViewerTool() {
           target,
           sourceHandle,
           targetHandle,
-          id: `edge_${Date.now()}`,
-          type: 'default',
-          markerEnd: { type: MarkerType.ArrowClosed },
-          data: { edgeType: 'directed', lineStyle: 'solid' },
+          id: `edge_${Date.now()}_${Math.random()}`,
+          type: 'smoothstep',
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b' },
+          data: { edgeType: 'directed', lineStyle: 'solid', color: '#64748b' },
+          zIndex: 1000,
         };
         const updated = addEdge(newEdge, eds);
         saveToHistory(nodes, updated);
+        toast.success('Connection created');
         return updated;
       });
     },
@@ -656,6 +668,11 @@ export function TopologyViewerTool() {
               .react-flow__node-topology { z-index: 1 !important; }
               /* Keep resize handles above for usability */
               .react-flow__resize-control { z-index: 5 !important; }
+              /* Edges should render above nodes */
+              .react-flow__edges { z-index: 1000 !important; }
+              .react-flow__edge { z-index: 1000 !important; }
+              /* Connection line during dragging */
+              .react-flow__connectionline { z-index: 1001 !important; }
             `}</style>
             <div ref={reactFlowWrapper} className="w-full h-full">
               <ReactFlow
@@ -819,15 +836,16 @@ export function TopologyViewerTool() {
                 nodesDraggable={!isLocked}
                 nodesConnectable={true}
                 elementsSelectable={true}
-                selectNodesOnDrag={false}
+                selectNodesOnDrag={true}
                 panOnDrag={isLocked ? true : [1, 2]}
                 selectionOnDrag={!isLocked}
                 multiSelectionKeyCode="Shift"
                 proOptions={{ hideAttribution: true }}
-                connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
+                connectionLineStyle={{ stroke: '#10b981', strokeWidth: 3, strokeDasharray: '5,5' }}
                 defaultEdgeOptions={{
                   type: 'smoothstep',
                   markerEnd: { type: MarkerType.ArrowClosed },
+                  zIndex: 1000,
                 }}
               >
                 <Background />
