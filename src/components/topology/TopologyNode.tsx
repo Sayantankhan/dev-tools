@@ -109,7 +109,7 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className="rounded-lg border-2 bg-background shadow-md transition-all flex flex-col relative"
+      className="group rounded-lg border-2 bg-background shadow-md transition-all flex flex-col relative"
       style={{
         borderColor: selected ? config.color : '#e5e7eb',
         boxShadow: selected ? `0 0 0 2px ${config.color}40` : undefined,
@@ -127,46 +127,46 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         lineStyle={{ borderColor: config.color }}
         handleStyle={{ borderColor: config.color }}
       />
-      {/* Connection Handles - Smaller default, expand on hover */}
+      {/* Connection Handles - Hidden by default, visible on hover/select */}
       <Handle 
         id="s-top"
         type="source" 
         position={Position.Top} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={true}
         isConnectableEnd={false}
-        style={{ top: -6, zIndex: 10 }}
+        style={{ top: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       <Handle 
         id="s-left"
         type="source" 
         position={Position.Left} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={true}
         isConnectableEnd={false}
-        style={{ left: -6, zIndex: 10 }}
+        style={{ left: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       <Handle 
         id="s-right"
         type="source" 
         position={Position.Right} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={true}
         isConnectableEnd={false}
-        style={{ right: -6, zIndex: 10 }}
+        style={{ right: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       <Handle 
         id="s-bottom"
         type="source" 
         position={Position.Bottom} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={true}
         isConnectableEnd={false}
-        style={{ bottom: -6, zIndex: 10 }}
+        style={{ bottom: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       
       {/* Target handles (to receive connections) */}
@@ -174,41 +174,41 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         id="t-top"
         type="target" 
         position={Position.Top} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={false}
         isConnectableEnd={true}
-        style={{ top: -6, zIndex: 10 }}
+        style={{ top: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       <Handle 
         id="t-left"
         type="target" 
         position={Position.Left} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={false}
         isConnectableEnd={true}
-        style={{ left: -6, zIndex: 10 }}
+        style={{ left: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       <Handle 
         id="t-right"
         type="target" 
         position={Position.Right} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={false}
         isConnectableEnd={true}
-        style={{ right: -6, zIndex: 10 }}
+        style={{ right: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       <Handle 
         id="t-bottom"
         type="target" 
         position={Position.Bottom} 
-        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair" 
+        className="!w-3 !h-3 !bg-primary hover:!w-5 hover:!h-5 hover:!bg-primary/90 transition-all duration-200 !border-2 !border-background shadow-sm !cursor-crosshair opacity-0 group-hover:opacity-100" 
         isConnectable={true}
         isConnectableStart={false}
         isConnectableEnd={true}
-        style={{ bottom: -6, zIndex: 10 }}
+        style={{ bottom: -6, zIndex: 10, opacity: selected ? 1 : undefined }}
       />
       
       <div className="flex items-center gap-2 min-h-0">
