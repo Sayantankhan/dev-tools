@@ -89,9 +89,24 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         boxShadow: selected ? `0 0 0 2px ${config.color}40` : undefined,
       }}
     >
+      {/* Handles: target on all sides */}
       <Handle 
         type="target" 
         position={Position.Top} 
+        className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        isConnectable={true}
+        style={{ background: 'hsl(var(--primary))', opacity: 1 }}
+      />
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        isConnectable={true}
+        style={{ background: 'hsl(var(--primary))', opacity: 1 }}
+      />
+      <Handle 
+        type="target" 
+        position={Position.Right} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
         style={{ background: 'hsl(var(--primary))', opacity: 1 }}
@@ -114,9 +129,24 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         </div>
       )}
       
+      {/* Handles: source on all sides */}
       <Handle 
         type="source" 
         position={Position.Bottom} 
+        className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        isConnectable={true}
+        style={{ background: 'hsl(var(--primary))', opacity: 1 }}
+      />
+      <Handle 
+        type="source" 
+        position={Position.Left} 
+        className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
+        isConnectable={true}
+        style={{ background: 'hsl(var(--primary))', opacity: 1 }}
+      />
+      <Handle 
+        type="source" 
+        position={Position.Right} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
         style={{ background: 'hsl(var(--primary))', opacity: 1 }}

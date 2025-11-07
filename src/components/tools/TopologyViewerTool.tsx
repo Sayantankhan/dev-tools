@@ -421,6 +421,7 @@ export function TopologyViewerTool() {
                 nodesDraggable={true}
                 nodesConnectable={true}
                 elementsSelectable={true}
+                connectOnClick
                 attributionPosition="bottom-right"
                 connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
                 defaultEdgeOptions={{
