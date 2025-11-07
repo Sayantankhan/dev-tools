@@ -333,19 +333,24 @@ export function TopologyViewerTool() {
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!connection.source || !connection.target) return;
+      const uniqueId = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+        ? (crypto as any).randomUUID()
+        : Math.random().toString(36).slice(2) + Date.now().toString(36);
       
       const newEdge: Edge = {
         ...connection,
-        id: `edge-${Date.now()}-${connection.source}-${connection.target}`,
+        id: `edge-${uniqueId}`,
         type: 'smoothstep',
         animated: false,
         style: { stroke: 'hsl(var(--primary))', strokeWidth: 2, zIndex: 1000 },
         data: { color: '#64748b', lineStyle: 'solid' },
       };
       setEdges((eds) => {
-        const updated = addEdge(newEdge, eds);
-        saveToHistory(nodes, updated);
-        return updated;
+        // avoid accidental duplicates by id
+        const exists = eds.some((e) => e.id === newEdge.id);
+        const next = exists ? eds : addEdge(newEdge, eds);
+        saveToHistory(nodes, next);
+        return next;
       });
       toast.success('Connection created');
     },
@@ -712,7 +717,7 @@ export function TopologyViewerTool() {
               .react-flow__node-container { z-index: 0 !important; }
               .react-flow__node-topology { z-index: 1 !important; }
               /* Keep resize handles above for usability and connection handles */
-              .react-flow__resize-control { z-index: 30 !important; }
+              .react-flow__resize-control { z-index: 2002 !important; }
               /* Edges should render above nodes */
               .react-flow__edges { z-index: 1000 !important; }
               .react-flow__edge { z-index: 1000 !important; }
@@ -732,76 +737,85 @@ export function TopologyViewerTool() {
                 onNodesChange={(changes) => {
                   onNodesChange(changes);
                   
-                  // Handle containment logic when node finishes dragging
-                  if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
-                    // Check all moved nodes for containment
-                    setNodes((currentNodes) => {
-                      let updated = [...currentNodes];
-                      const containerNodes = updated.filter((n) => n.type === 'container');
-                      const allOtherNodes = updated.filter((n) => n.type !== 'container');
-                      
-                      // First, clear all parentNode relationships
-                      updated = updated.map((n) => {
-                        if (n.type !== 'container') {
-                          return { ...n, parentNode: undefined };
-                        }
-                        return n;
-                      });
-                      
-                      // Update containers' contains arrays and set parentNode
-                      containerNodes.forEach((container) => {
-                        const cData = container.data as ContainerNodeData;
-                        const newContains: string[] = [];
-                        
-                        allOtherNodes.forEach((node) => {
-                          // Check if node is inside container bounds
-                          const containerBounds = {
-                            left: container.position.x,
-                            right: container.position.x + (container.style?.width as number || container.width || 400),
-                            top: container.position.y,
-                            bottom: container.position.y + (container.style?.height as number || container.height || 300),
-                          };
-                          
-                          const nodeBounds = {
-                            x: node.position.x,
-                            y: node.position.y,
-                          };
-                          
-                          if (
-                            nodeBounds.x >= containerBounds.left &&
-                            nodeBounds.x <= containerBounds.right &&
-                            nodeBounds.y >= containerBounds.top &&
-                            nodeBounds.y <= containerBounds.bottom
-                          ) {
-                            newContains.push(node.id);
-                            // Set parentNode to make it move with container
-                            updated = updated.map((n) =>
-                              n.id === node.id
-                                ? { 
-                                    ...n, 
-                                    parentNode: container.id,
-                                    extent: 'parent' as const,
-                                  }
-                                : n
-                            );
-                          }
-                        });
-                        
-                        // Update container's contains array if changed
-                        if (JSON.stringify(cData.contains?.sort()) !== JSON.stringify(newContains.sort())) {
-                          updated = updated.map((n) =>
-                            n.id === container.id
-                              ? { ...n, data: { ...n.data, contains: newContains } }
-                              : n
-                          );
-                        }
-                      });
-                      
-                      return updated;
-                    });
-                    
-                    saveToHistory(nodes, edges);
+          // Handle containment logic when node finishes dragging
+          if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
+            const movedIds = changes.filter((c: any) => c.type === 'position').map((c: any) => c.id);
+            
+            setNodes((currentNodes) => {
+              let updated = [...currentNodes];
+              const containers = updated.filter((n) => n.type === 'container');
+              const byId = new Map(updated.map((n) => [n.id, n] as const));
+
+              const getAbsPos = (node: any) => {
+                if (node.parentNode) {
+                  const parent = byId.get(node.parentNode);
+                  if (parent) {
+                    return {
+                      x: node.position.x + parent.position.x,
+                      y: node.position.y + parent.position.y,
+                    };
                   }
+                }
+                return { x: node.position.x, y: node.position.y };
+              };
+
+              const getContainerBounds = (c: any) => {
+                const w = c.measured?.width || (c.style?.width as number) || c.width || 400;
+                const h = c.measured?.height || (c.style?.height as number) || c.height || 300;
+                return {
+                  left: c.position.x,
+                  right: c.position.x + w,
+                  top: c.position.y,
+                  bottom: c.position.y + h,
+                };
+              };
+
+              const containsCenter = (c: any, absX: number, absY: number, n: any) => {
+                const b = getContainerBounds(c);
+                const centerX = absX + ((n.style?.width as number) || 160) / 2;
+                const centerY = absY + ((n.style?.height as number) || 60) / 2;
+                return centerX >= b.left && centerX <= b.right && centerY >= b.top && centerY <= b.bottom;
+              };
+
+              // process only moved nodes
+              movedIds.forEach((id: string) => {
+                const node = byId.get(id);
+                if (!node || node.type === 'container') return;
+
+                const abs = getAbsPos(node);
+                const currentParent = node.parentNode ? byId.get(node.parentNode) : undefined;
+                const target = containers.find((c) => containsCenter(c, abs.x, abs.y, node));
+
+                if (target) {
+                  if (node.parentNode !== target.id) {
+                    // move under new parent with relative coords
+                    const rel = { x: abs.x - target.position.x, y: abs.y - target.position.y };
+                    updated = updated.map((n) => n.id === node.id ? { ...n, position: rel, parentNode: target.id, extent: 'parent' as const } : n);
+                  }
+                } else {
+                  if (node.parentNode) {
+                    // detach from parent: convert to absolute coords and clear extent
+                    updated = updated.map((n) => n.id === node.id ? { ...n, position: { x: abs.x, y: abs.y }, parentNode: undefined, extent: undefined as any } : n);
+                  }
+                }
+              });
+
+              // sync containers' contains arrays
+              const recomputed = updated.map((n) => {
+                if (n.type !== 'container') return n;
+                const contains = updated.filter((x) => x.parentNode === n.id).map((x) => x.id);
+                const cData = n.data as any;
+                if (JSON.stringify((cData.contains || []).sort()) !== JSON.stringify(contains.sort())) {
+                  return { ...n, data: { ...n.data, contains } };
+                }
+                return n;
+              });
+
+              return recomputed;
+            });
+
+            saveToHistory(nodes, edges);
+          }
                   
                   // Visual feedback during dragging over containers
                   if (changes.some((c: any) => c.type === 'position' && c.dragging === true)) {
