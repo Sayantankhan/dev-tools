@@ -32,7 +32,7 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
       />
       
       <div
-        className="w-full h-full rounded-lg border-2 bg-background/50 backdrop-blur-sm transition-all"
+        className="w-full h-full rounded-lg border-2 bg-background/50 transition-all"
         style={{
           borderColor: isHovered 
             ? 'hsl(var(--primary))' 
@@ -73,7 +73,7 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
 
         {/* Metadata display */}
         {nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 && (
-          <div className="absolute top-12 left-2 text-xs text-muted-foreground space-y-0.5 bg-card/80 backdrop-blur-sm px-2 py-1 rounded border">
+          <div className="absolute top-12 left-2 text-xs text-muted-foreground space-y-0.5 bg-card px-2 py-1 rounded border">
             {Object.entries(nodeData.metadata)
               .filter(([key]) => key !== 'allowTypeEdit')
               .slice(0, 2)
