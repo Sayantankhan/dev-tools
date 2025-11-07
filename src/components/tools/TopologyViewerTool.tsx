@@ -430,7 +430,7 @@ export function TopologyViewerTool() {
               >
                 <Background />
                 <Controls />
-                <MiniMap />
+                
                 <Panel position="top-right">
                   <Button size="sm" variant="secondary" onClick={exportJSON}>
                     <Download className="w-3 h-3 mr-2" />
