@@ -117,19 +117,19 @@ export function TopologyViewerTool() {
   // Connect nodes
   const onConnect = useCallback(
     (connection: Connection) => {
-      console.log('Connection attempt:', connection);
-      if (!connection.source || !connection.target) {
-        console.log('Invalid connection - missing source or target');
-        return;
-      }
+      const startId = connectStartRef.current?.nodeId;
+      console.log('Connection attempt:', connection, 'startId:', startId);
+      if (!connection.source || !connection.target) return;
       
       setEdges((eds) => {
-        // ensure direction follows the node where the connection started
-        let { source, target, sourceHandle, targetHandle } = connection;
-        if (connectStartRef.current?.handleType === 'target') {
-          const s = source; const sh = sourceHandle;
-          source = target as string; sourceHandle = targetHandle;
-          target = s as string; targetHandle = sh;
+        let source = connection.source as string;
+        let target = connection.target as string;
+        let sourceHandle = connection.sourceHandle;
+        let targetHandle = connection.targetHandle;
+        // Force the node we started from to be the source
+        if (startId && connection.source !== startId) {
+          [source, target] = [target, source];
+          [sourceHandle, targetHandle] = [targetHandle, sourceHandle];
         }
         const newEdge = {
           ...connection,
@@ -143,9 +143,7 @@ export function TopologyViewerTool() {
           data: { edgeType: 'directed' },
         };
         const updated = addEdge(newEdge, eds);
-        console.log('Edge added:', newEdge);
         saveToHistory(nodes, updated);
-        toast.success('Connected nodes');
         return updated;
       });
     },
