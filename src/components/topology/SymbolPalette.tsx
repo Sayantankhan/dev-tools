@@ -121,11 +121,11 @@ interface SymbolPaletteProps {
 
 const SymbolGroup = ({ title, symbols, onSymbolDragStart }: { title: string, symbols: Symbol[], onSymbolDragStart: (type: SymbolType) => void }) => (
   <Collapsible defaultOpen>
-    <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded-md">
+    <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted/50 rounded-md bg-card">
       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
       <ChevronDown className="w-4 h-4 text-muted-foreground" />
     </CollapsibleTrigger>
-    <CollapsibleContent className="space-y-1 mt-1">
+    <CollapsibleContent className="space-y-1 mt-1 bg-card">
       {symbols.map((symbol) => {
         const Icon = symbol.icon;
         return (
@@ -137,7 +137,7 @@ const SymbolGroup = ({ title, symbols, onSymbolDragStart }: { title: string, sym
               e.dataTransfer.effectAllowed = 'move';
               onSymbolDragStart(symbol.type);
             }}
-            className="flex items-center gap-2 p-2 rounded-md border bg-background hover:bg-accent cursor-grab active:cursor-grabbing transition-colors text-xs"
+            className="flex items-center gap-2 p-2 rounded-md border bg-muted/30 hover:bg-muted/50 cursor-grab active:cursor-grabbing transition-colors text-xs"
             style={{ borderLeftColor: symbol.color, borderLeftWidth: '2px' }}
           >
             <Icon className="w-4 h-4 flex-shrink-0 text-foreground" style={{ color: symbol.color }} />
@@ -167,8 +167,8 @@ export function SymbolPalette({ onSymbolDragStart }: SymbolPaletteProps) {
   const filteredBase = filterSymbols(baseSymbols);
 
   return (
-    <Card className="h-full flex flex-col bg-muted/30">
-      <div className="p-3 border-b space-y-2">
+    <Card className="h-full flex flex-col !bg-card">
+      <div className="p-3 border-b space-y-2 bg-card">
         <h3 className="font-semibold text-sm text-foreground">Symbol Palette</h3>
         <Input
           placeholder="Search symbols..."
@@ -178,8 +178,8 @@ export function SymbolPalette({ onSymbolDragStart }: SymbolPaletteProps) {
         />
       </div>
       
-      <ScrollArea className="flex-1">
-        <div className="p-2 space-y-3">
+      <ScrollArea className="flex-1 bg-card">
+        <div className="p-2 space-y-3 bg-card">
           {filteredDb.length > 0 && <SymbolGroup title="Databases" symbols={filteredDb} onSymbolDragStart={onSymbolDragStart} />}
           {filteredAws.length > 0 && <SymbolGroup title="AWS Services" symbols={filteredAws} onSymbolDragStart={onSymbolDragStart} />}
           {filteredAzure.length > 0 && <SymbolGroup title="Azure Services" symbols={filteredAzure} onSymbolDragStart={onSymbolDragStart} />}
