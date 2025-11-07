@@ -420,7 +420,7 @@ export function TopologyViewerTool() {
                 nodesDraggable={true}
                 nodesConnectable={true}
                 elementsSelectable={true}
-                attributionPosition="bottom-right"
+                proOptions={{ hideAttribution: true }}
                 connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
                 defaultEdgeOptions={{
                   type: 'smoothstep',
