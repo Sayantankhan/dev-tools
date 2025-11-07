@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2, Image, Lock, Unlock } from 'lucide-react';
+import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2, Image, Lock, Unlock, Expand, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { SymbolPalette, SymbolType, getSymbolConfig } from '@/components/topology/SymbolPalette';
 import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNode';
@@ -497,9 +497,9 @@ export function TopologyViewerTool() {
   const hasSelection = selectedNodes.length > 0 || selectedEdges.length > 0;
 
   return (
-    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen' : 'h-[calc(100vh-120px)]'} min-h-0 relative`}>
+    <div className={`flex gap-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen p-4' : 'h-[calc(100vh-120px)] p-4'} min-h-0 relative`}>
       {/* Left Palette */}
-      <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-56' : 'w-48'}`}>
+      <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-64' : 'w-48'}`}>
         <SymbolPalette onSymbolDragStart={() => {}} />
       </div>
 
@@ -513,6 +513,15 @@ export function TopologyViewerTool() {
             </TabsList>
 
             <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className={isFullscreen ? 'bg-primary/10' : ''}
+              >
+                {isFullscreen ? <Minimize className="w-4 h-4 mr-2" /> : <Expand className="w-4 h-4 mr-2" />}
+                {isFullscreen ? 'Exit' : 'Expand'}
+              </Button>
               <Button size="sm" variant="outline" onClick={undo} disabled={historyIndex <= 0}>
                 <Undo2 className="w-4 h-4" />
               </Button>
