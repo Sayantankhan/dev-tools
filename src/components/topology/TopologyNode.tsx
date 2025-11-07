@@ -92,8 +92,9 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
       <Handle 
         type="target" 
         position={Position.Top} 
-        className="w-3 h-3 bg-primary border-2 border-background hover:scale-150 transition-transform cursor-crosshair" 
+        className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        style={{ background: 'hsl(var(--primary))', opacity: 1 }}
       />
       
       <div className="flex items-center gap-2 mb-1">
@@ -116,8 +117,9 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        className="w-3 h-3 bg-primary border-2 border-background hover:scale-150 transition-transform cursor-crosshair" 
+        className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
         isConnectable={true}
+        style={{ background: 'hsl(var(--primary))', opacity: 1 }}
       />
     </div>
   );

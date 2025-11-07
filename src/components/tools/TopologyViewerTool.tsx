@@ -115,6 +115,7 @@ export function TopologyViewerTool() {
   // Connect nodes
   const onConnect = useCallback(
     (connection: Connection) => {
+      console.log('Connection attempt:', connection);
       setEdges((eds) => {
         const newEdge = {
           ...connection,
@@ -124,7 +125,9 @@ export function TopologyViewerTool() {
           data: { edgeType: 'directed' },
         };
         const updated = addEdge(newEdge, eds);
+        console.log('Edge added:', newEdge);
         saveToHistory(nodes, updated);
+        toast.success('Connected nodes');
         return updated;
       });
     },
@@ -415,6 +418,9 @@ export function TopologyViewerTool() {
                 snapGrid={[15, 15]}
                 fitView
                 connectionMode={ConnectionMode.Loose}
+                nodesDraggable={true}
+                nodesConnectable={true}
+                elementsSelectable={true}
                 attributionPosition="bottom-right"
                 connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
                 defaultEdgeOptions={{
