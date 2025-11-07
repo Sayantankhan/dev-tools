@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { getSymbolConfig, SymbolType } from './SymbolPalette';
-import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, Search, BarChart3, Flame, Binary, Workflow } from 'lucide-react';
+import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, Search, BarChart3, Flame, Binary, Workflow, Type } from 'lucide-react';
 
 const iconMap: Record<SymbolType, any> = {
   'mysql': Database,
@@ -29,6 +29,7 @@ const iconMap: Record<SymbolType, any> = {
   'spark': Flame,
   'hadoop': Binary,
   'grafana': BarChart3,
+  'text': Type,
   'custom': Circle,
   'aws-s3': Box,
   'aws-ec2': Server,
@@ -85,6 +86,21 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
   const nodeData = data as TopologyNodeData;
   const config = getSymbolConfig(nodeData.symbolType);
   const Icon = iconMap[nodeData.symbolType];
+  
+  // Text node - simplified rendering without handles
+  if (nodeData.symbolType === 'text') {
+    return (
+      <div
+        className="px-3 py-2 bg-transparent text-foreground font-medium"
+        style={{
+          outline: selected ? `2px solid ${config.color}` : 'none',
+          outlineOffset: '4px',
+        }}
+      >
+        {nodeData.label}
+      </div>
+    );
+  }
 
   return (
     <div

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, DragEvent } from 'react';
+import { useState, useCallback, useRef, useEffect, DragEvent, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -45,6 +45,27 @@ export function TopologyViewerTool() {
   const connectStartRef = useRef<{ nodeId?: string; handleType?: 'source' | 'target' }>({});
   
   const nodeTypes = { topology: TopologyNode };
+
+  // Apply edge styles dynamically
+  const styledEdges = useMemo(() => 
+    edges.map((edge) => ({
+      ...edge,
+      style: {
+        strokeWidth: 2,
+        stroke: edge.selected ? 'hsl(var(--primary))' : '#64748b',
+        strokeDasharray: edge.data?.lineStyle === 'dotted' ? '5,5' : undefined,
+      },
+      label: edge.data?.label || edge.label,
+      labelStyle: { fill: 'hsl(var(--foreground))', fontWeight: 500, fontSize: 12 },
+      labelBgStyle: { fill: 'hsl(var(--background))', fillOpacity: 0.8 },
+      labelBgPadding: [8, 4] as [number, number],
+      labelBgBorderRadius: 4,
+      markerEnd: edge.data?.edgeType === 'undirected' ? undefined : { 
+        type: MarkerType.ArrowClosed, 
+        color: edge.selected ? 'hsl(var(--primary))' : '#64748b' 
+      },
+    }))
+  , [edges]);
 
   // Save to history
   const saveToHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
@@ -114,6 +135,23 @@ export function TopologyViewerTool() {
     [reactFlowInstance, edges, setNodes, saveToHistory]
   );
 
+  // Update edge styling
+  const updateEdgeStyle = useCallback((edgeId: string, updates: any) => {
+    setEdges((eds) => {
+      const updated = eds.map((edge) =>
+        edge.id === edgeId
+          ? {
+              ...edge,
+              data: { ...edge.data, ...updates },
+              label: updates.label !== undefined ? updates.label : edge.label,
+            }
+          : edge
+      );
+      saveToHistory(nodes, updated);
+      return updated;
+    });
+  }, [nodes, setEdges, saveToHistory]);
+
   // Connect nodes
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -140,7 +178,7 @@ export function TopologyViewerTool() {
           id: `edge_${Date.now()}`,
           type: 'default',
           markerEnd: { type: MarkerType.ArrowClosed },
-          data: { edgeType: 'directed' },
+          data: { edgeType: 'directed', lineStyle: 'solid' },
         };
         const updated = addEdge(newEdge, eds);
         saveToHistory(nodes, updated);
@@ -170,6 +208,7 @@ export function TopologyViewerTool() {
         label: e.label,
         type: e.data?.edgeType,
         weight: e.data?.weight,
+        lineStyle: e.data?.lineStyle,
       })),
       metadata: {
         author: 'Topology Editor',
@@ -218,6 +257,7 @@ export function TopologyViewerTool() {
         data: {
           edgeType: edge.type || 'directed',
           weight: edge.weight,
+          lineStyle: edge.lineStyle || 'solid',
         },
       }));
 
@@ -390,7 +430,7 @@ export function TopologyViewerTool() {
               <ReactFlow
                 style={{ width: '100%', height: '100%' }}
                 nodes={nodes}
-                edges={edges}
+                edges={styledEdges}
                 onNodesChange={(changes) => {
                   onNodesChange(changes);
                   if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
@@ -429,7 +469,6 @@ export function TopologyViewerTool() {
                 defaultEdgeOptions={{
                   type: 'smoothstep',
                   markerEnd: { type: MarkerType.ArrowClosed },
-                  style: { strokeWidth: 2, stroke: 'hsl(var(--primary))' },
                 }}
               >
                 <Background />

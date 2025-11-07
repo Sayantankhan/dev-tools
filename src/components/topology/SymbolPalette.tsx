@@ -3,13 +3,13 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary } from 'lucide-react';
+import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary, Type } from 'lucide-react';
 
 export type SymbolType = 
   | 'mysql' | 'postgres' | 'mongodb' | 'cassandra' | 'timeseries' | 'graphdb'
   | 'cache' | 'redis' | 'memcached' | 'hazelcast' | 'compute' | 'gpu-compute'
   | 'firewall' | 'lb-l4' | 'lb-l7' | 'storage' | 'message-queue' | 'rabbitmq'
-  | 'kubernetes' | 'custom'
+  | 'kubernetes' | 'custom' | 'text'
   | 'kafka' | 'elasticsearch' | 'splunk' | 'spark' | 'hadoop' | 'grafana'
   | 'aws-s3' | 'aws-ec2' | 'aws-ecs' | 'aws-eks' | 'aws-vpc' | 'aws-lambda' 
   | 'aws-sagemaker' | 'aws-dynamodb' | 'aws-opensearch' | 'aws-sns' | 'aws-sqs' 
@@ -109,6 +109,7 @@ const baseSymbols: Symbol[] = [
   { type: 'spark', label: 'Apache Spark', icon: Flame, color: '#e25a1c' },
   { type: 'hadoop', label: 'Apache Hadoop', icon: Binary, color: '#66ccff' },
   { type: 'grafana', label: 'Grafana', icon: BarChart3, color: '#f46800' },
+  { type: 'text', label: 'Text Label', icon: Type, color: '#6b7280' },
   { type: 'custom', label: 'Custom Node', icon: Circle, color: '#6b7280' },
 ];
 

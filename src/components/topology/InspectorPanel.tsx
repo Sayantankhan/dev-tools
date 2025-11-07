@@ -358,6 +358,22 @@ function EdgeInspector({
       </div>
 
       <div>
+        <Label>Line Style</Label>
+        <Select
+          value={String(edge.data?.lineStyle || 'solid')}
+          onValueChange={(v) => onUpdateEdge(edge.id, { ...edge.data, lineStyle: v })}
+        >
+          <SelectTrigger className="mt-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="z-50 bg-popover">
+            <SelectItem value="solid">Solid Line</SelectItem>
+            <SelectItem value="dotted">Dotted Line</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
         <Label>Edge Type</Label>
         <Select
           value={String(edge.data?.edgeType || 'directed')}
@@ -366,10 +382,9 @@ function EdgeInspector({
           <SelectTrigger className="mt-2">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-50 bg-popover">
             <SelectItem value="directed">Directed</SelectItem>
             <SelectItem value="undirected">Undirected</SelectItem>
-            <SelectItem value="dashed">Dashed</SelectItem>
           </SelectContent>
         </Select>
       </div>
