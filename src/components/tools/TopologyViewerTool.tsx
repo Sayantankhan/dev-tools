@@ -673,6 +673,10 @@ export function TopologyViewerTool() {
                 nodesDraggable={true}
                 nodesConnectable={true}
                 elementsSelectable={true}
+                selectNodesOnDrag={false}
+                panOnDrag={[1, 2]}
+                selectionOnDrag={true}
+                multiSelectionKeyCode="Shift"
                 proOptions={{ hideAttribution: true }}
                 connectionLineStyle={{ stroke: '#555', strokeWidth: 2 }}
                 defaultEdgeOptions={{
@@ -832,18 +836,69 @@ export function TopologyViewerTool() {
           onDuplicateNode={(id) => {
             const node = nodes.find((n) => n.id === id);
             if (node) {
-              const newNode = {
-                ...node,
-                id: getId(),
-                position: { x: node.position.x + 50, y: node.position.y + 50 },
-                data: { ...node.data, label: `${node.data.label} (copy)` },
-              };
-              setNodes((nds) => {
-                const updated = nds.concat(newNode);
-                saveToHistory(updated, edges);
-                return updated;
-              });
-              toast.success('Node duplicated');
+              // Check if this is a container with contents
+              if (node.type === 'container') {
+                const containerData = node.data as ContainerNodeData;
+                const containedNodeIds = containerData.contains || [];
+                
+                // Create new IDs mapping for contained nodes
+                const idMap = new Map<string, string>();
+                const newContainedNodes: Node[] = [];
+                
+                // Duplicate all contained nodes
+                containedNodeIds.forEach((containedId) => {
+                  const containedNode = nodes.find((n) => n.id === containedId);
+                  if (containedNode) {
+                    const newId = getId();
+                    idMap.set(containedId, newId);
+                    newContainedNodes.push({
+                      ...containedNode,
+                      id: newId,
+                      position: { 
+                        x: containedNode.position.x + 50, 
+                        y: containedNode.position.y + 50 
+                      },
+                      data: { ...containedNode.data },
+                    });
+                  }
+                });
+                
+                // Create new container
+                const newContainerId = getId();
+                const newContainer: Node = {
+                  ...node,
+                  id: newContainerId,
+                  position: { x: node.position.x + 50, y: node.position.y + 50 },
+                  data: { 
+                    ...node.data, 
+                    label: `${node.data.label} (copy)`,
+                    contains: Array.from(idMap.values()),
+                  },
+                };
+                
+                // Add all new nodes
+                setNodes((nds) => {
+                  const updated = [...nds, newContainer, ...newContainedNodes];
+                  saveToHistory(updated, edges);
+                  return updated;
+                });
+                
+                toast.success(`Duplicated container with ${newContainedNodes.length} nodes`);
+              } else {
+                // Regular node duplication
+                const newNode = {
+                  ...node,
+                  id: getId(),
+                  position: { x: node.position.x + 50, y: node.position.y + 50 },
+                  data: { ...node.data, label: `${node.data.label} (copy)` },
+                };
+                setNodes((nds) => {
+                  const updated = nds.concat(newNode);
+                  saveToHistory(updated, edges);
+                  return updated;
+                });
+                toast.success('Node duplicated');
+              }
             }
           }}
           onAddMetadata={(id, key, value) => {
