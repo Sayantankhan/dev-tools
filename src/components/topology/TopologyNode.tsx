@@ -91,6 +91,7 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
     >
       {/* Handles: target on all sides */}
       <Handle 
+        id="t-top"
         type="target" 
         position={Position.Top} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
@@ -98,6 +99,7 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         style={{ background: 'hsl(var(--primary))', opacity: 1 }}
       />
       <Handle 
+        id="t-left"
         type="target" 
         position={Position.Left} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
@@ -105,6 +107,7 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         style={{ background: 'hsl(var(--primary))', opacity: 1 }}
       />
       <Handle 
+        id="t-right"
         type="target" 
         position={Position.Right} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
@@ -131,6 +134,7 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
       
       {/* Handles: source on all sides */}
       <Handle 
+        id="s-bottom"
         type="source" 
         position={Position.Bottom} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
@@ -138,6 +142,7 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         style={{ background: 'hsl(var(--primary))', opacity: 1 }}
       />
       <Handle 
+        id="s-left"
         type="source" 
         position={Position.Left} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 
@@ -145,6 +150,7 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         style={{ background: 'hsl(var(--primary))', opacity: 1 }}
       />
       <Handle 
+        id="s-right"
         type="source" 
         position={Position.Right} 
         className="w-4 h-4 !bg-primary !border-2 !border-background hover:scale-150 transition-transform !cursor-crosshair !opacity-100" 

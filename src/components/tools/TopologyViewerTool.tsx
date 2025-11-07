@@ -410,6 +410,12 @@ export function TopologyViewerTool() {
                 }}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                onConnectStart={(e, params) => {
+                  console.log('onConnectStart', params);
+                }}
+                onConnectEnd={(e) => {
+                  console.log('onConnectEnd');
+                }}
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
