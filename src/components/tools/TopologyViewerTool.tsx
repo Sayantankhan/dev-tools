@@ -75,32 +75,33 @@ export function TopologyViewerTool() {
       return (
         <div
           style={{
-            padding: '10px 20px',
+            padding: '12px 16px',
             borderRadius: '8px',
             border: `2px solid ${color}`,
             backgroundColor: 'white',
             minWidth: '150px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>{icon}</span>
-            <div>
-              <div style={{ fontWeight: 'bold' }}>{data.label}</div>
-              {data.fields && data.fields.length > 0 && !data.collapsed && (
-                <div style={{ fontSize: '12px', marginTop: '8px', borderTop: '1px solid #ddd', paddingTop: '8px' }}>
-                  {data.fields.map((field: any, idx: number) => (
-                    <div key={idx} style={{ display: 'flex', gap: '4px' }}>
-                      {field.pk && <span style={{ color: '#f59e0b' }}>🔑</span>}
-                      {field.fk && <span style={{ color: '#3b82f6' }}>🔗</span>}
-                      <span style={{ fontWeight: field.pk ? 'bold' : 'normal' }}>
-                        {field.name}: {field.type}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: data.fields?.length > 0 ? '8px' : '0' }}>
+            <span style={{ fontSize: '24px', flexShrink: 0 }}>{icon}</span>
+            <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#1a1a1a', flex: 1 }}>
+              {data.label}
             </div>
           </div>
+          {data.fields && data.fields.length > 0 && !data.collapsed && (
+            <div style={{ fontSize: '11px', marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${color}30` }}>
+              {data.fields.map((field: any, idx: number) => (
+                <div key={idx} style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+                  {field.pk && <span style={{ fontSize: '14px' }}>🔑</span>}
+                  {field.fk && <span style={{ fontSize: '14px' }}>🔗</span>}
+                  <span style={{ fontWeight: field.pk ? 'bold' : 'normal', color: '#4a4a4a' }}>
+                    {field.name}: <span style={{ color: '#666' }}>{field.type}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     },
