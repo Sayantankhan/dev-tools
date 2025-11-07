@@ -14,6 +14,7 @@ import {
   Connection,
   MarkerType,
   ConnectionMode,
+  PanOnScrollMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
@@ -567,6 +568,11 @@ export function TopologyViewerTool() {
                 style={{ width: '100%', height: '100%' }}
                 nodes={nodes}
                 edges={styledEdges}
+                panOnScroll
+                panOnScrollMode={PanOnScrollMode.Free}
+                zoomOnScroll={false}
+                zoomOnPinch
+              
                 onNodesChange={(changes) => {
                   // Handle container group movement - move contained nodes with container
                   const positionChanges = changes.filter((c: any) => c.type === 'position');
