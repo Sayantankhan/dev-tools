@@ -24,7 +24,6 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2, Image } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { SymbolPalette, SymbolType, getSymbolConfig } from '@/components/topology/SymbolPalette';
 import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNode';
@@ -228,33 +227,50 @@ export function TopologyViewerTool() {
     toast.success('Exported topology JSON');
   }, [nodes, edges]);
 
-  // Export as JPG
-  const exportAsJPG = useCallback(async () => {
-    if (!reactFlowWrapper.current) return;
-    
-    try {
-      toast.info('Generating image...');
-      const canvas = await html2canvas(reactFlowWrapper.current, {
-        backgroundColor: '#0f1419',
-        scale: 2,
-        logging: false,
-      });
-      
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `topology-${Date.now()}.jpg`;
-        link.href = url;
-        link.click();
-        URL.revokeObjectURL(url);
-        toast.success('Diagram exported as JPG');
-      }, 'image/jpeg', 0.95);
-    } catch (error) {
-      toast.error('Failed to export diagram');
-      console.error(error);
+  // Export as JPG using React Flow's built-in method
+  const exportAsJPG = useCallback(() => {
+    if (!reactFlowInstance) {
+      toast.error('Canvas not ready');
+      return;
     }
-  }, []);
+    
+    const imageWidth = 1920;
+    const imageHeight = 1080;
+    
+    reactFlowInstance.getViewport();
+    const nodesBounds = {
+      x: Math.min(...nodes.map(n => n.position.x)),
+      y: Math.min(...nodes.map(n => n.position.y)),
+      x2: Math.max(...nodes.map(n => n.position.x + 200)),
+      y2: Math.max(...nodes.map(n => n.position.y + 200)),
+    };
+    
+    const width = nodesBounds.x2 - nodesBounds.x;
+    const height = nodesBounds.y2 - nodesBounds.y;
+    
+    import('html2canvas').then((html2canvas) => {
+      const canvasElement = reactFlowWrapper.current?.querySelector('.react-flow__viewport');
+      if (!canvasElement) return;
+      
+      html2canvas.default(canvasElement as HTMLElement, {
+        backgroundColor: '#0f1419',
+        width,
+        height,
+        scale: 2,
+      }).then((canvas) => {
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = `topology-${Date.now()}.jpg`;
+          link.href = url;
+          link.click();
+          URL.revokeObjectURL(url);
+          toast.success('Exported as JPG');
+        }, 'image/jpeg', 0.95);
+      }).catch(() => toast.error('Export failed'));
+    });
+  }, [reactFlowInstance, nodes]);
 
   // Import JSON
   const importJSON = useCallback(async (jsonString: string) => {
