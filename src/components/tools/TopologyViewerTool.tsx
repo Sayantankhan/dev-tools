@@ -30,6 +30,7 @@ import { SymbolPalette, SymbolType, getSymbolConfig } from '@/components/topolog
 import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNode';
 import { ContainerNode, ContainerNodeData } from '@/components/topology/ContainerNode';
 import { InspectorPanel } from '@/components/topology/InspectorPanel';
+import { CustomEdge } from '@/components/topology/CustomEdge';
 
 let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
@@ -125,6 +126,7 @@ export function TopologyViewerTool() {
   const connectStartRef = useRef<{ nodeId?: string; handleType?: 'source' | 'target' }>({});
   
   const nodeTypes = { topology: TopologyNode, container: ContainerNode };
+  const edgeTypes = { smoothstep: CustomEdge };
 
   // Apply edge styles dynamically with proper z-index for visibility
   const styledEdges = useMemo(() => 
@@ -712,6 +714,8 @@ export function TopologyViewerTool() {
                 style={{ width: '100%', height: '100%' }}
                 nodes={nodes}
                 edges={styledEdges}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 panOnScroll
                 panOnScrollMode={PanOnScrollMode.Free}
                 zoomOnScroll={false}
@@ -737,7 +741,6 @@ export function TopologyViewerTool() {
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
-                nodeTypes={nodeTypes}
                 snapToGrid={snapToGrid}
                 snapGrid={[15, 15]}
                 fitView
