@@ -502,6 +502,44 @@ export function TopologyViewerTool() {
                 nodes={nodes}
                 edges={styledEdges}
                 onNodesChange={(changes) => {
+                  // Handle container group movement - move contained nodes with container
+                  const positionChanges = changes.filter((c: any) => c.type === 'position');
+                  if (positionChanges.length > 0) {
+                    positionChanges.forEach((change: any) => {
+                      const movedNode = nodes.find((n) => n.id === change.id);
+                      if (movedNode && movedNode.type === 'container' && change.position) {
+                        const containerData = movedNode.data as ContainerNodeData;
+                        const containedIds = containerData.contains || [];
+                        
+                        if (containedIds.length > 0) {
+                          // Calculate movement delta
+                          const deltaX = change.position.x - movedNode.position.x;
+                          const deltaY = change.position.y - movedNode.position.y;
+                          
+                          // Create position changes for all contained nodes
+                          const containedChanges = containedIds.map((nodeId) => {
+                            const containedNode = nodes.find((n) => n.id === nodeId);
+                            if (containedNode) {
+                              return {
+                                id: nodeId,
+                                type: 'position' as const,
+                                position: {
+                                  x: containedNode.position.x + deltaX,
+                                  y: containedNode.position.y + deltaY,
+                                },
+                                dragging: change.dragging,
+                              };
+                            }
+                            return null;
+                          }).filter((c): c is any => c !== null);
+                          
+                          // Add contained node changes to the changes array
+                          changes = [...changes, ...containedChanges];
+                        }
+                      }
+                    });
+                  }
+                  
                   onNodesChange(changes);
                   
                   // Handle containment logic when node finishes dragging
