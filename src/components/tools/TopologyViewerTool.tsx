@@ -27,6 +27,7 @@ import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2, Image
 import { toast } from 'sonner';
 import { SymbolPalette, SymbolType, getSymbolConfig } from '@/components/topology/SymbolPalette';
 import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNode';
+import { ContainerNode, ContainerNodeData } from '@/components/topology/ContainerNode';
 import { InspectorPanel } from '@/components/topology/InspectorPanel';
 
 let nodeId = 0;
@@ -44,7 +45,7 @@ export function TopologyViewerTool() {
   
   const connectStartRef = useRef<{ nodeId?: string; handleType?: 'source' | 'target' }>({});
   
-  const nodeTypes = { topology: TopologyNode };
+  const nodeTypes = { topology: TopologyNode, container: ContainerNode };
 
   // Apply edge styles dynamically
   const styledEdges = useMemo(() => 
@@ -113,15 +114,24 @@ export function TopologyViewerTool() {
       });
 
       const config = getSymbolConfig(type);
+      const isContainer = type.startsWith('container-');
+      
       const newNode: Node = {
         id: getId(),
-        type: 'topology',
+        type: isContainer ? 'container' : 'topology',
         position,
         data: {
           label: `${config.label} ${nodeId}`,
           symbolType: type,
           metadata: { allowTypeEdit: type === 'custom' },
+          ...(isContainer && { 
+            contains: [],
+            style: { width: 400, height: 300 }
+          }),
         },
+        ...(isContainer && {
+          style: { width: 400, height: 300 },
+        }),
       };
 
       setNodes((nds) => {
@@ -493,8 +503,109 @@ export function TopologyViewerTool() {
                 edges={styledEdges}
                 onNodesChange={(changes) => {
                   onNodesChange(changes);
+                  
+                  // Handle containment logic when node finishes dragging
                   if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
+                    // Check all moved nodes for containment
+                    setNodes((currentNodes) => {
+                      let updated = [...currentNodes];
+                      const containerNodes = updated.filter((n) => n.type === 'container');
+                      const regularNodes = updated.filter((n) => n.type !== 'container');
+                      
+                      // Update containers' contains arrays
+                      containerNodes.forEach((container) => {
+                        const cData = container.data as ContainerNodeData;
+                        const newContains: string[] = [];
+                        
+                        regularNodes.forEach((node) => {
+                          // Check if node is inside container bounds
+                          const containerBounds = {
+                            left: container.position.x,
+                            right: container.position.x + (container.style?.width as number || container.width || 400),
+                            top: container.position.y,
+                            bottom: container.position.y + (container.style?.height as number || container.height || 300),
+                          };
+                          
+                          const nodeBounds = {
+                            x: node.position.x,
+                            y: node.position.y,
+                          };
+                          
+                          if (
+                            nodeBounds.x >= containerBounds.left &&
+                            nodeBounds.x <= containerBounds.right &&
+                            nodeBounds.y >= containerBounds.top &&
+                            nodeBounds.y <= containerBounds.bottom
+                          ) {
+                            newContains.push(node.id);
+                          }
+                        });
+                        
+                        // Update container's contains array if changed
+                        if (JSON.stringify(cData.contains?.sort()) !== JSON.stringify(newContains.sort())) {
+                          updated = updated.map((n) =>
+                            n.id === container.id
+                              ? { ...n, data: { ...n.data, contains: newContains } }
+                              : n
+                          );
+                        }
+                      });
+                      
+                      return updated;
+                    });
+                    
                     saveToHistory(nodes, edges);
+                  }
+                  
+                  // Visual feedback during dragging over containers
+                  if (changes.some((c: any) => c.type === 'position' && c.dragging === true)) {
+                    const draggedNodeIds = changes
+                      .filter((c: any) => c.type === 'position' && c.dragging)
+                      .map((c: any) => c.id);
+                    
+                    setNodes((currentNodes) => {
+                      const containerNodes = currentNodes.filter((n) => n.type === 'container');
+                      const draggedNodes = currentNodes.filter((n) => draggedNodeIds.includes(n.id));
+                      
+                      return currentNodes.map((node) => {
+                        if (node.type !== 'container') return node;
+                        
+                        const cData = node.data as ContainerNodeData;
+                        let isHovered = false;
+                        
+                        // Check if any dragged node is over this container
+                        draggedNodes.forEach((draggedNode) => {
+                          if (draggedNode.type === 'container') return; // Don't check container over container
+                          
+                          const containerBounds = {
+                            left: node.position.x,
+                            right: node.position.x + (node.style?.width as number || node.width || 400),
+                            top: node.position.y,
+                            bottom: node.position.y + (node.style?.height as number || node.height || 300),
+                          };
+                          
+                          const nodeBounds = {
+                            x: draggedNode.position.x,
+                            y: draggedNode.position.y,
+                          };
+                          
+                          if (
+                            nodeBounds.x >= containerBounds.left &&
+                            nodeBounds.x <= containerBounds.right &&
+                            nodeBounds.y >= containerBounds.top &&
+                            nodeBounds.y <= containerBounds.bottom
+                          ) {
+                            isHovered = true;
+                          }
+                        });
+                        
+                        if (cData.isHovered !== isHovered) {
+                          return { ...node, data: { ...node.data, isHovered } };
+                        }
+                        
+                        return node;
+                      });
+                    });
                   }
                 }}
                 onEdgesChange={(changes) => {
@@ -649,10 +760,28 @@ export function TopologyViewerTool() {
           onDeleteNode={(id) => {
             setNodes((nds) => {
               const updated = nds.filter((n) => n.id !== id);
+              
+              // Remove from any container's contains array
+              const finalUpdated = updated.map((n) => {
+                if (n.type === 'container') {
+                  const cData = n.data as ContainerNodeData;
+                  if (cData.contains?.includes(id)) {
+                    return {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        contains: cData.contains.filter((nid) => nid !== id),
+                      },
+                    };
+                  }
+                }
+                return n;
+              });
+              
               const updatedEdges = edges.filter((e) => e.source !== id && e.target !== id);
               setEdges(updatedEdges);
-              saveToHistory(updated, updatedEdges);
-              return updated;
+              saveToHistory(finalUpdated, updatedEdges);
+              return finalUpdated;
             });
           }}
           onDeleteEdge={(id) => {

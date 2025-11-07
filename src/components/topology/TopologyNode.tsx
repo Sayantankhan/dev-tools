@@ -74,6 +74,10 @@ const iconMap: Record<SymbolType, any> = {
   'gcp-lb': Layers,
   'gcp-disk': HardDrive,
   'gcp-memorystore': Zap,
+  'container-vpc': Box,
+  'container-vnet': Box,
+  'container-gcp-vpc': Box,
+  'container-generic': Box,
 };
 
 export interface TopologyNodeData extends Record<string, unknown> {

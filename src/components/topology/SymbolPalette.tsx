@@ -19,7 +19,8 @@ export type SymbolType =
   | 'azure-servicebus' | 'azure-eventgrid' | 'azure-lb' | 'azure-disk' | 'azure-cache'
   | 'gcp-storage' | 'gcp-compute' | 'gcp-cloudrun' | 'gcp-gke' | 'gcp-vpc' 
   | 'gcp-functions' | 'gcp-vertex' | 'gcp-firestore' | 'gcp-search' 
-  | 'gcp-pubsub' | 'gcp-eventarc' | 'gcp-lb' | 'gcp-disk' | 'gcp-memorystore';
+  | 'gcp-pubsub' | 'gcp-eventarc' | 'gcp-lb' | 'gcp-disk' | 'gcp-memorystore'
+  | 'container-vpc' | 'container-vnet' | 'container-gcp-vpc' | 'container-generic';
 
 interface Symbol {
   type: SymbolType;
@@ -113,7 +114,14 @@ const baseSymbols: Symbol[] = [
   { type: 'custom', label: 'Custom Node', icon: Circle, color: '#6b7280' },
 ];
 
-export const allSymbols = [...databaseSymbols, ...awsSymbols, ...azureSymbols, ...gcpSymbols, ...baseSymbols];
+const containerSymbols: Symbol[] = [
+  { type: 'container-vpc', label: 'VPC (AWS)', icon: Box, color: '#ff9900' },
+  { type: 'container-vnet', label: 'VNet (Azure)', icon: Box, color: '#0078d4' },
+  { type: 'container-gcp-vpc', label: 'VPC (GCP)', icon: Box, color: '#4285f4' },
+  { type: 'container-generic', label: 'Container', icon: Box, color: '#8b5cf6' },
+];
+
+export const allSymbols = [...databaseSymbols, ...awsSymbols, ...azureSymbols, ...gcpSymbols, ...baseSymbols, ...containerSymbols];
 
 interface SymbolPaletteProps {
   onSymbolDragStart: (type: SymbolType) => void;
@@ -165,6 +173,7 @@ export function SymbolPalette({ onSymbolDragStart }: SymbolPaletteProps) {
   const filteredAzure = filterSymbols(azureSymbols);
   const filteredGcp = filterSymbols(gcpSymbols);
   const filteredBase = filterSymbols(baseSymbols);
+  const filteredContainer = filterSymbols(containerSymbols);
 
   return (
     <Card className="h-full flex flex-col !bg-card">
@@ -180,12 +189,13 @@ export function SymbolPalette({ onSymbolDragStart }: SymbolPaletteProps) {
       
       <ScrollArea className="flex-1 bg-card">
         <div className="p-2 space-y-3 bg-card">
+          {filteredContainer.length > 0 && <SymbolGroup title="Containers" symbols={filteredContainer} onSymbolDragStart={onSymbolDragStart} />}
           {filteredDb.length > 0 && <SymbolGroup title="Databases" symbols={filteredDb} onSymbolDragStart={onSymbolDragStart} />}
           {filteredAws.length > 0 && <SymbolGroup title="AWS Services" symbols={filteredAws} onSymbolDragStart={onSymbolDragStart} />}
           {filteredAzure.length > 0 && <SymbolGroup title="Azure Services" symbols={filteredAzure} onSymbolDragStart={onSymbolDragStart} />}
           {filteredGcp.length > 0 && <SymbolGroup title="GCP Services" symbols={filteredGcp} onSymbolDragStart={onSymbolDragStart} />}
           {filteredBase.length > 0 && <SymbolGroup title="Infrastructure" symbols={filteredBase} onSymbolDragStart={onSymbolDragStart} />}
-          {filteredDb.length === 0 && filteredAws.length === 0 && filteredAzure.length === 0 && filteredGcp.length === 0 && filteredBase.length === 0 && (
+          {filteredDb.length === 0 && filteredAws.length === 0 && filteredAzure.length === 0 && filteredGcp.length === 0 && filteredBase.length === 0 && filteredContainer.length === 0 && (
             <div className="text-center text-sm text-muted-foreground py-4">No symbols found</div>
           )}
         </div>

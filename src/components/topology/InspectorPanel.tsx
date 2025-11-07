@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Plus, Copy, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Copy, ArrowRight, ArrowLeft, Box } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 import { SymbolType, allSymbols } from './SymbolPalette';
 import { TopologyNodeData } from './TopologyNode';
+import { ContainerNodeData } from './ContainerNode';
 import React from 'react';
 
 interface InspectorPanelProps {
@@ -133,7 +134,8 @@ function NodeInspector({
   onCreateConnection: (sourceId: string, targetId: string) => void;
   onDeleteEdge: (edgeId: string) => void;
 }) {
-  const nodeData = node.data as TopologyNodeData;
+  const nodeData = node.data as TopologyNodeData | ContainerNodeData;
+  const isContainer = node.type === 'container';
   const [connectionDirection, setConnectionDirection] = React.useState<'to' | 'from'>('to');
   const [selectedNodeId, setSelectedNodeId] = React.useState<string>('');
   
@@ -189,6 +191,35 @@ function NodeInspector({
           </Select>
         )}
       </div>
+
+      {/* Container-specific: Show contained nodes */}
+      {isContainer && (
+        <div>
+          <Label className="flex items-center gap-2">
+            <Box className="w-4 h-4" />
+            Contains
+          </Label>
+          <div className="mt-2 space-y-1">
+            {(nodeData as ContainerNodeData).contains?.length === 0 && (
+              <div className="text-xs text-muted-foreground bg-muted/30 rounded px-3 py-2">
+                No nodes inside this container
+              </div>
+            )}
+            {(nodeData as ContainerNodeData).contains?.map((nodeId) => (
+              <div
+                key={nodeId}
+                className="flex items-center justify-between text-xs bg-muted/30 rounded px-3 py-1.5"
+              >
+                <span className="font-medium">{nodeLabel(nodeId)}</span>
+                <span className="text-muted-foreground">#{nodeId}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Drag nodes into the container area to add them
+          </p>
+        </div>
+      )}
 
       <div>
         <Label>Metadata</Label>
