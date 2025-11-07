@@ -33,6 +33,15 @@ jobs:
 
       - name: Build
         run: npm run build
+        
+      - name: Ensure sitemap and robots are in dist
+        run: |
+          # copy from public if present
+          if [ -f ./public/sitemap.xml ]; then cp ./public/sitemap.xml ./dist/; fi
+          if [ -f ./public/robots.txt ]; then cp ./public/robots.txt ./dist/; fi
+          # fallback: copy from repo root if present
+          if [ -f ./sitemap.xml ]; then cp ./sitemap.xml ./dist/; fi
+          if [ -f ./robots.txt ]; then cp ./robots.txt ./dist/; fi
       
       - name: Show dist contents (debug)
         run: |
