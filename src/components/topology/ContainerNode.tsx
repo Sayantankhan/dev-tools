@@ -32,7 +32,7 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
       />
       
       <div
-        className="w-full h-full rounded-lg border-2 bg-background/50 transition-all"
+        className="w-full h-full rounded-lg border-2 transition-all"
         style={{
           borderColor: isHovered 
             ? 'hsl(var(--primary))' 
@@ -40,13 +40,9 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
               ? config.color 
               : '#94a3b8',
           borderStyle: 'dashed',
-          backgroundColor: isHovered 
-            ? `${config.color}15` 
-            : selected 
-              ? `${config.color}10` 
-              : 'hsl(var(--background) / 0.5)',
+          backgroundColor: 'transparent',
           boxShadow: isHovered 
-            ? `0 0 0 4px ${config.color}20, inset 0 0 20px ${config.color}15` 
+            ? `0 0 0 4px ${config.color}20` 
             : selected 
               ? `0 0 0 2px ${config.color}40` 
               : undefined,
