@@ -353,9 +353,9 @@ export function TopologyViewerTool() {
   }, [reactFlowInstance, isFullscreen]);
 
   return (
-    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-120px)]'}`}>
+    <div className={`flex gap-4 p-4 transition-all ${isFullscreen ? 'fixed inset-0 z-50 bg-background h-screen' : 'h-[calc(100vh-120px)]'} min-h-0`}>
       {/* Left Palette */}
-      <div className={`flex-shrink-0 ${isFullscreen ? 'w-56' : 'w-64'}`}>
+      <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-56' : 'w-64'}`}>
         <SymbolPalette onSymbolDragStart={() => {}} />
       </div>
 
@@ -507,7 +507,7 @@ export function TopologyViewerTool() {
       </div>
 
       {/* Right Inspector */}
-      <div className={`flex-shrink-0 ${isFullscreen ? 'w-72' : 'w-80'}`}>
+      <div className={`flex-shrink-0 h-full ${isFullscreen ? 'w-72' : 'w-80'}`}>
         <InspectorPanel
           selectedNodes={nodes.filter((n) => n.selected)}
           selectedEdges={edges.filter((e) => e.selected)}

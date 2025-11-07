@@ -143,7 +143,7 @@ function NodeInspector({
             <SelectTrigger className="mt-2">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-popover">
               {allSymbols.map((s) => (
                 <SelectItem key={s.type} value={s.type}>{s.label}</SelectItem>
               ))}
@@ -154,7 +154,7 @@ function NodeInspector({
             <SelectTrigger className="mt-2">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-popover">
               <SelectItem value={nodeData.symbolType}>{nodeData.symbolType}</SelectItem>
             </SelectContent>
           </Select>
