@@ -115,14 +115,14 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         width: '100%',
         height: '100%',
         minWidth: '160px',
-        minHeight: '80px',
-        padding: '4%',
+        minHeight: nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 ? '100px' : '60px',
+        padding: '3%',
       }}
     >
       <NodeResizer
         isVisible={selected}
         minWidth={160}
-        minHeight={80}
+        minHeight={nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 ? 100 : 60}
         lineStyle={{ borderColor: config.color }}
         handleStyle={{ borderColor: config.color }}
       />
@@ -210,15 +210,15 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         style={{ background: '#3b82f6', opacity: 1 }}
       />
       
-      <div className="flex items-center gap-2 mb-1 min-h-0">
-        <Icon className="flex-shrink-0" style={{ color: config.color, width: '20%', height: 'auto', maxWidth: '32px', minWidth: '16px' }} />
+      <div className="flex items-center gap-2 min-h-0">
+        <Icon className="flex-shrink-0" style={{ color: config.color, width: '20%', height: 'auto', maxWidth: '28px', minWidth: '16px' }} />
         <div className="font-semibold text-foreground flex-1 truncate" style={{ fontSize: 'clamp(0.75rem, 3vw, 0.875rem)' }}>
           {nodeData.label}
         </div>
       </div>
       
       {nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 && (
-        <div className="text-muted-foreground mt-1 space-y-0.5 overflow-hidden" style={{ fontSize: 'clamp(0.625rem, 2.5vw, 0.75rem)' }}>
+        <div className="text-muted-foreground mt-2 space-y-0.5 overflow-hidden" style={{ fontSize: 'clamp(0.625rem, 2.5vw, 0.75rem)' }}>
           {Object.entries(nodeData.metadata)
             .filter(([key]) => key !== 'allowTypeEdit')
             .slice(0, 3)
