@@ -746,6 +746,7 @@ export function TopologyViewerTool() {
                   
           // Handle containment logic when node finishes dragging
           if (changes.some((c: any) => c.type === 'position' && c.dragging === false)) {
+            let result: Node[] | null = null;
             const movedIds = changes.filter((c: any) => c.type === 'position').map((c: any) => c.id);
             
             setNodes((currentNodes) => {
@@ -819,9 +820,11 @@ export function TopologyViewerTool() {
               });
 
               return recomputed;
+              result = recomputed;
+              return recomputed;
             });
 
-            saveToHistory(nodes, edges);
+            if (result) saveToHistory(result, edges);
           }
                   
                   // Visual feedback during dragging over containers
@@ -846,9 +849,9 @@ export function TopologyViewerTool() {
                           
                           const containerBounds = {
                             left: node.position.x,
-                            right: node.position.x + (node.style?.width as number || node.width || 400),
+                            right: node.position.x + (node.measured?.width || (node.style?.width as number) || node.width || 400),
                             top: node.position.y,
-                            bottom: node.position.y + (node.style?.height as number || node.height || 300),
+                            bottom: node.position.y + (node.measured?.height || (node.style?.height as number) || node.height || 300),
                           };
                           
                           const nodeBounds = {
