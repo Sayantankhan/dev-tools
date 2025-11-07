@@ -620,44 +620,6 @@ export function TopologyViewerTool() {
                 zoomOnPinch
               
                 onNodesChange={(changes) => {
-                  // Handle container group movement - move contained nodes with container
-                  const positionChanges = changes.filter((c: any) => c.type === 'position');
-                  if (positionChanges.length > 0) {
-                    positionChanges.forEach((change: any) => {
-                      const movedNode = nodes.find((n) => n.id === change.id);
-                      if (movedNode && movedNode.type === 'container' && change.position) {
-                        const containerData = movedNode.data as ContainerNodeData;
-                        const containedIds = containerData.contains || [];
-                        
-                        if (containedIds.length > 0) {
-                          // Calculate movement delta
-                          const deltaX = change.position.x - movedNode.position.x;
-                          const deltaY = change.position.y - movedNode.position.y;
-                          
-                          // Create position changes for all contained nodes
-                          const containedChanges = containedIds.map((nodeId) => {
-                            const containedNode = nodes.find((n) => n.id === nodeId);
-                            if (containedNode) {
-                              return {
-                                id: nodeId,
-                                type: 'position' as const,
-                                position: {
-                                  x: containedNode.position.x + deltaX,
-                                  y: containedNode.position.y + deltaY,
-                                },
-                                dragging: change.dragging,
-                              };
-                            }
-                            return null;
-                          }).filter((c): c is any => c !== null);
-                          
-                          // Add contained node changes to the changes array
-                          changes = [...changes, ...containedChanges];
-                        }
-                      }
-                    });
-                  }
-                  
                   onNodesChange(changes);
                   
                   // Handle containment logic when node finishes dragging
@@ -666,14 +628,22 @@ export function TopologyViewerTool() {
                     setNodes((currentNodes) => {
                       let updated = [...currentNodes];
                       const containerNodes = updated.filter((n) => n.type === 'container');
-                      const regularNodes = updated.filter((n) => n.type !== 'container');
+                      const allOtherNodes = updated.filter((n) => n.type !== 'container');
                       
-                      // Update containers' contains arrays
+                      // First, clear all parentNode relationships
+                      updated = updated.map((n) => {
+                        if (n.type !== 'container') {
+                          return { ...n, parentNode: undefined };
+                        }
+                        return n;
+                      });
+                      
+                      // Update containers' contains arrays and set parentNode
                       containerNodes.forEach((container) => {
                         const cData = container.data as ContainerNodeData;
                         const newContains: string[] = [];
                         
-                        regularNodes.forEach((node) => {
+                        allOtherNodes.forEach((node) => {
                           // Check if node is inside container bounds
                           const containerBounds = {
                             left: container.position.x,
@@ -694,6 +664,16 @@ export function TopologyViewerTool() {
                             nodeBounds.y <= containerBounds.bottom
                           ) {
                             newContains.push(node.id);
+                            // Set parentNode to make it move with container
+                            updated = updated.map((n) =>
+                              n.id === node.id
+                                ? { 
+                                    ...n, 
+                                    parentNode: container.id,
+                                    extent: 'parent' as const,
+                                  }
+                                : n
+                            );
                           }
                         });
                         
