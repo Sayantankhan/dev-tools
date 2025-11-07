@@ -418,10 +418,6 @@ export function TopologyViewerTool() {
               <Button size="sm" variant="outline" onClick={clearCanvas}>
                 <Trash2 className="w-4 h-4" />
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setIsFullscreen(!isFullscreen)}>
-                <Maximize2 className="w-4 h-4 mr-2" />
-                {isFullscreen ? 'Exit' : 'Expand'}
-              </Button>
             </div>
           </div>
 
