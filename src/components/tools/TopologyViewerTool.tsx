@@ -116,9 +116,18 @@ export function TopologyViewerTool() {
   const onConnect = useCallback(
     (connection: Connection) => {
       console.log('Connection attempt:', connection);
+      if (!connection.source || !connection.target) {
+        console.log('Invalid connection - missing source or target');
+        return;
+      }
+      
       setEdges((eds) => {
         const newEdge = {
           ...connection,
+          source: connection.source,
+          target: connection.target,
+          sourceHandle: connection.sourceHandle,
+          targetHandle: connection.targetHandle,
           id: `edge_${Date.now()}`,
           type: 'default',
           markerEnd: { type: MarkerType.ArrowClosed },
