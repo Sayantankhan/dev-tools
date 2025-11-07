@@ -23,7 +23,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2 } from 'lucide-react';
+import { Download, Upload, Undo2, Redo2, Grid3x3, Maximize2, Save, Trash2, Image } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { SymbolPalette, SymbolType, getSymbolConfig } from '@/components/topology/SymbolPalette';
 import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNode';
@@ -226,6 +227,34 @@ export function TopologyViewerTool() {
     URL.revokeObjectURL(url);
     toast.success('Exported topology JSON');
   }, [nodes, edges]);
+
+  // Export as JPG
+  const exportAsJPG = useCallback(async () => {
+    if (!reactFlowWrapper.current) return;
+    
+    try {
+      toast.info('Generating image...');
+      const canvas = await html2canvas(reactFlowWrapper.current, {
+        backgroundColor: '#0f1419',
+        scale: 2,
+        logging: false,
+      });
+      
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `topology-${Date.now()}.jpg`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+        toast.success('Diagram exported as JPG');
+      }, 'image/jpeg', 0.95);
+    } catch (error) {
+      toast.error('Failed to export diagram');
+      console.error(error);
+    }
+  }, []);
 
   // Import JSON
   const importJSON = useCallback(async (jsonString: string) => {
@@ -512,6 +541,10 @@ export function TopologyViewerTool() {
                     <Button size="sm" variant="secondary" onClick={exportJSON}>
                       <Download className="w-3 h-3 mr-2" />
                       JSON
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={exportAsJPG}>
+                      <Image className="w-3 h-3 mr-2" />
+                      JPG
                     </Button>
                   </div>
                 </Panel>
