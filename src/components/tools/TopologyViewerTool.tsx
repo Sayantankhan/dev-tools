@@ -37,27 +37,17 @@ const getId = () => `node_${nodeId++}`;
 export function TopologyViewerTool() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const fullscreenContainerRef = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes] = useNodesState([]);
+  const [nodes, setNodes, rfOnNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   
   const onNodesChange = useCallback(
     (changes: any) => {
+      // First, let React Flow apply the changes correctly
+      rfOnNodesChange(changes);
+
+      // Then, if a locked container is being dragged, move its children by the delta
       setNodes((nds) => {
         const changeById = new Map<string, any>(changes.map((c: any) => [c.id, c]));
-
-        // Apply base changes (position/select/remove) first
-        let next = nds
-          .map((n) => {
-            const ch = changeById.get(n.id);
-            if (!ch) return n;
-            if (ch.type === 'position' && ch.position) return { ...n, position: ch.position };
-            if (ch.type === 'select') return { ...n, selected: ch.selected };
-            if (ch.type === 'remove') return undefined as any;
-            return n;
-          })
-          .filter(Boolean) as Node[];
-
-        // Handle locked container drag: move children by delta
         const lockedMoves = nds
           .map((n) => ({ n, ch: changeById.get(n.id) }))
           .filter(({ n, ch }) => ch?.type === 'position' && ch.dragging && n.type === 'container' && (n.data as ContainerNodeData).locked)
@@ -68,20 +58,18 @@ export function TopologyViewerTool() {
             children: ((n.data as ContainerNodeData).contains || []).slice(),
           }));
 
-        if (lockedMoves.length) {
-          next = next.map((node) => {
-            const move = lockedMoves.find((m) => m.children.includes(node.id));
-            if (!move) return node;
-            // use original position as base to avoid compounding
-            const original = nds.find((x) => x.id === node.id) || node;
-            return { ...node, position: { x: original.position.x + move.deltaX, y: original.position.y + move.deltaY } };
-          });
-        }
+        if (!lockedMoves.length) return nds;
 
-        return next;
+        const updated = nds.map((node) => {
+          const move = lockedMoves.find((m) => m.children.includes(node.id));
+          if (!move) return node;
+          const original = nds.find((x) => x.id === node.id) || node;
+          return { ...node, position: { x: original.position.x + move.deltaX, y: original.position.y + move.deltaY } };
+        });
+        return updated;
       });
     },
-    [setNodes]
+    [rfOnNodesChange, setNodes]
   );
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [history, setHistory] = useState<{ nodes: Node[]; edges: Edge[] }[]>([]);
