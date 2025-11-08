@@ -771,7 +771,16 @@ export function TopologyViewerTool() {
 
       {/* Center Canvas */}
       <div className="flex-1 min-h-0 flex flex-col gap-4" style={{ width: '85%' }}>
-        <Tabs defaultValue="editor" className="flex-1 min-h-0 flex flex-col">
+        <Tabs 
+          defaultValue="editor" 
+          className="flex-1 min-h-0 flex flex-col"
+          onValueChange={(value) => {
+            if (value === "import") {
+              setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+              setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
+            }
+          }}
+        >
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="editor">Editor</TabsTrigger>
