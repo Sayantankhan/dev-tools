@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary, Type, GalleryVerticalEnd, Router, ArrowLeftRight, GitBranch, ServerCog, Globe, Smartphone, Monitor } from 'lucide-react';
+import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, ChevronDown, Workflow, Search, BarChart3, Flame, Binary, Type, GalleryVerticalEnd, Router, ArrowLeftRight, GitBranch, ServerCog, Globe, Smartphone, Monitor, LayoutDashboard } from 'lucide-react';
 
 export type SymbolType = 
   | 'mysql' | 'postgres' | 'mongodb' | 'cassandra' | 'timeseries' | 'graphdb'
@@ -21,7 +21,7 @@ export type SymbolType =
   | 'gcp-functions' | 'gcp-vertex' | 'gcp-firestore' | 'gcp-search' 
   | 'gcp-pubsub' | 'gcp-eventarc' | 'gcp-lb' | 'gcp-disk' | 'gcp-memorystore'
   | 'container-vpc' | 'container-vnet' | 'container-gcp-vpc' | 'container-generic'
-  | 'mobile' | 'website';
+  | 'mobile' | 'website' | 'dashboard';
 
 interface Symbol {
   type: SymbolType;
@@ -119,6 +119,7 @@ const baseSymbols: Symbol[] = [
   { type: 'grafana', label: 'Grafana', icon: BarChart3, color: '#f46800' },
   { type: 'mobile', label: 'Mobile Device', icon: Smartphone, color: '#a855f7' },
   { type: 'website', label: 'Website', icon: Monitor, color: '#3b82f6' },
+  { type: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: '#10b981' },
   { type: 'text', label: 'Text Label', icon: Type, color: '#6b7280' },
   { type: 'custom', label: 'Custom Node', icon: Circle, color: '#6b7280' },
 ];
