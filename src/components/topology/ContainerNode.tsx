@@ -63,6 +63,7 @@ export const ContainerNode = memo(({ id, data, selected }: NodeProps) => {
             : selected 
               ? `0 0 0 2px ${config.color}40` 
               : undefined,
+          pointerEvents: 'none', // Allow clicks to pass through to edges inside
         }}
       >
         {/* Container header */}
@@ -71,6 +72,7 @@ export const ContainerNode = memo(({ id, data, selected }: NodeProps) => {
           style={{
             borderColor: config.color,
             borderLeftWidth: '3px',
+            pointerEvents: 'auto', // Re-enable clicks on header
           }}
         >
           <Box className="w-4 h-4 flex-shrink-0" style={{ color: config.color }} />
@@ -86,7 +88,10 @@ export const ContainerNode = memo(({ id, data, selected }: NodeProps) => {
 
         {/* Metadata display */}
         {nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 && (
-          <div className="absolute top-12 left-2 text-xs text-muted-foreground space-y-0.5 bg-card px-2 py-1 rounded border">
+          <div 
+            className="absolute top-12 left-2 text-xs text-muted-foreground space-y-0.5 bg-card px-2 py-1 rounded border"
+            style={{ pointerEvents: 'auto' }} // Re-enable clicks on metadata
+          >
             {Object.entries(nodeData.metadata)
               .filter(([key]) => key !== 'allowTypeEdit')
               .slice(0, 2)
