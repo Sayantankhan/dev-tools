@@ -19,6 +19,8 @@ const iconMap: Record<SymbolType, any> = {
   'firewall': Shield,
   'gateway': GalleryVerticalEnd,
   'nat-gateway': ArrowLeftRight,
+  'router': Router,
+  'switch': Network,
   'bgp-router': Router,
   'transit-gateway': GitBranch,
   'proxy': ServerCog,

@@ -9,7 +9,7 @@ export type SymbolType =
   | 'mysql' | 'postgres' | 'mongodb' | 'cassandra' | 'timeseries' | 'graphdb'
   | 'cache' | 'redis' | 'memcached' | 'hazelcast' | 'compute' | 'gpu-compute'
   | 'firewall' | 'lb-l4' | 'lb-l7' | 'storage' | 'message-queue' | 'rabbitmq'
-  | 'kubernetes' | 'custom' | 'text' | 'gateway' | 'nat-gateway' | 'bgp-router' | 'transit-gateway' | 'proxy' | 'dns' | 'cdn'
+  | 'kubernetes' | 'custom' | 'text' | 'gateway' | 'nat-gateway' | 'router' | 'switch' | 'bgp-router' | 'transit-gateway' | 'proxy' | 'dns' | 'cdn'
   | 'kafka' | 'elasticsearch' | 'splunk' | 'spark' | 'hadoop' | 'grafana'
   | 'aws-s3' | 'aws-ec2' | 'aws-ecs' | 'aws-eks' | 'aws-vpc' | 'aws-lambda' 
   | 'aws-sagemaker' | 'aws-dynamodb' | 'aws-opensearch' | 'aws-sns' | 'aws-sqs' 
@@ -97,6 +97,8 @@ const baseSymbols: Symbol[] = [
   { type: 'firewall', label: 'Firewall', icon: Shield, color: '#ef4444' },
   { type: 'gateway', label: 'API Gateway', icon: GalleryVerticalEnd, color: '#10b981' },
   { type: 'nat-gateway', label: 'NAT Gateway', icon: ArrowLeftRight, color: '#14b8a6' },
+  { type: 'router', label: 'Router', icon: Router, color: '#3b82f6' },
+  { type: 'switch', label: 'Switch', icon: Network, color: '#10b981' },
   { type: 'bgp-router', label: 'BGP Router', icon: Router, color: '#06b6d4' },
   { type: 'transit-gateway', label: 'Transit Gateway', icon: GitBranch, color: '#8b5cf6' },
   { type: 'proxy', label: 'Proxy Server', icon: ServerCog, color: '#ec4899' },
