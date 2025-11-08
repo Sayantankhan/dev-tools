@@ -148,6 +148,7 @@ function NodeInspector({
   const isContainer = node.type === 'container';
   const [connectionDirection, setConnectionDirection] = React.useState<'to' | 'from'>('to');
   const [selectedNodeId, setSelectedNodeId] = React.useState<string>('');
+  const [isSelectingEdge, setIsSelectingEdge] = React.useState(false);
   const [newMetadataKey, setNewMetadataKey] = React.useState('');
   const [newMetadataValue, setNewMetadataValue] = React.useState('');
   
@@ -300,47 +301,69 @@ function NodeInspector({
       <div>
         <Label>Connection</Label>
         <div className="mt-2 space-y-2">
-          <Select value={connectionDirection} onValueChange={(v: 'to' | 'from') => setConnectionDirection(v)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent container={portalContainer} sideOffset={5}>
-              <SelectItem value="to">Connect To</SelectItem>
-              <SelectItem value="from">Connect From</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={connectionDirection} onValueChange={(v: 'to' | 'from') => setConnectionDirection(v)} disabled={isSelectingEdge}>
+              <SelectTrigger className="flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent container={portalContainer} sideOffset={5}>
+                <SelectItem value="to">Connect To</SelectItem>
+                <SelectItem value="from">Connect From</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button
+              size="sm"
+              variant={isSelectingEdge ? "default" : "outline"}
+              onClick={() => setIsSelectingEdge(!isSelectingEdge)}
+              className="whitespace-nowrap"
+            >
+              {isSelectingEdge ? "Cancel" : "Select Edge"}
+            </Button>
+          </div>
           
-          <Select value={selectedNodeId} onValueChange={setSelectedNodeId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a node..." />
-            </SelectTrigger>
-            <SelectContent container={portalContainer} sideOffset={5}>
-              {availableNodes.map((n) => (
-                <SelectItem key={n.id} value={n.id}>
-                  {(n.data as TopologyNodeData).label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isSelectingEdge && (
+            <div className="bg-primary/10 border border-primary/30 rounded-md p-3 text-xs">
+              <p className="font-medium text-primary mb-1">Edge Selection Mode Active</p>
+              <p className="text-muted-foreground">Click any edge in the canvas to select it for editing.</p>
+            </div>
+          )}
+          
+          {!isSelectingEdge && (
+            <>
+              <Select value={selectedNodeId} onValueChange={setSelectedNodeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a node..." />
+                </SelectTrigger>
+                <SelectContent container={portalContainer} sideOffset={5}>
+                  {availableNodes.map((n) => (
+                    <SelectItem key={n.id} value={n.id}>
+                      {(n.data as TopologyNodeData).label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              if (!selectedNodeId) return;
-              if (connectionDirection === 'to') {
-                onCreateConnection(node.id, selectedNodeId);
-              } else {
-                onCreateConnection(selectedNodeId, node.id);
-              }
-              setSelectedNodeId('');
-            }}
-            disabled={!selectedNodeId}
-            className="w-full"
-          >
-            <ArrowRight className="w-3 h-3 mr-2" />
-            Create Connection
-          </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (!selectedNodeId) return;
+                  if (connectionDirection === 'to') {
+                    onCreateConnection(node.id, selectedNodeId);
+                  } else {
+                    onCreateConnection(selectedNodeId, node.id);
+                  }
+                  setSelectedNodeId('');
+                }}
+                disabled={!selectedNodeId}
+                className="w-full"
+              >
+                <ArrowRight className="w-3 h-3 mr-2" />
+                Create Connection
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

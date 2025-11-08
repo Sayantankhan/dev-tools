@@ -133,11 +133,12 @@ export function TopologyViewerTool() {
     edges.map((edge) => ({
       ...edge,
       style: {
-        strokeWidth: 2,
+        strokeWidth: edge.selected ? 3 : 2,
         stroke: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b'),
         strokeDasharray: edge.data?.lineStyle === 'dotted' ? '5,5' : undefined,
       },
-      zIndex: 1000,
+      zIndex: edge.selected ? 1001 : 1000,
+      interactionWidth: 20, // Wider click area
       label: edge.data?.label || edge.label,
       labelStyle: { fill: 'hsl(var(--foreground))', fontWeight: 500, fontSize: 12 },
       labelBgStyle: { fill: 'hsl(var(--background))', fillOpacity: 0.8 },
@@ -838,9 +839,20 @@ export function TopologyViewerTool() {
                 z-index: 100 !important; 
                 pointer-events: all !important;
               }
-              /* Edges should render above nodes */
-              .react-flow__edges { z-index: 50 !important; }
-              .react-flow__edge { z-index: 50 !important; }
+              /* Edges should render above nodes with pointer events enabled */
+              .react-flow__edges { z-index: 50 !important; pointer-events: all !important; }
+              .react-flow__edge { 
+                z-index: 50 !important; 
+                pointer-events: all !important;
+                cursor: pointer !important;
+              }
+              .react-flow__edge path { 
+                pointer-events: stroke !important;
+                stroke-width: 12 !important; /* Wider hit area */
+              }
+              .react-flow__edge:hover path {
+                stroke-width: 14 !important;
+              }
               /* Connection line during dragging */
               .react-flow__connectionline { z-index: 60 !important; }
             `}</style>
@@ -881,6 +893,7 @@ export function TopologyViewerTool() {
                       selected: false,
                     }))
                   );
+                  toast.success('Edge selected - check Inspector panel');
                 }}
                 onConnect={onConnect}
                 onConnectStart={(e, params) => {
