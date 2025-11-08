@@ -866,6 +866,22 @@ export function TopologyViewerTool() {
                     return next;
                   });
                 }}
+                onEdgeClick={(event, edge) => {
+                  // Select the clicked edge
+                  setEdges((eds) =>
+                    eds.map((e) => ({
+                      ...e,
+                      selected: e.id === edge.id,
+                    }))
+                  );
+                  // Deselect all nodes
+                  setNodes((nds) =>
+                    nds.map((n) => ({
+                      ...n,
+                      selected: false,
+                    }))
+                  );
+                }}
                 onConnect={onConnect}
                 onConnectStart={(e, params) => {
                   connectStartRef.current = { nodeId: params.nodeId, handleType: params.handleType } as any;
@@ -950,6 +966,52 @@ export function TopologyViewerTool() {
                   Load
                 </Button>
               </Card>
+
+              {copiedNodes.length > 0 && (
+                <Card className="p-4 col-span-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>Copied Selection ({copiedNodes.length} nodes)</Label>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const data = {
+                          nodes: copiedNodes.map(n => ({
+                            id: n.id,
+                            label: n.data.label,
+                            type: n.data.symbolType,
+                            position: n.position,
+                            width: (n.style?.width as number) || n.width || (n.type === 'container' ? 400 : 160),
+                            height: (n.style?.height as number) || n.height || (n.type === 'container' ? 300 : 60),
+                          })),
+                          connections: copiedEdges.map(e => ({
+                            id: e.id,
+                            from: e.source,
+                            to: e.target,
+                            label: e.label,
+                          })),
+                        };
+                        setRawInput(JSON.stringify(data, null, 2));
+                        toast.success('Copied selection JSON to paste area');
+                      }}
+                    >
+                      Use This
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={JSON.stringify({
+                      nodes: copiedNodes.map(n => ({
+                        id: n.id,
+                        label: n.data.label,
+                        type: n.data.symbolType,
+                      })),
+                      edges: copiedEdges.length,
+                    }, null, 2)}
+                    readOnly
+                    className="h-24 font-mono text-xs bg-muted"
+                  />
+                </Card>
+              )}
 
               <Card className="p-4 col-span-2">
                 <Label>Sample Topologies</Label>

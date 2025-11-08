@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
+import { Handle, Position, NodeProps, NodeResizer, useReactFlow } from '@xyflow/react';
 import { getSymbolConfig, SymbolType } from './SymbolPalette';
 import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, Search, BarChart3, Flame, Binary, Workflow, Type, GalleryVerticalEnd, Router, ArrowLeftRight, GitBranch, ServerCog, Globe } from 'lucide-react';
 
@@ -95,10 +95,11 @@ export interface TopologyNodeData extends Record<string, unknown> {
   metadata?: Record<string, any>;
 }
 
-export const TopologyNode = memo(({ data, selected }: NodeProps) => {
+export const TopologyNode = memo(({ id, data, selected }: NodeProps) => {
   const nodeData = data as TopologyNodeData;
   const config = getSymbolConfig(nodeData.symbolType);
   const Icon = iconMap[nodeData.symbolType];
+  const { setNodes } = useReactFlow();
   
   // Text node - simplified rendering without handles
   if (nodeData.symbolType === 'text') {
@@ -134,6 +135,22 @@ export const TopologyNode = memo(({ data, selected }: NodeProps) => {
         minHeight={nodeData.metadata && Object.keys(nodeData.metadata).filter(k => k !== 'allowTypeEdit').length > 0 ? 100 : 60}
         lineStyle={{ borderColor: config.color }}
         handleStyle={{ borderColor: config.color }}
+        onResize={(_, params) => {
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === id
+                ? {
+                    ...n,
+                    style: {
+                      ...n.style,
+                      width: params.width,
+                      height: params.height,
+                    },
+                  }
+                : n
+            )
+          );
+        }}
       />
       {/* Connection Handles - Hidden by default, visible on hover/select */}
       <Handle 

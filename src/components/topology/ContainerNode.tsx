@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
+import { Handle, Position, NodeProps, NodeResizer, useReactFlow } from '@xyflow/react';
 import { getSymbolConfig, SymbolType } from './SymbolPalette';
 import { Box } from 'lucide-react';
 
@@ -11,10 +11,11 @@ export interface ContainerNodeData extends Record<string, unknown> {
   isHovered?: boolean; // Visual feedback when dragging over
 }
 
-export const ContainerNode = memo(({ data, selected }: NodeProps) => {
+export const ContainerNode = memo(({ id, data, selected }: NodeProps) => {
   const nodeData = data as ContainerNodeData;
   const config = getSymbolConfig(nodeData.symbolType);
   const [isResizing, setIsResizing] = useState(false);
+  const { setNodes } = useReactFlow();
   
   const isHovered = nodeData.isHovered || false;
   const containsCount = nodeData.contains?.length || 0;
@@ -29,6 +30,22 @@ export const ContainerNode = memo(({ data, selected }: NodeProps) => {
         onResizeEnd={() => setIsResizing(false)}
         lineClassName="!border-primary"
         handleClassName="!w-3 !h-3 !bg-primary"
+        onResize={(_, params) => {
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === id
+                ? {
+                    ...n,
+                    style: {
+                      ...n.style,
+                      width: params.width,
+                      height: params.height,
+                    },
+                  }
+                : n
+            )
+          );
+        }}
       />
       
       <div
