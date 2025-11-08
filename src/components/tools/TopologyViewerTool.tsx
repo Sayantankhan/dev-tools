@@ -185,6 +185,10 @@ export function TopologyViewerTool() {
   // Keyboard shortcuts for copy/paste
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const el = (document.activeElement as HTMLElement | null);
+      const isEditable = !!el && ((el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') || el.isContentEditable);
+      if (isEditable) return;
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         const selectedNodes = nodes.filter(n => n.selected);
         if (selectedNodes.length > 0) {
@@ -197,27 +201,7 @@ export function TopologyViewerTool() {
             e => selectedNodeIds.has(e.source) && selectedNodeIds.has(e.target)
           );
           setCopiedEdges(relevantEdges);
-          
-          // Update import/export tab with copied selection
-          const exportData = {
-            nodes: selectedNodes.map(n => ({
-              id: n.id,
-              label: n.data.label,
-              type: n.data.symbolType,
-              position: n.position,
-              width: (n.style?.width as number) || n.width || (n.type === 'container' ? 400 : 160),
-              height: (n.style?.height as number) || n.height || (n.type === 'container' ? 300 : 60),
-            })),
-            connections: relevantEdges.map(e => ({
-              id: e.id,
-              from: e.source,
-              to: e.target,
-              label: e.label,
-            })),
-          };
-          setRawInput(JSON.stringify(exportData, null, 2));
-          
-          toast.success(`Copied ${selectedNodes.length} node(s) to clipboard and export`);
+          toast.success(`Copied ${selectedNodes.length} node(s)`);
         }
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         if (copiedNodes.length > 0) {
