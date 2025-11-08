@@ -48,7 +48,7 @@ export function CustomEdge({
               pointerEvents: 'none',
               zIndex: 1000,
             }}
-            className="nodrag nopan bg-background px-3 py-1 rounded text-xs font-medium border border-border shadow-md"
+            className="nodrag nopan bg-transparent px-3 py-1 rounded text-xs font-medium border border-border shadow-md"
           >
             {label}
           </div>
