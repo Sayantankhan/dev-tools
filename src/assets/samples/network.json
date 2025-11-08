@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    { "id": "fw1", "label": "Firewall", "type": "firewall", "position": { "x": 250, "y": 0 } },
+    { "id": "lb1", "label": "Load Balancer", "type": "lb-l7", "position": { "x": 250, "y": 120 } },
+    { "id": "app1", "label": "App Server 1", "type": "compute", "position": { "x": 100, "y": 250 } },
+    { "id": "app2", "label": "App Server 2", "type": "compute", "position": { "x": 400, "y": 250 } },
+    { "id": "cache1", "label": "Redis Cache", "type": "cache", "position": { "x": 250, "y": 380 } },
+    { "id": "db1", "label": "PostgreSQL", "type": "postgres", "position": { "x": 250, "y": 510 } }
+  ],
+  "edges": [
+    { "from": "fw1", "to": "lb1", "label": "HTTPS" },
+    { "from": "lb1", "to": "app1" },
+    { "from": "lb1", "to": "app2" },
+    { "from": "app1", "to": "cache1" },
+    { "from": "app2", "to": "cache1" },
+    { "from": "app1", "to": "db1" },
+    { "from": "app2", "to": "db1" }
+  ]
+}

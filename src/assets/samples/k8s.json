@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    { "id": "k8s1", "label": "K8s Cluster", "type": "kubernetes", "position": { "x": 250, "y": 0 } },
+    { "id": "ing1", "label": "Ingress", "type": "lb-l7", "position": { "x": 250, "y": 120 } },
+    { "id": "svc1", "label": "Frontend Service", "type": "compute", "position": { "x": 100, "y": 250 } },
+    { "id": "svc2", "label": "API Service", "type": "compute", "position": { "x": 400, "y": 250 } },
+    { "id": "cache1", "label": "Redis", "type": "cache", "position": { "x": 250, "y": 380 } },
+    { "id": "mq1", "label": "RabbitMQ", "type": "message-queue", "position": { "x": 100, "y": 510 } },
+    { "id": "db1", "label": "PostgreSQL", "type": "postgres", "position": { "x": 400, "y": 510 } }
+  ],
+  "edges": [
+    { "from": "k8s1", "to": "ing1" },
+    { "from": "ing1", "to": "svc1" },
+    { "from": "ing1", "to": "svc2" },
+    { "from": "svc1", "to": "cache1" },
+    { "from": "svc2", "to": "cache1" },
+    { "from": "svc2", "to": "mq1" },
+    { "from": "svc2", "to": "db1" }
+  ]
+}

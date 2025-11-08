@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    { "id": "gcp1", "label": "GCP Region", "type": "gcp-vpc", "position": { "x": 250, "y": 0 } },
+    { "id": "lb1", "label": "Cloud LB", "type": "aws-elb", "position": { "x": 250, "y": 120 } },
+    { "id": "web1", "label": "Web Tier", "type": "aws-ec2", "position": { "x": 100, "y": 250 } },
+    { "id": "web2", "label": "Web Tier", "type": "aws-ec2", "position": { "x": 400, "y": 250 } },
+    { "id": "app1", "label": "App Tier", "type": "compute", "position": { "x": 100, "y": 380 } },
+    { "id": "app2", "label": "App Tier", "type": "compute", "position": { "x": 400, "y": 380 } },
+    { "id": "db1", "label": "Cloud SQL", "type": "mysql", "position": { "x": 250, "y": 510 } }
+  ],
+  "edges": [
+    { "from": "gcp1", "to": "lb1" },
+    { "from": "lb1", "to": "web1" },
+    { "from": "lb1", "to": "web2" },
+    { "from": "web1", "to": "app1" },
+    { "from": "web2", "to": "app2" },
+    { "from": "app1", "to": "db1" },
+    { "from": "app2", "to": "db1" }
+  ]
+}

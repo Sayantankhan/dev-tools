@@ -32,6 +32,9 @@ import { ContainerNode, ContainerNodeData } from '@/components/topology/Containe
 import { InspectorPanel } from '@/components/topology/InspectorPanel';
 import { CustomEdge } from '@/components/topology/CustomEdge';
 import metricCollectorSample from '@/assets/samples/metric-collector.json';
+import networkSample from '@/assets/samples/network.json';
+import cloud3tierSample from '@/assets/samples/cloud-3tier.json';
+import k8sSample from '@/assets/samples/k8s.json';
 
 let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
@@ -636,65 +639,9 @@ export function TopologyViewerTool() {
   // Load sample topologies
   const loadSample = useCallback((type: 'network' | 'cloud-3tier' | 'k8s' | 'metric-collector') => {
     const samples = {
-      network: {
-        nodes: [
-          { id: 'fw1', label: 'Firewall', type: 'firewall', position: { x: 250, y: 0 } },
-          { id: 'lb1', label: 'Load Balancer', type: 'lb-l7', position: { x: 250, y: 120 } },
-          { id: 'app1', label: 'App Server 1', type: 'compute', position: { x: 100, y: 250 } },
-          { id: 'app2', label: 'App Server 2', type: 'compute', position: { x: 400, y: 250 } },
-          { id: 'cache1', label: 'Redis Cache', type: 'cache', position: { x: 250, y: 380 } },
-          { id: 'db1', label: 'PostgreSQL', type: 'postgres', position: { x: 250, y: 510 } },
-        ],
-        edges: [
-          { from: 'fw1', to: 'lb1', label: 'HTTPS' },
-          { from: 'lb1', to: 'app1' },
-          { from: 'lb1', to: 'app2' },
-          { from: 'app1', to: 'cache1' },
-          { from: 'app2', to: 'cache1' },
-          { from: 'app1', to: 'db1' },
-          { from: 'app2', to: 'db1' },
-        ],
-      },
-      'cloud-3tier': {
-        nodes: [
-          { id: 'gcp1', label: 'GCP Region', type: 'gcp-vpc', position: { x: 250, y: 0 } },
-          { id: 'lb1', label: 'Cloud LB', type: 'aws-elb', position: { x: 250, y: 120 } },
-          { id: 'web1', label: 'Web Tier', type: 'aws-ec2', position: { x: 100, y: 250 } },
-          { id: 'web2', label: 'Web Tier', type: 'aws-ec2', position: { x: 400, y: 250 } },
-          { id: 'app1', label: 'App Tier', type: 'compute', position: { x: 100, y: 380 } },
-          { id: 'app2', label: 'App Tier', type: 'compute', position: { x: 400, y: 380 } },
-          { id: 'db1', label: 'Cloud SQL', type: 'mysql', position: { x: 250, y: 510 } },
-        ],
-        edges: [
-          { from: 'gcp1', to: 'lb1' },
-          { from: 'lb1', to: 'web1' },
-          { from: 'lb1', to: 'web2' },
-          { from: 'web1', to: 'app1' },
-          { from: 'web2', to: 'app2' },
-          { from: 'app1', to: 'db1' },
-          { from: 'app2', to: 'db1' },
-        ],
-      },
-      k8s: {
-        nodes: [
-          { id: 'k8s1', label: 'K8s Cluster', type: 'kubernetes', position: { x: 250, y: 0 } },
-          { id: 'ing1', label: 'Ingress', type: 'lb-l7', position: { x: 250, y: 120 } },
-          { id: 'svc1', label: 'Frontend Service', type: 'compute', position: { x: 100, y: 250 } },
-          { id: 'svc2', label: 'API Service', type: 'compute', position: { x: 400, y: 250 } },
-          { id: 'cache1', label: 'Redis', type: 'cache', position: { x: 250, y: 380 } },
-          { id: 'mq1', label: 'RabbitMQ', type: 'message-queue', position: { x: 100, y: 510 } },
-          { id: 'db1', label: 'PostgreSQL', type: 'postgres', position: { x: 400, y: 510 } },
-        ],
-        edges: [
-          { from: 'k8s1', to: 'ing1' },
-          { from: 'ing1', to: 'svc1' },
-          { from: 'ing1', to: 'svc2' },
-          { from: 'svc1', to: 'cache1' },
-          { from: 'svc2', to: 'cache1' },
-          { from: 'svc2', to: 'mq1' },
-          { from: 'svc2', to: 'db1' },
-        ],
-      },
+      network: networkSample,
+      'cloud-3tier': cloud3tierSample,
+      k8s: k8sSample,
       'metric-collector': metricCollectorSample,
     };
 
