@@ -95,6 +95,7 @@ export const DataVizTool = () => {
         );
 
       case "pie":
+        const showLegend = chartData.length <= 10;
         return (
           <ResponsiveContainer width="100%" height={height}>
             <PieChart>
@@ -104,15 +105,15 @@ export const DataVizTool = () => {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={Math.min(height * 0.3, 120)}
-                label
+                outerRadius={Math.min(height * 0.35, 150)}
+                label={chartData.length <= 20}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              {showLegend && <Legend />}
             </PieChart>
           </ResponsiveContainer>
         );
