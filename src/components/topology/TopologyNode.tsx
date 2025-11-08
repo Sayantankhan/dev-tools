@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps, NodeResizer, useReactFlow } from '@xyflow/react';
 import { getSymbolConfig, SymbolType } from './SymbolPalette';
-import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, Search, BarChart3, Flame, Binary, Workflow, Type, GalleryVerticalEnd, Router, ArrowLeftRight, GitBranch, ServerCog, Globe } from 'lucide-react';
+import { Database, HardDrive, Cpu, Zap, Shield, Network, Server, Layers, Box, MessageSquare, Container, Cloud, CloudCog, CloudRain, Circle, Search, BarChart3, Flame, Binary, Workflow, Type, GalleryVerticalEnd, Router, ArrowLeftRight, GitBranch, ServerCog, Globe, Smartphone, Monitor } from 'lucide-react';
 
 const iconMap: Record<SymbolType, any> = {
   'mysql': Database,
@@ -38,6 +38,8 @@ const iconMap: Record<SymbolType, any> = {
   'spark': Flame,
   'hadoop': Binary,
   'grafana': BarChart3,
+  'mobile': Smartphone,
+  'website': Monitor,
   'text': Type,
   'custom': Circle,
   'aws-s3': Box,
