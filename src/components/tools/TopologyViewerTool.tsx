@@ -359,26 +359,71 @@ export function TopologyViewerTool() {
 
   // Export function
   const exportJSON = useCallback(() => {
+    // Helper to convert handle ID to position number (1-4)
+    const getPositionFromHandle = (handleId: string | null | undefined): number | undefined => {
+      if (!handleId) return undefined;
+      const map: Record<string, number> = {
+        's-top': 1, 't-top': 1,
+        's-right': 2, 't-right': 2,
+        's-bottom': 3, 't-bottom': 3,
+        's-left': 4, 't-left': 4,
+      };
+      return map[handleId];
+    };
+
+    // Find which container each node belongs to
+    const containerMap = new Map<string, string>(); // nodeId -> containerId
+    nodes.filter(n => n.type === 'container').forEach(container => {
+      const contains = (container.data as ContainerNodeData).contains || [];
+      contains.forEach(nodeId => containerMap.set(nodeId, container.id));
+    });
+
     const data = {
       nodes: nodes.map((n) => {
         const { allowTypeEdit, ...userMetadata } = n.data.metadata || {};
-        return {
+        const baseNode = {
           id: n.id,
           label: n.data.label,
           type: n.data.symbolType,
           metadata: userMetadata,
           position: n.position,
         };
+
+        // Add container-specific fields
+        if (n.type === 'container') {
+          return {
+            ...baseNode,
+            width: (n.style?.width as number) || n.width || 400,
+            height: (n.style?.height as number) || n.height || 300,
+            contains: (n.data as ContainerNodeData).contains || [],
+          };
+        }
+
+        // Add container reference for regular nodes
+        const containerId = containerMap.get(n.id);
+        return containerId ? { ...baseNode, container: containerId } : baseNode;
       }),
-      edges: edges.map((e) => ({
-        id: e.id,
-        from: e.source,
-        to: e.target,
-        label: e.label,
-        type: e.data?.edgeType,
-        weight: e.data?.weight,
-        lineStyle: e.data?.lineStyle,
-      })),
+      edges: edges.map((e) => {
+        const baseEdge = {
+          id: e.id,
+          from: e.source,
+          to: e.target,
+          label: e.label,
+          type: e.data?.edgeType,
+          weight: e.data?.weight,
+          lineStyle: e.data?.lineStyle,
+        };
+
+        // Add connection positions (1-4)
+        const fromPosition = getPositionFromHandle(e.sourceHandle);
+        const toPosition = getPositionFromHandle(e.targetHandle);
+
+        return {
+          ...baseEdge,
+          ...(fromPosition && { fromPosition }),
+          ...(toPosition && { toPosition }),
+        };
+      }),
       metadata: {
         author: 'Topology Editor',
         timestamp: new Date().toISOString(),
@@ -448,30 +493,61 @@ export function TopologyViewerTool() {
         throw new Error('Invalid topology: nodes array required');
       }
 
-      const importedNodes: Node[] = data.nodes.map((node: any) => ({
-        id: node.id || getId(),
-        type: 'topology',
-        position: node.position || { x: Math.random() * 500, y: Math.random() * 500 },
-        data: {
-          label: node.label || node.name || node.id,
-          symbolType: (node.type || 'custom') as SymbolType,
-          metadata: { ...(node.metadata || {}), allowTypeEdit: (node.type === 'custom') || (node.metadata?.allowTypeEdit === true) },
-        },
-      }));
+      // Helper to convert position number (1-4) to handle ID
+      const getHandleFromPosition = (position: number | undefined, isSource: boolean): string | undefined => {
+        if (!position) return undefined;
+        const prefix = isSource ? 's' : 't';
+        const map: Record<number, string> = {
+          1: `${prefix}-top`,
+          2: `${prefix}-right`,
+          3: `${prefix}-bottom`,
+          4: `${prefix}-left`,
+        };
+        return map[position];
+      };
 
-      const importedEdges: Edge[] = (data.edges || []).map((edge: any) => ({
-        id: edge.id || `edge_${Date.now()}_${Math.random()}`,
-        source: edge.from || edge.source,
-        target: edge.to || edge.target,
-        label: edge.label,
-        type: 'default',
-        markerEnd: { type: MarkerType.ArrowClosed },
-        data: {
-          edgeType: edge.type || 'directed',
-          weight: edge.weight,
-          lineStyle: edge.lineStyle || 'solid',
-        },
-      }));
+      const importedNodes: Node[] = data.nodes.map((node: any) => {
+        const isContainer = node.type?.startsWith('container-');
+        
+        return {
+          id: node.id || getId(),
+          type: isContainer ? 'container' : 'topology',
+          position: node.position || { x: Math.random() * 500, y: Math.random() * 500 },
+          data: {
+            label: node.label || node.name || node.id,
+            symbolType: (node.type || 'custom') as SymbolType,
+            metadata: { ...(node.metadata || {}), allowTypeEdit: (node.type === 'custom') || (node.metadata?.allowTypeEdit === true) },
+            ...(isContainer && { contains: node.contains || [] }),
+          },
+          zIndex: isContainer ? 0 : 10,
+          ...(isContainer 
+            ? { style: { width: node.width || 400, height: node.height || 300 } }
+            : { style: { width: 160, height: 60 } }
+          ),
+        };
+      });
+
+      const importedEdges: Edge[] = (data.edges || []).map((edge: any) => {
+        const sourceHandle = getHandleFromPosition(edge.fromPosition, true);
+        const targetHandle = getHandleFromPosition(edge.toPosition, false);
+
+        return {
+          id: edge.id || `edge_${Date.now()}_${Math.random()}`,
+          source: edge.from || edge.source,
+          target: edge.to || edge.target,
+          label: edge.label,
+          type: 'smoothstep',
+          markerEnd: { type: MarkerType.ArrowClosed },
+          ...(sourceHandle && { sourceHandle }),
+          ...(targetHandle && { targetHandle }),
+          data: {
+            edgeType: edge.type || 'directed',
+            weight: edge.weight,
+            lineStyle: edge.lineStyle || 'solid',
+            color: '#64748b',
+          },
+        };
+      });
 
       setNodes(importedNodes);
       setEdges(importedEdges);
