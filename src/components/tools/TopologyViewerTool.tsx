@@ -272,7 +272,7 @@ export function TopologyViewerTool() {
         type: isContainer ? 'container' : 'topology',
         position,
         data: {
-          label: `${config.label} ${nodeId}`,
+          label: config.label,
           symbolType: type,
           metadata: { allowTypeEdit: type === 'custom' },
           ...(isContainer && { 
