@@ -441,7 +441,7 @@ export const DataVizTool = () => {
         <div className="space-y-3">
           <Label>Visualization</Label>
           <ChartWrapper>
-            <div className="p-6 bg-card/50 rounded-lg border border-border">
+            <div className="p-6 bg-card/50 rounded-lg border border-border overflow-hidden">
               {renderChart()}
             </div>
           </ChartWrapper>
