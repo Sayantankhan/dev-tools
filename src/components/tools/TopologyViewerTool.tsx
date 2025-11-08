@@ -31,6 +31,7 @@ import { TopologyNode, TopologyNodeData } from '@/components/topology/TopologyNo
 import { ContainerNode, ContainerNodeData } from '@/components/topology/ContainerNode';
 import { InspectorPanel } from '@/components/topology/InspectorPanel';
 import { CustomEdge } from '@/components/topology/CustomEdge';
+import metricCollectorSample from '@/assets/samples/metric-collector.json';
 
 let nodeId = 0;
 const getId = () => `node_${nodeId++}`;
@@ -633,7 +634,7 @@ export function TopologyViewerTool() {
   }, [importJSON]);
 
   // Load sample topologies
-  const loadSample = useCallback((type: 'network' | 'cloud-3tier' | 'k8s') => {
+  const loadSample = useCallback((type: 'network' | 'cloud-3tier' | 'k8s' | 'metric-collector') => {
     const samples = {
       network: {
         nodes: [
@@ -694,6 +695,7 @@ export function TopologyViewerTool() {
           { from: 'svc2', to: 'db1' },
         ],
       },
+      'metric-collector': metricCollectorSample,
     };
 
     importJSON(JSON.stringify(samples[type], null, 2));
@@ -1037,7 +1039,7 @@ export function TopologyViewerTool() {
 
               <Card className="p-4 col-span-2">
                 <Label>Sample Topologies</Label>
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 flex-wrap">
                   <Button size="sm" variant="outline" onClick={() => loadSample('network')}>
                     Network
                   </Button>
@@ -1046,6 +1048,9 @@ export function TopologyViewerTool() {
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => loadSample('k8s')}>
                     Kubernetes
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => loadSample('metric-collector')}>
+                    Metric Collector
                   </Button>
                 </div>
               </Card>

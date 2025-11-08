@@ -1,0 +1,365 @@
+{
+  "containers": [
+    {
+      "id": "node_9",
+      "label": "VPC (AWS) ",
+      "type": "container-vpc",
+      "position": {
+        "x": -260.3109521378916,
+        "y": -736.3548106192691
+      },
+      "width": 609,
+      "height": 635,
+      "contains": [
+        "node_10",
+        "node_11",
+        "node_12",
+        "node_13",
+        "node_14",
+        "node_15"
+      ],
+      "metadata": {
+        "Region": "us-east-1"
+      }
+    },
+    {
+      "id": "node_16",
+      "label": "VPC (AWS) 17",
+      "type": "container-vpc",
+      "position": {
+        "x": 444.623480150493,
+        "y": -665.3897303075025
+      },
+      "width": 439,
+      "height": 350,
+      "contains": [
+        "node_17",
+        "node_18"
+      ],
+      "metadata": {
+        "Region": "us-west-1"
+      }
+    },
+    {
+      "id": "node_0",
+      "label": "Subnet - 10.0.1.0/16",
+      "type": "container-generic",
+      "position": {
+        "x": -225.73420921419762,
+        "y": -645.8542064360104
+      },
+      "width": 523,
+      "height": 493,
+      "contains": [
+        "node_10",
+        "node_11",
+        "node_12",
+        "node_13",
+        "node_14",
+        "node_15"
+      ]
+    },
+    {
+      "id": "node_0",
+      "label": "Subnet - 10.0.1.0/16",
+      "type": "container-generic",
+      "position": {
+        "x": -225.73420921419762,
+        "y": -645.8542064360104
+      },
+      "width": 523,
+      "height": 493,
+      "contains": [
+        "node_10",
+        "node_11",
+        "node_12",
+        "node_13",
+        "node_14",
+        "node_15"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node_10",
+      "label": "API Gateway ",
+      "type": "gateway",
+      "position": {
+        "x": -73.87923491022649,
+        "y": -508.99967943528566
+      },
+      "width": 191,
+      "height": 60
+    },
+    {
+      "id": "node_11",
+      "label": "NAT Gateway",
+      "type": "nat-gateway",
+      "position": {
+        "x": 84.19044308437326,
+        "y": -594.362075520096
+      },
+      "width": 160,
+      "height": 60
+    },
+    {
+      "id": "node_12",
+      "label": "Compute Server ",
+      "type": "compute",
+      "position": {
+        "x": -212.46447964140793,
+        "y": -396.5425832821235
+      },
+      "width": 210,
+      "height": 60
+    },
+    {
+      "id": "node_13",
+      "label": "MySQL Master",
+      "type": "mysql",
+      "position": {
+        "x": -188.07813732883858,
+        "y": -235.87541583370253
+      },
+      "width": 160,
+      "height": 60
+    },
+    {
+      "id": "node_14",
+      "label": "MySQL Replica",
+      "type": "mysql",
+      "position": {
+        "x": 21.921862671161406,
+        "y": -235.87541583370253
+      },
+      "width": 160,
+      "height": 60
+    },
+    {
+      "id": "node_15",
+      "label": "Metric Agent",
+      "type": "compute",
+      "position": {
+        "x": 67.93389715500113,
+        "y": -396.5580080115175
+      },
+      "width": 210,
+      "height": 60
+    },
+    {
+      "id": "node_17",
+      "label": "Metric Collector",
+      "type": "compute",
+      "position": {
+        "x": 485.20724734332293,
+        "y": -525.6572427245836
+      },
+      "width": 210,
+      "height": 60
+    },
+    {
+      "id": "node_18",
+      "label": "Grafana",
+      "type": "grafana",
+      "position": {
+        "x": 690.6389287846978,
+        "y": -434.5040202211179
+      },
+      "width": 160,
+      "height": 60
+    },
+    {
+      "id": "node_1",
+      "label": "Dashboard",
+      "type": "dashboard",
+      "position": {
+        "x": 928.6499449912949,
+        "y": -417.22725585867624
+      },
+      "width": 206,
+      "height": 60
+    },
+    {
+      "id": "node_2",
+      "label": "Website",
+      "type": "website",
+      "position": {
+        "x": 84.64856196345113,
+        "y": -851.9691385658733
+      },
+      "width": 160,
+      "height": 60
+    },
+    {
+      "id": "node_1",
+      "label": "Dashboard",
+      "type": "dashboard",
+      "position": {
+        "x": 928.6499449912949,
+        "y": -417.22725585867624
+      },
+      "width": 206,
+      "height": 60
+    },
+    {
+      "id": "node_2",
+      "label": "Website",
+      "type": "website",
+      "position": {
+        "x": 84.64856196345113,
+        "y": -851.9691385658733
+      },
+      "width": 160,
+      "height": 60
+    }
+  ],
+  "connections": [
+    {
+      "id": "edge-f0d96adf-4d84-4412-b1f3-0fdd2e589ea9",
+      "from": {
+        "node": "node_9",
+        "position": 3
+      },
+      "to": {
+        "node": "node_16",
+        "position": 3
+      },
+      "label": "Peering",
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-c9ab9d41-18c6-440a-9279-3399caab14e8",
+      "from": {
+        "node": "node_12",
+        "position": 2
+      },
+      "to": {
+        "node": "node_15",
+        "position": 4
+      },
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-88e049fe-978d-4c0f-8b84-87f0b82bbe41",
+      "from": {
+        "node": "node_12",
+        "position": 3
+      },
+      "to": {
+        "node": "node_13",
+        "position": 1
+      },
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-8c8214bf-a06d-4298-8943-f8e2e782f53e",
+      "from": {
+        "node": "node_13",
+        "position": 2
+      },
+      "to": {
+        "node": "node_14",
+        "position": 4
+      },
+      "style": "solid",
+      "type": "bidirectional",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-aa1ae8b6-85a5-4245-b214-6ac95cfd11eb",
+      "from": {
+        "node": "node_15",
+        "position": 2
+      },
+      "to": {
+        "node": "node_17",
+        "position": 4
+      },
+      "label": "Pusing  Metrics",
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-1939af0f-2a53-44f6-a076-49aa5f0713c6",
+      "from": {
+        "node": "node_17",
+        "position": 2
+      },
+      "to": {
+        "node": "node_18",
+        "position": 1
+      },
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-72b52b83-8870-4cf9-a22c-17169257cd05",
+      "from": {
+        "node": "node_11",
+        "position": 3
+      },
+      "to": {
+        "node": "node_10",
+        "position": 2
+      },
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-bac8c945-5eec-4690-b206-6a737828a49f",
+      "from": {
+        "node": "node_10",
+        "position": 4
+      },
+      "to": {
+        "node": "node_12",
+        "position": 1
+      },
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-cb7be143-0c6d-42db-aca9-1033d8edc9eb",
+      "from": {
+        "node": "node_2",
+        "position": 3
+      },
+      "to": {
+        "node": "node_11",
+        "position": 1
+      },
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    },
+    {
+      "id": "edge-64387bf5-01fd-4113-88f6-412cd0f714fd",
+      "from": {
+        "node": "node_18",
+        "position": 2
+      },
+      "to": {
+        "node": "node_1",
+        "position": 4
+      },
+      "style": "solid",
+      "type": "directed",
+      "color": "#64748b"
+    }
+  ],
+  "metadata": {
+    "author": "Topology Editor",
+    "timestamp": "2025-11-08T05:17:11.166Z",
+    "version": "2.0"
+  }
+}
