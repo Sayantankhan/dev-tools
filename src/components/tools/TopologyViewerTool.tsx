@@ -133,12 +133,12 @@ export function TopologyViewerTool() {
     edges.map((edge) => ({
       ...edge,
       style: {
-        strokeWidth: edge.selected ? 3 : 2,
+        strokeWidth: 2,
         stroke: edge.selected ? 'hsl(var(--primary))' : (edge.data?.color || '#64748b'),
         strokeDasharray: edge.data?.lineStyle === 'dotted' ? '5,5' : undefined,
       },
-      zIndex: edge.selected ? 1001 : 1000,
-      interactionWidth: 20, // Wider click area
+      zIndex: 1000,
+      interactionWidth: 20, // Wider click area for easier selection
       label: edge.data?.label || edge.label,
       labelStyle: { fill: 'hsl(var(--foreground))', fontWeight: 500, fontSize: 12 },
       labelBgStyle: { fill: 'hsl(var(--background))', fillOpacity: 0.8 },
@@ -848,10 +848,6 @@ export function TopologyViewerTool() {
               }
               .react-flow__edge path { 
                 pointer-events: stroke !important;
-                stroke-width: 12 !important; /* Wider hit area */
-              }
-              .react-flow__edge:hover path {
-                stroke-width: 14 !important;
               }
               /* Connection line during dragging */
               .react-flow__connectionline { z-index: 60 !important; }
@@ -1078,6 +1074,22 @@ export function TopologyViewerTool() {
               saveToHistory(updated, edges);
               return updated;
             });
+          }}
+          onSelectEdge={(edgeId) => {
+            // Select the edge and deselect all nodes
+            setEdges((eds) =>
+              eds.map((e) => ({
+                ...e,
+                selected: e.id === edgeId,
+              }))
+            );
+            setNodes((nds) =>
+              nds.map((n) => ({
+                ...n,
+                selected: false,
+              }))
+            );
+            toast.success('Edge selected');
           }}
           onUpdateEdge={(id, data) => {
             console.log('[TopologyViewerTool] onUpdateEdge called:', id, data);

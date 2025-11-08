@@ -25,6 +25,7 @@ interface InspectorPanelProps {
   onRemoveMetadata: (nodeId: string, key: string) => void;
   onCreateConnection: (sourceId: string, targetId: string) => void;
   onReattachEdge: (edgeId: string, updates: { source?: string; target?: string; sourceHandle?: string; targetHandle?: string }) => void;
+  onSelectEdge: (edgeId: string) => void;
   portalContainer?: HTMLElement | null;
 }
 
@@ -42,6 +43,7 @@ export function InspectorPanel({
   onRemoveMetadata,
   onCreateConnection,
   onReattachEdge,
+  onSelectEdge,
   portalContainer,
 }: InspectorPanelProps) {
   if (selectedNodes.length === 0 && selectedEdges.length === 0) {
@@ -81,6 +83,7 @@ export function InspectorPanel({
               onRemoveMetadata={onRemoveMetadata}
               onCreateConnection={onCreateConnection}
               onDeleteEdge={onDeleteEdge}
+              onSelectEdge={onSelectEdge}
               portalContainer={portalContainer}
             />
           )}
@@ -130,6 +133,7 @@ function NodeInspector({
   onRemoveMetadata,
   onCreateConnection,
   onDeleteEdge,
+  onSelectEdge,
   portalContainer,
 }: {
   node: Node;
@@ -142,6 +146,7 @@ function NodeInspector({
   onRemoveMetadata: (nodeId: string, key: string) => void;
   onCreateConnection: (sourceId: string, targetId: string) => void;
   onDeleteEdge: (edgeId: string) => void;
+  onSelectEdge: (edgeId: string) => void;
   portalContainer?: HTMLElement | null;
 }) {
   const nodeData = node.data as TopologyNodeData | ContainerNodeData;
@@ -374,12 +379,24 @@ function NodeInspector({
             <div className="text-xs text-muted-foreground">No connections</div>
           )}
           {existing.map(({ e, dir, other }) => (
-            <div key={e.id} className="flex items-center justify-between text-xs bg-muted/30 rounded px-2 py-1">
+            <div 
+              key={e.id} 
+              className="flex items-center justify-between text-xs bg-muted/30 rounded px-2 py-1 hover:bg-muted/50 cursor-pointer transition-colors"
+              onClick={() => onSelectEdge(e.id)}
+            >
               <div className="flex items-center gap-2">
                 {dir === 'to' ? <ArrowRight className="w-3 h-3" /> : <ArrowLeft className="w-3 h-3" />}
                 <span>{dir === 'to' ? 'to' : 'from'} {other}</span>
               </div>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDeleteEdge(e.id)}>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-7 w-7" 
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDeleteEdge(e.id);
+                }}
+              >
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
