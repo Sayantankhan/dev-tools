@@ -396,6 +396,8 @@ export function TopologyViewerTool() {
           label: n.data.label,
           type: n.data.symbolType,
           position: n.position,
+          width: (n.style?.width as number) || n.width || 160,
+          height: (n.style?.height as number) || n.height || 60,
           metadata: Object.keys(userMetadata).length > 0 ? userMetadata : undefined,
         };
       }),
@@ -530,7 +532,7 @@ export function TopologyViewerTool() {
             metadata: { ...(node.metadata || {}), allowTypeEdit: (node.type === 'custom') },
           },
           zIndex: 10,
-          style: { width: 160, height: 60 },
+          style: { width: node.width || 160, height: node.height || 60 },
         }));
 
         allNodes = [...containers, ...regularNodes];
