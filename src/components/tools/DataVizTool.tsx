@@ -166,8 +166,7 @@ export const DataVizTool = () => {
           const originalVariance = originalValues.reduce((a, b) => a + Math.pow(b - originalMean, 2), 0) / originalValues.length;
           const originalStd = Math.sqrt(originalVariance);
 
-          const BIN_COUNT = 25;
-          const { bins, mean: logMean, std: logStd, maxCount } = helpers.computeHistogram(logTransformedValues, BIN_COUNT);
+          const { bins, mean: logMean, std: logStd, maxCount } = helpers.computeHistogram(logTransformedValues, state.distributionBins);
 
           const pdfAtMean = helpers.gaussianPdf(logMean, logMean, logStd) || 1;
           const gaussianScale = maxCount / pdfAtMean;
@@ -200,7 +199,7 @@ export const DataVizTool = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="name" 
-                  interval={Math.floor(BIN_COUNT / 10)} 
+                  interval={Math.floor(state.distributionBins / 10)} 
                   angle={-45} 
                   textAnchor="end" 
                   height={80}
@@ -375,16 +374,29 @@ export const DataVizTool = () => {
             )}
 
             {state.chartType === "distribution" && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="log-scale"
-                  checked={state.useLogScale}
-                  onCheckedChange={(checked) => setters.setUseLogScale(checked as boolean)}
-                />
-                <Label htmlFor="log-scale" className="cursor-pointer text-sm">
-                  Log Scale (for skewed data)
-                </Label>
-              </div>
+              <>
+                <div className="min-w-[120px]">
+                  <Label>Bins</Label>
+                  <Input
+                    type="number"
+                    min={5}
+                    max={50}
+                    value={state.distributionBins}
+                    onChange={(e) => setters.setDistributionBins(parseInt(e.target.value) || 25)}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="log-scale"
+                    checked={state.useLogScale}
+                    onCheckedChange={(checked) => setters.setUseLogScale(checked as boolean)}
+                  />
+                  <Label htmlFor="log-scale" className="cursor-pointer text-sm">
+                    Log Scale (for skewed data)
+                  </Label>
+                </div>
+              </>
             )}
 
             {state.chartType !== "distribution" && state.chartType !== "clustering" && (
