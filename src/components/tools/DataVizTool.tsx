@@ -460,8 +460,108 @@ export const DataVizTool = () => {
               <DialogHeader className="mb-4">
                 <DialogTitle>Expanded Chart View</DialogTitle>
               </DialogHeader>
+              
+              {/* Controls in expanded view */}
+              <div className="flex flex-wrap gap-3 items-end mb-4 pb-4 border-b border-border">
+                <div className="min-w-[120px]">
+                  <Label>Chart Type</Label>
+                  <Select value={state.chartType} onValueChange={(v: ChartType) => setters.setChartType(v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bar">Bar Chart</SelectItem>
+                      <SelectItem value="line">Line Chart</SelectItem>
+                      <SelectItem value="pie">Pie Chart</SelectItem>
+                      <SelectItem value="area">Area Chart</SelectItem>
+                      <SelectItem value="distribution">Std Distribution</SelectItem>
+                      <SelectItem value="clustering">Clustering</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="min-w-[150px]">
+                  <Label>{(state.chartType === "distribution" || state.chartType === "clustering") ? "Column" : "X-Axis"}</Label>
+                  <Select value={state.selectedXAxis} onValueChange={setters.setSelectedXAxis}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {state.columns.map((col) => (
+                        <SelectItem key={col} value={col}>
+                          {col}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {state.chartType === "clustering" && (
+                  <div className="min-w-[120px]">
+                    <Label>Bins</Label>
+                    <Input
+                      type="number"
+                      min={2}
+                      max={20}
+                      value={state.clusterBins}
+                      onChange={(e) => setters.setClusterBins(parseInt(e.target.value) || 5)}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+
+                {state.chartType === "distribution" && (
+                  <>
+                    <div className="min-w-[120px]">
+                      <Label>Bins</Label>
+                      <Input
+                        type="number"
+                        min={5}
+                        max={50}
+                        value={state.distributionBins}
+                        onChange={(e) => setters.setDistributionBins(parseInt(e.target.value) || 25)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="min-w-[150px]">
+                      <Label>Transformation</Label>
+                      <Select value={state.transformationType} onValueChange={(v: any) => setters.setTransformationType(v)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="log">Log</SelectItem>
+                          <SelectItem value="sqrt">Square Root</SelectItem>
+                          <SelectItem value="boxcox">Box-Cox (λ=0.5)</SelectItem>
+                          <SelectItem value="yeojohnson">Yeo-Johnson (λ=0.5)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+
+                {state.chartType !== "distribution" && state.chartType !== "clustering" && (
+                  <div className="min-w-[150px]">
+                    <Label>Y-Axis</Label>
+                    <Select value={state.selectedYAxis} onValueChange={setters.setSelectedYAxis}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {state.columns.map((col) => (
+                          <SelectItem key={col} value={col}>
+                            {col}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
               <div className="flex-1 overflow-auto pr-2">
-                {renderChart(window.innerHeight * 0.7)}
+                {renderChart(window.innerHeight * 0.65)}
               </div>
             </DialogContent>
           </Dialog>
