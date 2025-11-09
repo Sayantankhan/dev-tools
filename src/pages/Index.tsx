@@ -38,7 +38,7 @@ const tools: Tool[] = [
   { id: "image", label: "Image", icon: Image, component: ImageTool },
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
-  { id: "encoder", label: "Encoder", icon: FileCode, component: EncoderTool },
+  { id: "encoder", label: "Encoder/Decoder", icon: FileCode, component: EncoderTool },
   { id: "random-generator", label: "Random", icon: Shuffle, component: RandomGeneratorTool },
   { id: "data-converter", label: "Convert", icon: ArrowRightLeft, component: DataConverterTool },
   { id: "ip-lookup", label: "IP Lookup", icon: MapPin, component: IPLookupTool },

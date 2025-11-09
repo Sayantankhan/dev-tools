@@ -111,34 +111,21 @@ export const EncoderTool = () => {
 
       {/* Base64 Options */}
       {encodingType === "base64" && (
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="url-safe"
-              checked={base64Handler.state.urlSafe}
-              onCheckedChange={(checked) => base64Handler.setters.setUrlSafe(checked as boolean)}
-            />
-            <Label htmlFor="url-safe" className="cursor-pointer">
-              URL-safe Base64
-            </Label>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              ref={base64Handler.state.fileInputRef}
-              type="file"
-              onChange={base64Handler.actions.handleFileEncode}
-              className="hidden"
-            />
-            <Button
-              onClick={() => base64Handler.state.fileInputRef.current?.click()}
-              variant="outline"
-              size="sm"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Encode File
-            </Button>
-          </div>
+        <div className="flex items-center">
+          <input
+            ref={base64Handler.state.fileInputRef}
+            type="file"
+            onChange={base64Handler.actions.handleFileEncode}
+            className="hidden"
+          />
+          <Button
+            onClick={() => base64Handler.state.fileInputRef.current?.click()}
+            variant="outline"
+            size="sm"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Encode File
+          </Button>
         </div>
       )}
 
