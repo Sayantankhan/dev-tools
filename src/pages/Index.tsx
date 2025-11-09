@@ -3,11 +3,10 @@ import { JSONTool } from "@/components/tools/JSONTool";
 import { ImageTool } from "@/components/tools/ImageTool";
 import { JWTTool } from "@/components/tools/JWTTool";
 import { APITool } from "@/components/tools/APITool";
-import { Base64Tool } from "@/components/tools/Base64Tool";
-import { URLTool } from "@/components/tools/URLTool";
+import { EncoderTool } from "@/components/tools/EncoderTool";
 import { TabNavigation } from "@/components/TabNavigation";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode, Link, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network } from "lucide-react";
+import { Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network } from "lucide-react";
 
 // Lazy load tools for better performance
 const TextCompareTool = lazy(() => import("@/components/tools/TextCompareTool").then(m => ({ default: m.TextCompareTool })));
@@ -23,7 +22,7 @@ const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRe
 const SearchTool = lazy(() => import("@/components/tools/SearchTool").then(m => ({ default: m.SearchTool })));
 const TopologyViewerTool = lazy(() => import("@/components/tools/TopologyViewerTool").then(m => ({ default: m.TopologyViewerTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "base64" | "url" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer";
 
 export interface Tool {
   id: ToolId;
@@ -39,8 +38,7 @@ const tools: Tool[] = [
   { id: "image", label: "Image", icon: Image, component: ImageTool },
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
-  { id: "base64", label: "Base64", icon: FileCode, component: Base64Tool },
-  { id: "url", label: "URL", icon: Link, component: URLTool },
+  { id: "encoder", label: "Encoder", icon: FileCode, component: EncoderTool },
   { id: "random-generator", label: "Random", icon: Shuffle, component: RandomGeneratorTool },
   { id: "data-converter", label: "Convert", icon: ArrowRightLeft, component: DataConverterTool },
   { id: "ip-lookup", label: "IP Lookup", icon: MapPin, component: IPLookupTool },
