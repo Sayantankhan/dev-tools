@@ -166,6 +166,10 @@ export const DataVizTool = () => {
           const originalMean = originalValues.reduce((a, b) => a + b, 0) / originalValues.length;
           const originalVariance = originalValues.reduce((a, b) => a + Math.pow(b - originalMean, 2), 0) / originalValues.length;
           const originalStd = Math.sqrt(originalVariance);
+          
+          // Calculate skewness: (1/n) * Σ((x - mean) / std)^3
+          const skewness = originalValues.reduce((a, b) => a + Math.pow((b - originalMean) / originalStd, 3), 0) / originalValues.length;
+          const skewnessLabel = skewness > 0.5 ? " (Right-skewed)" : skewness < -0.5 ? " (Left-skewed)" : " (Symmetric)";
 
           const { bins, mean: transformedMean, std: transformedStd, maxCount } = helpers.computeHistogram(transformedValues, state.distributionBins);
 
@@ -215,7 +219,7 @@ export const DataVizTool = () => {
               </div>
             )}
             <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
-              <p><strong>Statistics (Original Data):</strong> Mean = {originalMean.toFixed(2)}, Std Dev = {originalStd.toFixed(2)}</p>
+              <p><strong>Statistics (Original Data):</strong> Mean = {originalMean.toFixed(2)}, Std Dev = {originalStd.toFixed(2)}{skewnessLabel}</p>
             </div>
             <ResponsiveContainer width="100%" height={height - (state.transformationType !== "none" ? 160 : 80)}>
               <ComposedChart data={distData}>
