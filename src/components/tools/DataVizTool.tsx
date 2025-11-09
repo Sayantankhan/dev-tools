@@ -316,29 +316,8 @@ export const DataVizTool = () => {
     }
   };
 
-  const ChartWrapper = ({ children, showExpand = true }: { children: React.ReactNode, showExpand?: boolean }) => (
+  const ChartWrapper = ({ children }: { children: React.ReactNode }) => (
     <div className="relative">
-      {showExpand && (
-        <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="absolute top-2 right-2 z-10"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full">
-            <DialogHeader>
-              <DialogTitle>Expanded Chart View</DialogTitle>
-            </DialogHeader>
-            <div className="flex-1 overflow-auto">
-              {renderChart(600)}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
       {children}
     </div>
   );
@@ -468,6 +447,25 @@ export const DataVizTool = () => {
           <Trash2 className="w-4 h-4 mr-2" />
           Clear
         </Button>
+
+        {state.data.length > 0 && (
+          <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Maximize2 className="w-4 h-4 mr-2" />
+                Expand
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full">
+              <DialogHeader>
+                <DialogTitle>Expanded Chart View</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-auto">
+                {renderChart(600)}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Data Input */}
