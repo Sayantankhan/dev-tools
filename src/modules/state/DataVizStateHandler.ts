@@ -15,7 +15,7 @@ export const DataVizStateHandler = (): ToolHandler => {
   const [fileName, setFileName] = useState<string>("");
   const [clusterBins, setClusterBins] = useState(5);
   const [distributionBins, setDistributionBins] = useState(25);
-  const [useLogScale, setUseLogScale] = useState(false);
+  const [transformationType, setTransformationType] = useState<"none" | "log" | "sqrt" | "boxcox" | "yeojohnson">("none");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const helpers = {
@@ -244,6 +244,52 @@ export const DataVizStateHandler = (): ToolHandler => {
       const coeff = 1 / (std * Math.sqrt(2 * Math.PI));
       const expo = Math.exp(-0.5 * Math.pow((x - mean) / std, 2));
       return coeff * expo;
+    },
+
+    applyTransformation: (values: number[], transformType: "none" | "log" | "sqrt" | "boxcox" | "yeojohnson") => {
+      if (transformType === "none") return values;
+      
+      switch (transformType) {
+        case "log":
+          return values.filter(v => v > 0).map(v => Math.log(v));
+        
+        case "sqrt":
+          return values.filter(v => v >= 0).map(v => Math.sqrt(v));
+        
+        case "boxcox": {
+          // Box-Cox transformation with lambda = 0.5 (sqrt-like)
+          // Box-Cox requires positive values
+          const positiveValues = values.filter(v => v > 0);
+          const lambda = 0.5;
+          return positiveValues.map(v => (Math.pow(v, lambda) - 1) / lambda);
+        }
+        
+        case "yeojohnson": {
+          // Yeo-Johnson transformation with lambda = 0.5
+          // Works with negative values unlike Box-Cox
+          const lambda = 0.5;
+          return values.map(v => {
+            if (v >= 0) {
+              return (Math.pow(v + 1, lambda) - 1) / lambda;
+            } else {
+              return -(Math.pow(-v + 1, 2 - lambda) - 1) / (2 - lambda);
+            }
+          });
+        }
+        
+        default:
+          return values;
+      }
+    },
+
+    getTransformationLabel: (transformType: "none" | "log" | "sqrt" | "boxcox" | "yeojohnson") => {
+      switch (transformType) {
+        case "log": return "Log";
+        case "sqrt": return "Square Root";
+        case "boxcox": return "Box-Cox (λ=0.5)";
+        case "yeojohnson": return "Yeo-Johnson (λ=0.5)";
+        default: return "";
+      }
     }
 };
 
@@ -319,7 +365,7 @@ const actions = {
     setFileName("");
     setClusterBins(5);
     setDistributionBins(25);
-    setUseLogScale(false);
+    setTransformationType("none");
     toast.success("Cleared!");
   },
 };
@@ -335,7 +381,7 @@ return {
     fileName,
     clusterBins,
     distributionBins,
-    useLogScale,
+    transformationType,
     fileInputRef,
   },
   setters: {
@@ -348,7 +394,7 @@ return {
     setFileName,
     setClusterBins,
     setDistributionBins,
-    setUseLogScale,
+    setTransformationType,
   },
   helpers,
   actions,

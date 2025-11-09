@@ -144,39 +144,57 @@ export const DataVizTool = () => {
           // Store original values for statistics
           const originalValues = [...numericValues];
 
-          // Apply log transformation if enabled
-          let logTransformedValues = numericValues;
-          if (state.useLogScale && numericValues.length > 0) {
-            logTransformedValues = numericValues
-              .filter((v) => v > 0) // Log only works on positive values
-              .map((v) => Math.log(v));
-          }
+          // Apply transformation on original data
+          const transformedValues = helpers.applyTransformation(numericValues, state.transformationType);
 
-          if (logTransformedValues.length === 0) {
+          if (transformedValues.length === 0) {
+            const transformationLabel = helpers.getTransformationLabel(state.transformationType);
+            let errorMsg = "No valid numeric data to display";
+            if (state.transformationType === "log" || state.transformationType === "boxcox") {
+              errorMsg += " (transformation requires positive values)";
+            } else if (state.transformationType === "sqrt") {
+              errorMsg += " (transformation requires non-negative values)";
+            }
             return (
               <div className={`h-[${height}px] flex items-center justify-center text-muted-foreground`}>
-                No valid numeric data to display
-                {state.useLogScale && " (log scale requires positive values)"}
+                {errorMsg}
               </div>
             );
           }
 
-          // Compute statistics on ORIGINAL data (before log transformation)
+          // Compute statistics on ORIGINAL data (before transformation)
           const originalMean = originalValues.reduce((a, b) => a + b, 0) / originalValues.length;
           const originalVariance = originalValues.reduce((a, b) => a + Math.pow(b - originalMean, 2), 0) / originalValues.length;
           const originalStd = Math.sqrt(originalVariance);
 
-          const { bins, mean: logMean, std: logStd, maxCount } = helpers.computeHistogram(logTransformedValues, state.distributionBins);
+          const { bins, mean: transformedMean, std: transformedStd, maxCount } = helpers.computeHistogram(transformedValues, state.distributionBins);
 
-          const pdfAtMean = helpers.gaussianPdf(logMean, logMean, logStd) || 1;
+          const pdfAtMean = helpers.gaussianPdf(transformedMean, transformedMean, transformedStd) || 1;
           const gaussianScale = maxCount / pdfAtMean;
 
           const distData = bins.map((b) => {
-            const pdfVal = helpers.gaussianPdf(b.center, logMean, logStd);
+            const pdfVal = helpers.gaussianPdf(b.center, transformedMean, transformedStd);
+            
+            // Convert bin ranges back to original scale for display
+            let binLabel = `${b.x0.toFixed(2)}-${b.x1.toFixed(2)}`;
+            if (state.transformationType === "log") {
+              binLabel = `${Math.exp(b.x0).toFixed(1)}-${Math.exp(b.x1).toFixed(1)}`;
+            } else if (state.transformationType === "sqrt") {
+              binLabel = `${Math.pow(b.x0, 2).toFixed(1)}-${Math.pow(b.x1, 2).toFixed(1)}`;
+            } else if (state.transformationType === "boxcox") {
+              const lambda = 0.5;
+              const x0_orig = Math.pow(lambda * b.x0 + 1, 1/lambda);
+              const x1_orig = Math.pow(lambda * b.x1 + 1, 1/lambda);
+              binLabel = `${x0_orig.toFixed(1)}-${x1_orig.toFixed(1)}`;
+            } else if (state.transformationType === "yeojohnson") {
+              const lambda = 0.5;
+              const x0_orig = b.x0 >= 0 ? Math.pow(lambda * b.x0 + 1, 1/lambda) - 1 : -Math.pow((2-lambda)*(-b.x0) + 1, 1/(2-lambda)) + 1;
+              const x1_orig = b.x1 >= 0 ? Math.pow(lambda * b.x1 + 1, 1/lambda) - 1 : -Math.pow((2-lambda)*(-b.x1) + 1, 1/(2-lambda)) + 1;
+              binLabel = `${x0_orig.toFixed(1)}-${x1_orig.toFixed(1)}`;
+            }
+            
             return {
-              name: state.useLogScale 
-                ? `${Math.exp(b.x0).toFixed(1)}-${Math.exp(b.x1).toFixed(1)}`
-                : `${b.x0.toFixed(2)}-${b.x1.toFixed(2)}`,
+              name: binLabel,
               center: b.center,
               count: b.count,
               gaussian: pdfVal * gaussianScale,
@@ -185,16 +203,21 @@ export const DataVizTool = () => {
         
         return (
           <div className="space-y-3">
-            {state.useLogScale && (
+            {state.transformationType !== "none" && (
               <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
-                <p><strong>Log Scale Applied:</strong> Data transformed using natural logarithm</p>
-                <p className="text-xs mt-1">Useful for right-skewed distributions</p>
+                <p><strong>{helpers.getTransformationLabel(state.transformationType)} Transformation Applied</strong></p>
+                <p className="text-xs mt-1">
+                  {state.transformationType === "log" && "Useful for right-skewed distributions"}
+                  {state.transformationType === "sqrt" && "Moderate transformation for skewed data"}
+                  {state.transformationType === "boxcox" && "Power transformation to normalize data (requires positive values)"}
+                  {state.transformationType === "yeojohnson" && "Power transformation that works with negative values"}
+                </p>
               </div>
             )}
             <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
               <p><strong>Statistics (Original Data):</strong> Mean = {originalMean.toFixed(2)}, Std Dev = {originalStd.toFixed(2)}</p>
             </div>
-            <ResponsiveContainer width="100%" height={height - (state.useLogScale ? 160 : 80)}>
+            <ResponsiveContainer width="100%" height={height - (state.transformationType !== "none" ? 160 : 80)}>
               <ComposedChart data={distData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -386,15 +409,20 @@ export const DataVizTool = () => {
                     className="mt-1"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="log-scale"
-                    checked={state.useLogScale}
-                    onCheckedChange={(checked) => setters.setUseLogScale(checked as boolean)}
-                  />
-                  <Label htmlFor="log-scale" className="cursor-pointer text-sm">
-                    Log Scale (for skewed data)
-                  </Label>
+                <div className="min-w-[150px]">
+                  <Label>Transformation</Label>
+                  <Select value={state.transformationType} onValueChange={(v: any) => setters.setTransformationType(v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="log">Log</SelectItem>
+                      <SelectItem value="sqrt">Square Root</SelectItem>
+                      <SelectItem value="boxcox">Box-Cox (λ=0.5)</SelectItem>
+                      <SelectItem value="yeojohnson">Yeo-Johnson (λ=0.5)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </>
             )}
