@@ -2,9 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Lock, Unlock, Copy, Download, Upload, Trash2, Hash } from "lucide-react";
+import { Lock, Unlock, Copy, Download, Trash2, Hash } from "lucide-react";
 import { Base64EnStateHandler } from "@/modules/state/Base64EnStateHandler";
 import { URLStateHandler } from "@/modules/state/URLStateHandler";
 import { SHA256StateHandler } from "@/modules/state/SHA256StateHandler";
@@ -17,6 +16,14 @@ export const EncoderTool = () => {
   const base64Handler = Base64EnStateHandler();
   const urlHandler = URLStateHandler();
   const sha256Handler = SHA256StateHandler();
+
+  // Clear input/output when encoding type changes
+  const handleEncodingTypeChange = (value: EncodingType) => {
+    base64Handler.actions.handleClear();
+    urlHandler.actions.handleClear();
+    sha256Handler.actions.handleClear();
+    setEncodingType(value);
+  };
 
   // Get current handler based on encoding type
   const getCurrentHandler = () => {
@@ -38,7 +45,7 @@ export const EncoderTool = () => {
       {/* Encoding Type Selector */}
       <div className="flex items-center gap-4">
         <Label>Encoding Type:</Label>
-        <Select value={encodingType} onValueChange={(value) => setEncodingType(value as EncodingType)}>
+        <Select value={encodingType} onValueChange={handleEncodingTypeChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue />
           </SelectTrigger>
@@ -108,26 +115,6 @@ export const EncoderTool = () => {
           Clear
         </Button>
       </div>
-
-      {/* Base64 Options */}
-      {encodingType === "base64" && (
-        <div className="flex items-center">
-          <input
-            ref={base64Handler.state.fileInputRef}
-            type="file"
-            onChange={base64Handler.actions.handleFileEncode}
-            className="hidden"
-          />
-          <Button
-            onClick={() => base64Handler.state.fileInputRef.current?.click()}
-            variant="outline"
-            size="sm"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Encode File
-          </Button>
-        </div>
-      )}
 
       {/* Input/Output */}
       <div className="grid md:grid-cols-2 gap-6">

@@ -139,8 +139,20 @@ export const Base64EnStateHandler = (): ToolHandler => {
     }
 
     return {
-        state: {},
-        setters: {},
+        state: {
+            input,
+            output,
+            urlSafe,
+            isEncoded,
+            fileInputRef,
+            isImagePreview: helpers.isImagePreview(),
+        },
+        setters: {
+            setInput,
+            setOutput,
+            setUrlSafe,
+            setIsEncoded,
+        },
         helpers,
         actions
     }
