@@ -141,14 +141,18 @@ export const DataVizTool = () => {
             })
             .filter((v) => !isNaN(v));
 
+          // Store original values for statistics
+          const originalValues = [...numericValues];
+
           // Apply log transformation if enabled
+          let logTransformedValues = numericValues;
           if (state.useLogScale && numericValues.length > 0) {
-            numericValues = numericValues
+            logTransformedValues = numericValues
               .filter((v) => v > 0) // Log only works on positive values
               .map((v) => Math.log(v));
           }
 
-          if (numericValues.length === 0) {
+          if (logTransformedValues.length === 0) {
             return (
               <div className={`h-[${height}px] flex items-center justify-center text-muted-foreground`}>
                 No valid numeric data to display
@@ -157,14 +161,19 @@ export const DataVizTool = () => {
             );
           }
 
-          const BIN_COUNT = 25;
-          const { bins, mean, std, maxCount } = helpers.computeHistogram(numericValues, BIN_COUNT);
+          // Compute statistics on ORIGINAL data (before log transformation)
+          const originalMean = originalValues.reduce((a, b) => a + b, 0) / originalValues.length;
+          const originalVariance = originalValues.reduce((a, b) => a + Math.pow(b - originalMean, 2), 0) / originalValues.length;
+          const originalStd = Math.sqrt(originalVariance);
 
-          const pdfAtMean = helpers.gaussianPdf(mean, mean, std) || 1;
+          const BIN_COUNT = 25;
+          const { bins, mean: logMean, std: logStd, maxCount } = helpers.computeHistogram(logTransformedValues, BIN_COUNT);
+
+          const pdfAtMean = helpers.gaussianPdf(logMean, logMean, logStd) || 1;
           const gaussianScale = maxCount / pdfAtMean;
 
           const distData = bins.map((b) => {
-            const pdfVal = helpers.gaussianPdf(b.center, mean, std);
+            const pdfVal = helpers.gaussianPdf(b.center, logMean, logStd);
             return {
               name: state.useLogScale 
                 ? `${Math.exp(b.x0).toFixed(1)}-${Math.exp(b.x1).toFixed(1)}`
@@ -184,7 +193,7 @@ export const DataVizTool = () => {
               </div>
             )}
             <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
-              <p><strong>Statistics:</strong> Mean = {(state.useLogScale ? Math.exp(mean) : mean).toFixed(2)}, Std Dev = {(state.useLogScale ? Math.exp(std) : std).toFixed(2)}</p>
+              <p><strong>Statistics (Original Data):</strong> Mean = {originalMean.toFixed(2)}, Std Dev = {originalStd.toFixed(2)}</p>
             </div>
             <ResponsiveContainer width="100%" height={height - (state.useLogScale ? 160 : 80)}>
               <ComposedChart data={distData}>
