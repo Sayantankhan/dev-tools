@@ -219,7 +219,9 @@ export const DataVizTool = () => {
               </div>
             )}
             <div className="text-sm text-muted-foreground bg-card/50 p-3 rounded-lg">
-              <p><strong>Statistics (Original Data):</strong> Mean = {originalMean.toFixed(2)}, Std Dev = {originalStd.toFixed(2)}{skewnessLabel}</p>
+              <p><strong>Statistics (Original Data):</strong></p>
+              <p className="mt-1">Mean = {originalMean.toFixed(2)}, Std Dev = {originalStd.toFixed(2)}</p>
+              <p className="mt-1"><strong>Distribution Shape:</strong> {skewnessLabel.replace(/[()]/g, '')} (skewness = {skewness.toFixed(3)})</p>
             </div>
             <ResponsiveContainer width="100%" height={height - (state.transformationType !== "none" ? 160 : 80)}>
               <ComposedChart data={distData}>
