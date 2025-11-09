@@ -456,12 +456,12 @@ export const DataVizTool = () => {
                 Expand
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full">
-              <DialogHeader>
+            <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full flex flex-col p-6">
+              <DialogHeader className="mb-4">
                 <DialogTitle>Expanded Chart View</DialogTitle>
               </DialogHeader>
-              <div className="flex-1 overflow-auto">
-                {renderChart(600)}
+              <div className="flex-1 overflow-auto pr-2">
+                {renderChart(window.innerHeight * 0.7)}
               </div>
             </DialogContent>
           </Dialog>
