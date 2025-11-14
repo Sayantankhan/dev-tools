@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { 
@@ -387,9 +388,9 @@ export const PDFEditorTool = () => {
       {state.isLoading && (
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center gap-4 py-8">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-              <p className="text-muted-foreground">Loading PDF...</p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Loading PDF...</p>
+              <Progress value={75} className="w-full" />
             </div>
           </CardContent>
         </Card>
