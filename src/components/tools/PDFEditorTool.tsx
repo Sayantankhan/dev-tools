@@ -56,7 +56,7 @@ export const PDFEditorTool = () => {
 
   // Size comes from PDFCanvasViewer via onRendered callback
   useEffect(() => {
-    setViewSize((s) => s);
+    // no-op: size is set only when PDFCanvasViewer finishes rendering
   }, [state.pdfUrl, currentPage]);
 
   // Keyboard shortcuts
@@ -682,7 +682,7 @@ export const PDFEditorTool = () => {
                   url={state.pdfUrl} 
                   pageNumber={currentPage + 1}
                   onRendered={({ width, height }) => {
-                    setViewSize({ width, height });
+                    setViewSize(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
                   }}
                 />
                 {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
