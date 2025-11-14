@@ -87,7 +87,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
         await task.promise;
         if (cancelled) return;
         setIsRendering(false);
-        cbRef.current?.({ width: canvas.width, height: canvas.height });
+        cbRef.current?.({ width: canvas.width, height: canvas.height, pageNumber });
       } catch (err) {
         if ((err as any)?.name === 'RenderingCancelledException') return;
         console.error(err);
