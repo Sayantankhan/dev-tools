@@ -23,6 +23,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
   const pdfRef = useRef<any>(null);
   const renderTaskRef = useRef<any>(null);
   const [pdfLoaded, setPdfLoaded] = useState(false);
+  const [isRendering, setIsRendering] = useState(true);
   
   useEffect(() => {
     cbRef.current = onRendered;
@@ -33,6 +34,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
     let destroyed = false;
     let loadingTask: any;
     setPdfLoaded(false);
+    setIsRendering(true);
     pdfRef.current = null;
     
     (async () => {
@@ -47,6 +49,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
       } catch (err) {
         console.error(err);
         toast.error("Unable to preview PDF. Use Download/Open instead.");
+        setIsRendering(false);
       }
     })();
 
@@ -63,6 +66,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
   useEffect(() => {
     if (!pdfLoaded || !pdfRef.current) return;
     
+    setIsRendering(true);
     let cancelled = false;
     (async () => {
       try {
@@ -82,10 +86,12 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
         renderTaskRef.current = task;
         await task.promise;
         if (cancelled) return;
+        setIsRendering(false);
         cbRef.current?.({ width: canvas.width, height: canvas.height });
       } catch (err) {
         if ((err as any)?.name === 'RenderingCancelledException') return;
         console.error(err);
+        setIsRendering(false);
       }
     })();
 
@@ -95,7 +101,19 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
     };
   }, [pdfLoaded, pageNumber]);
 
-  return <canvas ref={canvasRef} className="w-full h-auto bg-background" />;
+  return (
+    <div className="relative w-full h-auto">
+      {isRendering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted z-10" style={{ minHeight: '400px' }}>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading page {pageNumber}...</p>
+          </div>
+        </div>
+      )}
+      <canvas ref={canvasRef} className="w-full h-auto bg-background" style={{ opacity: isRendering ? 0 : 1 }} />
+    </div>
+  );
 };
 
 export default PDFCanvasViewer;
