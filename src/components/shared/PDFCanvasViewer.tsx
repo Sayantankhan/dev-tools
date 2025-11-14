@@ -18,6 +18,11 @@ interface PDFCanvasViewerProps {
 
 export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumber = 1, onRendered }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Keep a stable callback reference to avoid re-running effect when parent re-renders
+  const cbRef = useRef<typeof onRendered>(onRendered);
+  useEffect(() => {
+    cbRef.current = onRendered;
+  }, [onRendered]);
 
   useEffect(() => {
     let destroyed = false as boolean;
@@ -39,7 +44,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
         canvas.width = viewport.width;
         await page.render({ canvasContext: context, viewport }).promise;
         // Notify parent about actual size
-        onRendered?.({ width: canvas.width, height: canvas.height });
+        cbRef.current?.({ width: canvas.width, height: canvas.height });
       } catch (err) {
         console.error(err);
         toast.error("Unable to preview PDF. Use Download/Open instead.");
@@ -52,7 +57,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
         loadingTask?.destroy?.();
       } catch {}
     };
-  }, [url, pageNumber, onRendered]);
+  }, [url, pageNumber]);
 
   return <canvas ref={canvasRef} className="w-full h-auto bg-background" />;
 };
