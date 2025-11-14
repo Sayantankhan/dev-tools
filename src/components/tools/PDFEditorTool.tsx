@@ -347,42 +347,39 @@ export const PDFEditorTool = () => {
             Upload PDF
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <Label>Select PDF File</Label>
-            <input
-              ref={state.fileInputRef}
-              type="file"
-              accept="application/pdf"
-              onChange={actions.handlePDFUpload}
-              className="hidden"
-            />
-            <div className="flex gap-2">
-              <Button
-                onClick={() => state.fileInputRef.current?.click()}
-                className="flex items-center gap-2"
-                disabled={state.isLoading}
-              >
-                <Upload className="w-4 h-4" />
-                {state.isLoading ? "Loading..." : "Upload PDF"}
-              </Button>
-              {state.pdfFile && !state.isLoading && (
-                <>
-                  <span className="flex items-center text-sm text-muted-foreground">
-                    {state.pdfFile.name}
-                  </span>
-                  <Button
-                    onClick={handleClearPDF}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Clear
-                  </Button>
-                </>
-              )}
-            </div>
+        <CardContent>
+          <input
+            ref={state.fileInputRef}
+            type="file"
+            accept="application/pdf"
+            onChange={actions.handlePDFUpload}
+            className="hidden"
+          />
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => state.fileInputRef.current?.click()}
+              className="flex items-center gap-2"
+              disabled={state.isLoading}
+            >
+              <Upload className="w-4 h-4" />
+              {state.isLoading ? "Loading..." : "Upload PDF"}
+            </Button>
+            {state.pdfFile && !state.isLoading && (
+              <>
+                <span className="flex items-center text-sm text-muted-foreground">
+                  {state.pdfFile.name}
+                </span>
+                <Button
+                  onClick={handleClearPDF}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Clear
+                </Button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
