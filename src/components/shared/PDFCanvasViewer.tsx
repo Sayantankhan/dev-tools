@@ -13,9 +13,10 @@ if (typeof window !== 'undefined' && 'Worker' in window) {
 interface PDFCanvasViewerProps {
   url: string;
   pageNumber?: number;
+  onRendered?: (size: { width: number; height: number }) => void;
 }
 
-export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumber = 1 }) => {
+export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumber = 1, onRendered }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -37,6 +38,8 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         await page.render({ canvasContext: context, viewport }).promise;
+        // Notify parent about actual size
+        onRendered?.({ width: canvas.width, height: canvas.height });
       } catch (err) {
         console.error(err);
         toast.error("Unable to preview PDF. Use Download/Open instead.");
@@ -49,7 +52,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
         loadingTask?.destroy?.();
       } catch {}
     };
-  }, [url, pageNumber]);
+  }, [url, pageNumber, onRendered]);
 
   return <canvas ref={canvasRef} className="w-full h-auto bg-background" />;
 };
