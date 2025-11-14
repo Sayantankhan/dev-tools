@@ -56,29 +56,77 @@ export const PDFEditorStateHandler = (): ToolHandler => {
           const page = pdfDoc.getPage(pageIndex);
           const { width, height } = page.getSize();
 
+          // Determine scale from viewer to PDF units if provided
+          const viewWidth = (dimensions && (dimensions.width || (dimensions[pageIndex]?.width))) || width;
+          const viewHeight = (dimensions && (dimensions.height || (dimensions[pageIndex]?.height))) || height;
+          const scaleX = width / (viewWidth || width);
+          const scaleY = height / (viewHeight || height);
+
+          // Helper to parse hex color strings like #RRGGBB
+          const hexToRgb = (hex: string) => {
+            const c = hex.startsWith('#') ? hex : '#000000';
+            const r = parseInt(c.slice(1, 3), 16) / 255;
+            const g = parseInt(c.slice(3, 5), 16) / 255;
+            const b = parseInt(c.slice(5, 7), 16) / 255;
+            return { r, g, b };
+          };
+
+          // Helper to embed image supporting PNG/JPEG/SVG data URLs
+          const embedImage = async (dataUrl: string) => {
+            if (dataUrl.startsWith('data:image/png')) {
+              return await pdfDoc.embedPng(dataUrl);
+            }
+            if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) {
+              return await pdfDoc.embedJpg(dataUrl);
+            }
+            if (dataUrl.startsWith('data:image/svg')) {
+              // Rasterize SVG to PNG using canvas
+              const img = new Image();
+              const loaded: Promise<HTMLImageElement> = new Promise((resolve, reject) => {
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+              });
+              img.src = dataUrl;
+              const el = await loaded;
+              const canvas = document.createElement('canvas');
+              // Use target size in PDF units converted back to CSS px scale (approx)
+              canvas.width = Math.max(1, Math.floor((el.width || 1)));
+              canvas.height = Math.max(1, Math.floor((el.height || 1)));
+              const ctx = canvas.getContext('2d');
+              if (ctx) ctx.drawImage(el, 0, 0, canvas.width, canvas.height);
+              const pngUrl = canvas.toDataURL('image/png');
+              return await pdfDoc.embedPng(pngUrl);
+            }
+            // Fallback try PNG
+            return await pdfDoc.embedPng(dataUrl);
+          };
+
           for (const annotation of pageAnnotations as any[]) {
             if (annotation.type === 'text' && annotation.text) {
-              // Parse color (assuming hex format like #000000)
-              const color = annotation.color || '#000000';
-              const r = parseInt(color.slice(1, 3), 16) / 255;
-              const g = parseInt(color.slice(3, 5), 16) / 255;
-              const b = parseInt(color.slice(5, 7), 16) / 255;
-              
+              const colorHex = annotation.color || '#000000';
+              const { r, g, b } = hexToRgb(colorHex);
+              const size = annotation.fontSize || 20;
+
               page.drawText(annotation.text, {
-                x: annotation.x,
-                y: height - annotation.y - annotation.height,
-                size: annotation.fontSize || 20,
+                x: (annotation.x || 0) * scaleX,
+                // pdf-lib uses baseline from bottom-left. Convert top-left to baseline using font size
+                y: height - (annotation.y || 0) * scaleY - size,
+                size,
                 color: rgb(r, g, b),
               });
             } else if (annotation.imageData) {
-              const pngImage = await pdfDoc.embedPng(annotation.imageData);
-              page.drawImage(pngImage, {
-                x: annotation.x,
-                y: height - annotation.y - annotation.height,
-                width: annotation.width,
-                height: annotation.height,
-                rotate: degrees(-(annotation.rotation || 0)),
-              });
+              try {
+                const img = await embedImage(annotation.imageData);
+                page.drawImage(img, {
+                  x: (annotation.x || 0) * scaleX,
+                  y: height - (annotation.y || 0) * scaleY - (annotation.height || 0) * scaleY,
+                  width: (annotation.width || 0) * scaleX,
+                  height: (annotation.height || 0) * scaleY,
+                  rotate: degrees(-(annotation.rotation || 0)),
+                });
+              } catch (e) {
+                console.warn('Failed to embed image annotation, skipping', e);
+              }
             }
           }
         }
