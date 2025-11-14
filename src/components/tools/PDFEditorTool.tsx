@@ -325,7 +325,7 @@ export const PDFEditorTool = () => {
   };
 
   const handleSaveEdited = async () => {
-    await actions.handleDownloadEdited(annotations, state.pdfDimensions);
+    await actions.handleDownloadEdited(annotations);
     toast.success("PDF saved with all annotations!");
   };
 

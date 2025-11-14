@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { ToolHandler } from "@/modules/types/ToolHandler";
 import { toast } from "sonner";
 import { PDFDocument, rgb, degrees } from "pdf-lib";
-
+import { PDF_PREVIEW_SCALE } from "@/lib/pdf";
 export const PDFEditorStateHandler = (): ToolHandler => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string>("");
@@ -43,7 +43,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       }
     },
 
-    handleDownloadEdited: async (annotations: any, dimensions: any) => {
+    handleDownloadEdited: async (annotations: any) => {
       if (!pdfFile) return;
 
       try {
@@ -56,15 +56,15 @@ export const PDFEditorStateHandler = (): ToolHandler => {
           const page = pdfDoc.getPage(pageIndex);
           const { width, height } = page.getSize();
 
-          // Determine scale from viewer to PDF units if provided
-          const viewWidth = (dimensions && (dimensions.width || (dimensions[pageIndex]?.width))) || width;
-          const viewHeight = (dimensions && (dimensions.height || (dimensions[pageIndex]?.height))) || height;
-          const scaleX = width / (viewWidth || width);
-          const scaleY = height / (viewHeight || height);
+          // Determine scale from preview (uses the same constant as viewer)
+          const viewWidth = width * PDF_PREVIEW_SCALE;
+          const viewHeight = height * PDF_PREVIEW_SCALE;
+          const scaleX = width / viewWidth;
+          const scaleY = height / viewHeight;
 
           // Helper to parse hex color strings like #RRGGBB
           const hexToRgb = (hex: string) => {
-            const c = hex.startsWith('#') ? hex : '#000000';
+            const c = /^#([0-9a-fA-F]{6})$/.test(hex) ? hex : '#000000';
             const r = parseInt(c.slice(1, 3), 16) / 255;
             const g = parseInt(c.slice(3, 5), 16) / 255;
             const b = parseInt(c.slice(5, 7), 16) / 255;
@@ -73,31 +73,23 @@ export const PDFEditorStateHandler = (): ToolHandler => {
 
           // Helper to embed image supporting PNG/JPEG/SVG data URLs
           const embedImage = async (dataUrl: string) => {
-            if (dataUrl.startsWith('data:image/png')) {
-              return await pdfDoc.embedPng(dataUrl);
-            }
-            if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) {
-              return await pdfDoc.embedJpg(dataUrl);
-            }
+            if (dataUrl.startsWith('data:image/png')) return await pdfDoc.embedPng(dataUrl);
+            if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) return await pdfDoc.embedJpg(dataUrl);
             if (dataUrl.startsWith('data:image/svg')) {
-              // Rasterize SVG to PNG using canvas
               const img = new Image();
-              const loaded: Promise<HTMLImageElement> = new Promise((resolve, reject) => {
-                img.onload = () => resolve(img);
+              await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve();
                 img.onerror = reject;
+                img.src = dataUrl;
               });
-              img.src = dataUrl;
-              const el = await loaded;
               const canvas = document.createElement('canvas');
-              // Use target size in PDF units converted back to CSS px scale (approx)
-              canvas.width = Math.max(1, Math.floor((el.width || 1)));
-              canvas.height = Math.max(1, Math.floor((el.height || 1)));
+              canvas.width = Math.max(1, img.width);
+              canvas.height = Math.max(1, img.height);
               const ctx = canvas.getContext('2d');
-              if (ctx) ctx.drawImage(el, 0, 0, canvas.width, canvas.height);
+              if (ctx) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
               const pngUrl = canvas.toDataURL('image/png');
               return await pdfDoc.embedPng(pngUrl);
             }
-            // Fallback try PNG
             return await pdfDoc.embedPng(dataUrl);
           };
 
@@ -109,8 +101,8 @@ export const PDFEditorStateHandler = (): ToolHandler => {
 
               page.drawText(annotation.text, {
                 x: (annotation.x || 0) * scaleX,
-                // pdf-lib uses baseline from bottom-left. Convert top-left to baseline using font size
-                y: height - (annotation.y || 0) * scaleY - size,
+                // Convert from top-left to bottom-left using bounding height for perfect alignment
+                y: height - (annotation.y || 0) * scaleY - (annotation.height || size) * scaleY,
                 size,
                 color: rgb(r, g, b),
               });

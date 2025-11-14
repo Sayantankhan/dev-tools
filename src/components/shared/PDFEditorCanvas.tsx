@@ -199,6 +199,11 @@ export const PDFEditorCanvas = ({
         console.log('Adding text object to canvas:', textObj);
         fabricCanvas.add(textObj);
         objectMapRef.current.set(annotation.id, textObj);
+        // After fabric computes layout, update measured width/height in annotation store once
+        fabricCanvas.requestRenderAll();
+        const measuredWidth = (textObj.width || annotation.width);
+        const measuredHeight = (textObj.height || annotation.height || (annotation.fontSize || 20));
+        onAnnotationUpdate(annotation.id, { width: measuredWidth, height: measuredHeight });
         fabricCanvas.renderAll();
         console.log('Canvas objects after add:', fabricCanvas.getObjects().length);
       } else if (annotation.imageData) {
