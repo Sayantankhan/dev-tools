@@ -7,7 +7,7 @@ import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { 
   Upload, FileText, Trash2, Save, Type, PenTool, 
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
-  Grid3x3
+  Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser
 } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
@@ -34,6 +34,8 @@ export const PDFEditorTool = () => {
   const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
   const [showOverlays, setShowOverlays] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [zoom, setZoom] = useState(1);
   
   // Text formatting
   const [fontSize, setFontSize] = useState("20");
@@ -288,6 +290,163 @@ export const PDFEditorTool = () => {
     toast.success(newState ? "Overlays shown" : "Overlays hidden");
   };
 
+  const handleAddCheckbox = () => {
+    if (!editorCanvas) return;
+    
+    // Create checkbox with X mark by default
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 36, 36);
+      // Draw X
+      ctx.beginPath();
+      ctx.moveTo(8, 8);
+      ctx.lineTo(32, 32);
+      ctx.moveTo(32, 8);
+      ctx.lineTo(8, 32);
+      ctx.stroke();
+    }
+    
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      const img = new FabricImage(imgEl, {
+        left: viewSize.width / 2 - 20,
+        top: viewSize.height / 2 - 20,
+        selectable: true,
+        hasControls: true,
+      });
+      (img as any).checkboxState = 'x'; // Custom property to track state
+      editorCanvas.add(img);
+      editorCanvas.setActiveObject(img);
+      editorCanvas.renderAll();
+      addToHistory({ type: 'add', object: img });
+      toast.success("Checkbox added - click to toggle");
+    };
+    imgEl.src = canvas.toDataURL();
+  };
+
+  const handleToggleCheckbox = () => {
+    if (!editorCanvas || !selectedObject) return;
+    
+    const state = (selectedObject as any).checkboxState || 'x';
+    const newState = state === 'x' ? 'tick' : 'x';
+    
+    // Create new checkbox image
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 36, 36);
+      
+      if (newState === 'tick') {
+        // Draw checkmark
+        ctx.beginPath();
+        ctx.moveTo(8, 20);
+        ctx.lineTo(16, 28);
+        ctx.lineTo(32, 12);
+        ctx.stroke();
+      } else {
+        // Draw X
+        ctx.beginPath();
+        ctx.moveTo(8, 8);
+        ctx.lineTo(32, 32);
+        ctx.moveTo(32, 8);
+        ctx.lineTo(8, 32);
+        ctx.stroke();
+      }
+    }
+    
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      if (selectedObject instanceof FabricImage) {
+        const currentProps = {
+          left: selectedObject.left,
+          top: selectedObject.top,
+          scaleX: selectedObject.scaleX,
+          scaleY: selectedObject.scaleY,
+          angle: selectedObject.angle,
+        };
+        
+        editorCanvas.remove(selectedObject);
+        
+        const newImg = new FabricImage(imgEl, {
+          ...currentProps,
+          selectable: true,
+          hasControls: true,
+        });
+        (newImg as any).checkboxState = newState;
+        
+        editorCanvas.add(newImg);
+        editorCanvas.setActiveObject(newImg);
+        setSelectedObject(newImg);
+        editorCanvas.renderAll();
+        toast.success(`Checkbox: ${newState === 'tick' ? '✓' : '✗'}`);
+      }
+    };
+    imgEl.src = canvas.toDataURL();
+  };
+
+  const handleAddMask = () => {
+    if (!editorCanvas) return;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 50;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 200, 50);
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0, 0, 200, 50);
+    }
+    
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      const img = new FabricImage(imgEl, {
+        left: viewSize.width / 2 - 100,
+        top: viewSize.height / 2 - 25,
+        selectable: true,
+        hasControls: true,
+      });
+      editorCanvas.add(img);
+      editorCanvas.setActiveObject(img);
+      editorCanvas.renderAll();
+      addToHistory({ type: 'add', object: img });
+      toast.success("Mask added - drag to cover text");
+    };
+    imgEl.src = canvas.toDataURL();
+  };
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.25, 0.5));
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+      toast.info(`Page ${currentPage}`);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (state.totalPages && currentPage < state.totalPages - 1) {
+      setCurrentPage(prev => prev + 1);
+      toast.info(`Page ${currentPage + 2}`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -329,7 +488,32 @@ export const PDFEditorTool = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-              <span>Edit PDF (Page 1)</span>
+              <div className="flex items-center gap-2">
+                <span>Edit PDF</span>
+                {state.totalPages && state.totalPages > 1 && (
+                  <div className="flex items-center gap-1 text-sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 0}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="px-2">
+                      Page {currentPage + 1} / {state.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage >= (state.totalPages - 1)}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 {/* Text Tools */}
                 <Button
@@ -364,6 +548,61 @@ export const PDFEditorTool = () => {
                 >
                   <Upload className="w-4 h-4 mr-1" />
                   Upload
+                </Button>
+
+                {/* Checkbox Tool */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddCheckbox}
+                  title="Add Checkbox"
+                >
+                  <Square className="w-4 h-4 mr-1" />
+                  Checkbox
+                </Button>
+
+                {/* Mask/Erase Tool */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddMask}
+                  title="Add mask to hide text"
+                >
+                  <Eraser className="w-4 h-4 mr-1" />
+                  Mask
+                </Button>
+
+                {/* Object Controls */}
+                {selectedObject && (selectedObject as any).checkboxState && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleToggleCheckbox}
+                    title="Toggle checkbox"
+                  >
+                    Toggle ✓/✗
+                  </Button>
+                )}
+                
+                {/* Zoom Controls */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleZoomOut}
+                  disabled={zoom <= 0.5}
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-sm px-2">{Math.round(zoom * 100)}%</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 3}
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-4 h-4" />
                 </Button>
 
                 {/* Object Controls */}
@@ -541,20 +780,27 @@ export const PDFEditorTool = () => {
             )}
 
             {/* PDF Canvas with Overlays */}
-            <div ref={viewerWrapperRef} className="relative border rounded-lg overflow-hidden bg-muted" style={{ minHeight: '600px' }}>
-              <PDFCanvasViewer url={state.pdfUrl} />
-              {viewSize.width > 0 && viewSize.height > 0 && (
-                <div className="absolute inset-0 z-20 pointer-events-none">
-                  <div className="pointer-events-auto w-full h-full">
-                    <PDFEditorCanvas
-                      width={viewSize.width}
-                      height={viewSize.height}
-                      onExport={setEditorCanvas}
-                      snapToGrid={snapToGrid}
-                    />
+            <div 
+              ref={viewerWrapperRef} 
+              className="relative border rounded-lg overflow-auto bg-muted" 
+              style={{ minHeight: '600px', maxHeight: '800px' }}
+            >
+              <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
+                <PDFCanvasViewer url={state.pdfUrl} pageNumber={currentPage + 1} />
+                {viewSize.width > 0 && viewSize.height > 0 && (
+                  <div className="absolute inset-0 z-20 pointer-events-none" style={{ width: `${viewSize.width}px`, height: `${viewSize.height}px` }}>
+                    <div className="pointer-events-auto w-full h-full">
+                      <PDFEditorCanvas
+                        width={viewSize.width}
+                        height={viewSize.height}
+                        onExport={setEditorCanvas}
+                        snapToGrid={snapToGrid}
+                        zoom={zoom}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -6,7 +6,7 @@ import { APITool } from "@/components/tools/APITool";
 import { EncoderTool } from "@/components/tools/EncoderTool";
 import { TabNavigation } from "@/components/TabNavigation";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network } from "lucide-react";
+import { Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network, FileEdit } from "lucide-react";
 
 // Lazy load tools for better performance
 const TextCompareTool = lazy(() => import("@/components/tools/TextCompareTool").then(m => ({ default: m.TextCompareTool })));
@@ -21,8 +21,9 @@ const ImageConverterTool = lazy(() => import("@/components/tools/ImageConverterT
 const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRemoverTool").then(m => ({ default: m.BackgroundRemoverTool })));
 const SearchTool = lazy(() => import("@/components/tools/SearchTool").then(m => ({ default: m.SearchTool })));
 const TopologyViewerTool = lazy(() => import("@/components/tools/TopologyViewerTool").then(m => ({ default: m.TopologyViewerTool })));
+const PDFEditorTool = lazy(() => import("@/components/tools/PDFEditorTool").then(m => ({ default: m.PDFEditorTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor";
 
 export interface Tool {
   id: ToolId;
@@ -47,6 +48,7 @@ const tools: Tool[] = [
   { id: "bg-remover", label: "BG Remover", icon: Scissors, component: BackgroundRemoverTool },
   { id: "search", label: "Search", icon: Search, component: SearchTool },
   { id: "topology-viewer", label: "Topology", icon: Network, component: TopologyViewerTool },
+  { id: "pdf-editor", label: "PDF Editor", icon: FileEdit, component: PDFEditorTool },
 ];
 
 const Index = () => {
