@@ -463,18 +463,21 @@ export const PDFEditorTool = () => {
 
                 {/* Checkbox Dropdown */}
                 {selectedObject && (selectedObject as any).checkboxState && (
-                  <Select
-                    value={(selectedObject as any).checkboxState || 'x'}
-                    onValueChange={(value: 'x' | 'tick') => handleCheckboxChange(value)}
-                  >
-                    <SelectTrigger className="w-[100px] h-9 bg-background border-input z-50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-input z-50">
-                      <SelectItem value="x">✗ X</SelectItem>
-                      <SelectItem value="tick">✓ Tick</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm">Symbol:</Label>
+                    <Select
+                      value={(selectedObject as any).checkboxState || 'x'}
+                      onValueChange={(value: 'x' | 'tick') => handleCheckboxChange(value)}
+                    >
+                      <SelectTrigger className="w-[120px] h-9 bg-popover text-popover-foreground border-input">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover text-popover-foreground border-input z-[100]">
+                        <SelectItem value="x" className="cursor-pointer">✗ X Mark</SelectItem>
+                        <SelectItem value="tick" className="cursor-pointer">✓ Tick Mark</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
                 
                 {/* Zoom Controls */}
