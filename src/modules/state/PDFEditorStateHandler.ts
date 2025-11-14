@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { ToolHandler } from "@/modules/types/ToolHandler";
 import { toast } from "sonner";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, rgb, degrees } from "pdf-lib";
 
 export const PDFEditorStateHandler = (): ToolHandler => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -58,11 +58,17 @@ export const PDFEditorStateHandler = (): ToolHandler => {
 
           for (const annotation of pageAnnotations as any[]) {
             if (annotation.type === 'text' && annotation.text) {
+              // Parse color (assuming hex format like #000000)
+              const color = annotation.color || '#000000';
+              const r = parseInt(color.slice(1, 3), 16) / 255;
+              const g = parseInt(color.slice(3, 5), 16) / 255;
+              const b = parseInt(color.slice(5, 7), 16) / 255;
+              
               page.drawText(annotation.text, {
                 x: annotation.x,
                 y: height - annotation.y - annotation.height,
                 size: annotation.fontSize || 20,
-                color: { r: 0, g: 0, b: 0 },
+                color: rgb(r, g, b),
               });
             } else if (annotation.imageData) {
               const pngImage = await pdfDoc.embedPng(annotation.imageData);
@@ -71,14 +77,14 @@ export const PDFEditorStateHandler = (): ToolHandler => {
                 y: height - annotation.y - annotation.height,
                 width: annotation.width,
                 height: annotation.height,
-                rotate: { angle: -(annotation.rotation || 0) },
+                rotate: degrees(-(annotation.rotation || 0)),
               });
             }
           }
         }
 
         const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
 
         const link = document.createElement("a");
