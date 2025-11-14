@@ -310,7 +310,6 @@ export const PDFEditorTool = () => {
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
-      setIsPageLoading(true);
       setCurrentPage(prev => prev - 1);
       toast.info(`Page ${currentPage}`);
     }
@@ -318,7 +317,6 @@ export const PDFEditorTool = () => {
 
   const handleNextPage = () => {
     if (state.totalPages && currentPage < state.totalPages - 1) {
-      setIsPageLoading(true);
       setCurrentPage(prev => prev + 1);
       toast.info(`Page ${currentPage + 2}`);
     }
