@@ -17,6 +17,7 @@ export interface PDFAnnotation {
   color?: string;
   fontWeight?: string;
   fontStyle?: string;
+  effectiveFontSize?: number;
   
   // Image-specific (signature, checkbox, mask)
   imageData?: string;
