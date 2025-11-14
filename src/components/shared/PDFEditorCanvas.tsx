@@ -73,9 +73,14 @@ export const PDFEditorCanvas = ({
         rotation: e.target.angle || 0,
       };
 
-      // If it's text, update text content
+      // If it's text, update text content and effective size from scaling
       if (e.target instanceof IText) {
         updates.text = e.target.text;
+        const sx = (e.target.scaleX || 1);
+        const sy = (e.target.scaleY || 1);
+        const baseFont = (e.target.fontSize || 20);
+        const eff = baseFont * ((sx + sy) / 2);
+        (updates as any).effectiveFontSize = eff;
       }
 
       onAnnotationUpdate(id, updates);
