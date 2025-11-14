@@ -91,10 +91,6 @@ export const PDFEditorTool = () => {
   const handleAddText = () => {
     if (!textValue.trim()) return;
     
-    console.log('Adding text annotation:', textValue);
-    console.log('View size:', viewSize);
-    console.log('Current page:', currentPage);
-    
     const annotation: PDFAnnotation = {
       id: `text-${Date.now()}`,
       type: 'text',
@@ -111,7 +107,6 @@ export const PDFEditorTool = () => {
       fontStyle: isItalic ? 'italic' : 'normal',
     };
     
-    console.log('Annotation created:', annotation);
     addAnnotation(currentPage, annotation);
     setTextValue("");
     setShowTextInput(false);
@@ -342,10 +337,6 @@ export const PDFEditorTool = () => {
   };
 
   const pageAnnotations = getPageAnnotations(currentPage);
-  
-  console.log('Current page annotations:', pageAnnotations);
-  console.log('View size for canvas:', viewSize);
-  console.log('Show overlays:', showOverlays);
 
   return (
     <div className="space-y-6">
