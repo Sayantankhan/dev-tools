@@ -726,10 +726,14 @@ export const PDFEditorTool = () => {
                 <PDFCanvasViewer 
                   url={state.pdfUrl} 
                   pageNumber={currentPage + 1}
-                  onRendered={({ width, height }) => {
-                    setViewSize(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
-                    setPageViewSizes(prev => ({ ...prev, [currentPage]: { width, height } }));
-                    setIsPageLoading(false);
+                  onRendered={({ width, height, pageNumber }) => {
+                    // Only update viewSize if this render is for the currently visible page
+                    if (pageNumber === currentPage + 1) {
+                      setViewSize(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
+                      setIsPageLoading(false);
+                    }
+                    // Store view size keyed by pageIndex (pageNumber is 1-based, so pageNumber - 1)
+                    setPageViewSizes(prev => ({ ...prev, [pageNumber - 1]: { width, height } }));
                   }}
                 />
                 {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
