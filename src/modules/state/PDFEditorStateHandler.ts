@@ -43,30 +43,42 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       }
     },
 
-    handleDownloadEdited: async (annotationsCanvas: any) => {
+    handleDownloadEdited: async (annotations: any, dimensions: any) => {
       if (!pdfFile) return;
 
       try {
         const arrayBuffer = await pdfFile.arrayBuffer();
         const pdfDoc = await PDFDocument.load(arrayBuffer);
-        const firstPage = pdfDoc.getPage(0);
 
-        // Export canvas as PNG
-        const canvasDataUrl = annotationsCanvas.toDataURL("image/png");
-        const pngImage = await pdfDoc.embedPng(canvasDataUrl);
+        // Process annotations for each page
+        for (const [pageIndexStr, pageAnnotations] of Object.entries(annotations)) {
+          const pageIndex = parseInt(pageIndexStr);
+          const page = pdfDoc.getPage(pageIndex);
+          const { width, height } = page.getSize();
 
-        const { width, height } = firstPage.getSize();
-        
-        // Draw the annotations on top of the PDF
-        firstPage.drawImage(pngImage, {
-          x: 0,
-          y: 0,
-          width,
-          height,
-        });
+          for (const annotation of pageAnnotations as any[]) {
+            if (annotation.type === 'text' && annotation.text) {
+              page.drawText(annotation.text, {
+                x: annotation.x,
+                y: height - annotation.y - annotation.height,
+                size: annotation.fontSize || 20,
+                color: { r: 0, g: 0, b: 0 },
+              });
+            } else if (annotation.imageData) {
+              const pngImage = await pdfDoc.embedPng(annotation.imageData);
+              page.drawImage(pngImage, {
+                x: annotation.x,
+                y: height - annotation.y - annotation.height,
+                width: annotation.width,
+                height: annotation.height,
+                rotate: { angle: -(annotation.rotation || 0) },
+              });
+            }
+          }
+        }
 
         const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
 
         const link = document.createElement("a");

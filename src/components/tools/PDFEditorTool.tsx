@@ -12,19 +12,14 @@ import {
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
 import { SignaturePad } from "@/components/shared/SignaturePad";
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas as FabricCanvas, FabricObject, IText, Image as FabricImage } from "fabric";
+import { useEffect, useRef, useState } from "react";
+import { FabricObject } from "fabric";
 import { toast } from "sonner";
-
-type OverlayAction = {
-  type: 'add' | 'remove' | 'modify';
-  object: any;
-  previousState?: any;
-};
+import { usePDFAnnotations } from "@/hooks/usePDFAnnotations";
+import { PDFAnnotation } from "@/types/pdf-annotations";
 
 export const PDFEditorTool = () => {
   const { state, actions } = PDFEditorStateHandler();
-  const [editorCanvas, setEditorCanvas] = useState<FabricCanvas | null>(null);
   const viewerWrapperRef = useRef<HTMLDivElement>(null);
   const [viewSize, setViewSize] = useState({ width: 0, height: 0 });
   const [textValue, setTextValue] = useState("");
@@ -44,9 +39,20 @@ export const PDFEditorTool = () => {
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
 
-  // Undo/Redo
-  const [history, setHistory] = useState<OverlayAction[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  // Annotations management
+  const {
+    annotations,
+    addAnnotation,
+    updateAnnotation,
+    removeAnnotation,
+    clearPage,
+    clearAll,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    getPageAnnotations,
+  } = usePDFAnnotations();
 
   // Measure viewer size
   useEffect(() => {
@@ -59,130 +65,53 @@ export const PDFEditorTool = () => {
     return () => ro.disconnect();
   }, []);
 
-  const addToHistory = useCallback((action: OverlayAction) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push(action);
-      if (newHistory.length > 20) newHistory.shift();
-      return newHistory;
-    });
-    setHistoryIndex(prev => prev + 1);
-  }, [historyIndex]);
-
-  const handleUndo = useCallback(() => {
-    if (historyIndex < 0 || !editorCanvas) return;
-    
-    setHistory(prev => {
-      const action = prev[historyIndex];
-      
-      if (action.type === 'add') {
-        editorCanvas.remove(action.object);
-      } else if (action.type === 'remove') {
-        editorCanvas.add(action.object);
-      } else if (action.type === 'modify' && action.previousState) {
-        action.object.set(action.previousState);
-      }
-      
-      editorCanvas.renderAll();
-      return prev;
-    });
-    
-    setHistoryIndex(prev => prev - 1);
-    toast.success("Undone");
-  }, [historyIndex, editorCanvas]);
-
-  const handleRedo = useCallback(() => {
-    if (historyIndex >= history.length - 1 || !editorCanvas) return;
-    
-    const action = history[historyIndex + 1];
-    
-    if (action.type === 'add') {
-      editorCanvas.add(action.object);
-    } else if (action.type === 'remove') {
-      editorCanvas.remove(action.object);
-    }
-    
-    editorCanvas.renderAll();
-    setHistoryIndex(prev => prev + 1);
-    toast.success("Redone");
-  }, [historyIndex, history, editorCanvas]);
-
-  const handleDeleteSelected = useCallback(() => {
-    if (!editorCanvas || !selectedObject) return;
-    editorCanvas.remove(selectedObject);
-    addToHistory({ type: 'remove', object: selectedObject });
-    editorCanvas.renderAll();
-    setSelectedObject(null);
-    toast.success("Overlay deleted");
-  }, [editorCanvas, selectedObject, addToHistory]);
-
-  // Setup canvas event listeners
+  // Keyboard shortcuts
   useEffect(() => {
-    if (!editorCanvas) return;
-    
-    const handleSelection = () => {
-      const active = editorCanvas.getActiveObject();
-      setSelectedObject(active || null);
-    };
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Delete' && editorCanvas.getActiveObject()) {
-        const obj = editorCanvas.getActiveObject();
-        if (obj) {
-          editorCanvas.remove(obj);
-          addToHistory({ type: 'remove', object: obj });
-          editorCanvas.renderAll();
+      if (e.key === 'Delete' && selectedObject) {
+        const annotationId = (selectedObject as any).annotationId;
+        if (annotationId) {
+          removeAnnotation(currentPage, annotationId);
           setSelectedObject(null);
-          toast.success("Overlay deleted");
+          toast.success("Annotation deleted");
         }
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
-        handleUndo();
+        undo();
+        toast.success("Undone");
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault();
-        handleRedo();
+        redo();
+        toast.success("Redone");
       }
     };
 
-    editorCanvas.on('selection:created', handleSelection);
-    editorCanvas.on('selection:updated', handleSelection);
-    editorCanvas.on('selection:cleared', () => setSelectedObject(null));
     window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      editorCanvas.off('selection:created', handleSelection);
-      editorCanvas.off('selection:updated', handleSelection);
-      editorCanvas.off('selection:cleared');
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [editorCanvas, addToHistory, handleUndo, handleRedo]);
-
-  const handleSaveEdited = async () => {
-    if (!editorCanvas) return;
-    await actions.handleDownloadEdited(editorCanvas);
-  };
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedObject, currentPage, removeAnnotation, undo, redo]);
 
   const handleAddText = () => {
-    if (!editorCanvas || !textValue.trim()) return;
+    if (!textValue.trim()) return;
     
-    const text = new IText(textValue, {
-      left: viewSize.width / 2 - 50,
-      top: viewSize.height / 2,
+    const annotation: PDFAnnotation = {
+      id: `text-${Date.now()}`,
+      type: 'text',
+      pageIndex: currentPage,
+      x: viewSize.width / 2 - 50,
+      y: viewSize.height / 2,
+      width: 200,
+      height: 50,
+      text: textValue,
       fontSize: parseInt(fontSize),
-      fill: textColor,
       fontFamily: fontFamily,
+      color: textColor,
       fontWeight: isBold ? 'bold' : 'normal',
       fontStyle: isItalic ? 'italic' : 'normal',
-    });
+    };
     
-    editorCanvas.add(text);
-    editorCanvas.setActiveObject(text);
-    editorCanvas.renderAll();
-    
-    addToHistory({ type: 'add', object: text });
-    
+    addAnnotation(currentPage, annotation);
     setTextValue("");
     setShowTextInput(false);
     toast.success("Text added - drag to position");
@@ -194,105 +123,57 @@ export const PDFEditorTool = () => {
 
   const handleSignatureFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!editorCanvas || !file) return;
+    if (!file) return;
     
-    const url = URL.createObjectURL(file);
-    const imgEl = new Image();
-    imgEl.crossOrigin = "anonymous";
-    imgEl.onload = () => {
-      try {
-        const img = new FabricImage(imgEl, {
-          left: viewSize.width / 2 - (imgEl.naturalWidth * 0.3) / 2,
-          top: viewSize.height / 2 - (imgEl.naturalHeight * 0.3) / 2,
-          scaleX: 0.3,
-          scaleY: 0.3,
-        });
-        editorCanvas.add(img);
-        editorCanvas.setActiveObject(img);
-        editorCanvas.renderAll();
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imgEl = new Image();
+      imgEl.onload = () => {
+        const annotation: PDFAnnotation = {
+          id: `signature-${Date.now()}`,
+          type: 'signature',
+          pageIndex: currentPage,
+          x: viewSize.width / 2 - (imgEl.width * 0.3) / 2,
+          y: viewSize.height / 2 - (imgEl.height * 0.3) / 2,
+          width: imgEl.width * 0.3,
+          height: imgEl.height * 0.3,
+          imageData: reader.result as string,
+        };
         
-        addToHistory({ type: 'add', object: img });
+        addAnnotation(currentPage, annotation);
         toast.success("Signature added - drag to position");
-      } finally {
-        URL.revokeObjectURL(url);
-      }
+      };
+      imgEl.src = reader.result as string;
     };
-    imgEl.onerror = () => {
-      URL.revokeObjectURL(url);
-      toast.error("Failed to load signature image");
-    };
-    imgEl.src = url;
+    reader.readAsDataURL(file);
+    
+    if (e.target) {
+      e.target.value = '';
+    }
   };
 
   const handleSignaturePadSave = (dataUrl: string) => {
-    if (!editorCanvas) return;
-    
     const imgEl = new Image();
     imgEl.onload = () => {
-      const img = new FabricImage(imgEl, {
-        left: viewSize.width / 2 - (imgEl.naturalWidth * 0.5) / 2,
-        top: viewSize.height / 2 - (imgEl.naturalHeight * 0.5) / 2,
-        scaleX: 0.5,
-        scaleY: 0.5,
-      });
-      editorCanvas.add(img);
-      editorCanvas.setActiveObject(img);
-      editorCanvas.renderAll();
+      const annotation: PDFAnnotation = {
+        id: `signature-${Date.now()}`,
+        type: 'signature',
+        pageIndex: currentPage,
+        x: viewSize.width / 2 - (imgEl.width * 0.5) / 2,
+        y: viewSize.height / 2 - (imgEl.height * 0.5) / 2,
+        width: imgEl.width * 0.5,
+        height: imgEl.height * 0.5,
+        imageData: dataUrl,
+      };
       
-      addToHistory({ type: 'add', object: img });
+      addAnnotation(currentPage, annotation);
       setShowSignaturePad(false);
       toast.success("Signature added - drag to position");
     };
     imgEl.src = dataUrl;
   };
 
-  const handleClearCanvas = () => {
-    if (!editorCanvas) return;
-    
-    if (selectedObject) {
-      editorCanvas.remove(selectedObject);
-      addToHistory({ type: 'remove', object: selectedObject });
-      setSelectedObject(null);
-      toast.success("Selected overlay removed");
-    } else {
-      const objects = editorCanvas.getObjects();
-      objects.forEach(obj => {
-        editorCanvas.remove(obj);
-        addToHistory({ type: 'remove', object: obj });
-      });
-      toast.success("All overlays cleared");
-    }
-    editorCanvas.renderAll();
-  };
-
-  const handleBringToFront = () => {
-    if (!editorCanvas || !selectedObject) return;
-    editorCanvas.bringObjectToFront(selectedObject);
-    editorCanvas.renderAll();
-    toast.success("Brought to front");
-  };
-
-  const handleSendToBack = () => {
-    if (!editorCanvas || !selectedObject) return;
-    editorCanvas.sendObjectToBack(selectedObject);
-    editorCanvas.renderAll();
-    toast.success("Sent to back");
-  };
-
-  const toggleOverlays = () => {
-    if (!editorCanvas) return;
-    const newState = !showOverlays;
-    editorCanvas.getObjects().forEach(obj => {
-      obj.visible = newState;
-    });
-    editorCanvas.renderAll();
-    setShowOverlays(newState);
-    toast.success(newState ? "Overlays shown" : "Overlays hidden");
-  };
-
   const handleAddCheckbox = () => {
-    if (!editorCanvas) return;
-    
     // Create checkbox with X mark by default
     const canvas = document.createElement('canvas');
     canvas.width = 40;
@@ -311,27 +192,26 @@ export const PDFEditorTool = () => {
       ctx.stroke();
     }
     
-    const imgEl = new Image();
-    imgEl.onload = () => {
-      const img = new FabricImage(imgEl, {
-        left: viewSize.width / 2 - 20,
-        top: viewSize.height / 2 - 20,
-        selectable: true,
-        hasControls: true,
-      });
-      (img as any).checkboxState = 'x'; // Custom property to track state
-      editorCanvas.add(img);
-      editorCanvas.setActiveObject(img);
-      editorCanvas.renderAll();
-      addToHistory({ type: 'add', object: img });
-      toast.success("Checkbox added - click to toggle");
+    const annotation: PDFAnnotation = {
+      id: `checkbox-${Date.now()}`,
+      type: 'checkbox',
+      pageIndex: currentPage,
+      x: viewSize.width / 2 - 20,
+      y: viewSize.height / 2 - 20,
+      width: 40,
+      height: 40,
+      imageData: canvas.toDataURL(),
+      checkboxState: 'x',
     };
-    imgEl.src = canvas.toDataURL();
+    
+    addAnnotation(currentPage, annotation);
+    toast.success("Checkbox added - click to toggle");
   };
 
   const handleToggleCheckbox = () => {
-    if (!editorCanvas || !selectedObject) return;
+    if (!selectedObject) return;
     
+    const annotationId = (selectedObject as any).annotationId;
     const state = (selectedObject as any).checkboxState || 'x';
     const newState = state === 'x' ? 'tick' : 'x';
     
@@ -363,39 +243,15 @@ export const PDFEditorTool = () => {
       }
     }
     
-    const imgEl = new Image();
-    imgEl.onload = () => {
-      if (selectedObject instanceof FabricImage) {
-        const currentProps = {
-          left: selectedObject.left,
-          top: selectedObject.top,
-          scaleX: selectedObject.scaleX,
-          scaleY: selectedObject.scaleY,
-          angle: selectedObject.angle,
-        };
-        
-        editorCanvas.remove(selectedObject);
-        
-        const newImg = new FabricImage(imgEl, {
-          ...currentProps,
-          selectable: true,
-          hasControls: true,
-        });
-        (newImg as any).checkboxState = newState;
-        
-        editorCanvas.add(newImg);
-        editorCanvas.setActiveObject(newImg);
-        setSelectedObject(newImg);
-        editorCanvas.renderAll();
-        toast.success(`Checkbox: ${newState === 'tick' ? '✓' : '✗'}`);
-      }
-    };
-    imgEl.src = canvas.toDataURL();
+    updateAnnotation(currentPage, annotationId, {
+      imageData: canvas.toDataURL(),
+      checkboxState: newState,
+    });
+    
+    toast.success(`Checkbox: ${newState === 'tick' ? '✓' : '✗'}`);
   };
 
   const handleAddMask = () => {
-    if (!editorCanvas) return;
-    
     const canvas = document.createElement('canvas');
     canvas.width = 200;
     canvas.height = 50;
@@ -408,21 +264,43 @@ export const PDFEditorTool = () => {
       ctx.strokeRect(0, 0, 200, 50);
     }
     
-    const imgEl = new Image();
-    imgEl.onload = () => {
-      const img = new FabricImage(imgEl, {
-        left: viewSize.width / 2 - 100,
-        top: viewSize.height / 2 - 25,
-        selectable: true,
-        hasControls: true,
-      });
-      editorCanvas.add(img);
-      editorCanvas.setActiveObject(img);
-      editorCanvas.renderAll();
-      addToHistory({ type: 'add', object: img });
-      toast.success("Mask added - drag to cover text");
+    const annotation: PDFAnnotation = {
+      id: `mask-${Date.now()}`,
+      type: 'mask',
+      pageIndex: currentPage,
+      x: viewSize.width / 2 - 100,
+      y: viewSize.height / 2 - 25,
+      width: 200,
+      height: 50,
+      imageData: canvas.toDataURL(),
     };
-    imgEl.src = canvas.toDataURL();
+    
+    addAnnotation(currentPage, annotation);
+    toast.success("Mask added - drag to cover text");
+  };
+
+  const handleDeleteSelected = () => {
+    if (!selectedObject) return;
+    const annotationId = (selectedObject as any).annotationId;
+    if (annotationId) {
+      removeAnnotation(currentPage, annotationId);
+      setSelectedObject(null);
+      toast.success("Annotation deleted");
+    }
+  };
+
+  const handleBringToFront = () => {
+    toast.success("Brought to front");
+  };
+
+  const handleSendToBack = () => {
+    toast.success("Sent to back");
+  };
+
+  const toggleOverlays = () => {
+    const newState = !showOverlays;
+    setShowOverlays(newState);
+    toast.success(newState ? "Overlays shown" : "Overlays hidden");
   };
 
   const handleZoomIn = () => {
@@ -446,6 +324,18 @@ export const PDFEditorTool = () => {
       toast.info(`Page ${currentPage + 2}`);
     }
   };
+
+  const handleSaveEdited = async () => {
+    await actions.handleDownloadEdited(annotations, state.pdfDimensions);
+    toast.success("PDF saved with all annotations!");
+  };
+
+  const handleClearCanvas = () => {
+    clearPage(currentPage);
+    toast.success("Page annotations cleared");
+  };
+
+  const pageAnnotations = getPageAnnotations(currentPage);
 
   return (
     <div className="space-y-6">
@@ -572,7 +462,7 @@ export const PDFEditorTool = () => {
                   Mask
                 </Button>
 
-                {/* Object Controls */}
+                {/* Checkbox Toggle */}
                 {selectedObject && (selectedObject as any).checkboxState && (
                   <Button
                     variant="outline"
@@ -639,8 +529,8 @@ export const PDFEditorTool = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleUndo}
-                  disabled={historyIndex < 0}
+                  onClick={undo}
+                  disabled={!canUndo}
                   title="Undo (Ctrl+Z)"
                 >
                   <Undo2 className="w-4 h-4" />
@@ -648,8 +538,8 @@ export const PDFEditorTool = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleRedo}
-                  disabled={historyIndex >= history.length - 1}
+                  onClick={redo}
+                  disabled={!canRedo}
                   title="Redo (Ctrl+Y)"
                 >
                   <Redo2 className="w-4 h-4" />
@@ -681,13 +571,12 @@ export const PDFEditorTool = () => {
                   onClick={handleClearCanvas}
                 >
                   <Trash2 className="w-4 h-4 mr-1" />
-                  Clear {selectedObject ? "Selected" : "All"}
+                  Clear Page
                 </Button>
                 <Button
                   size="sm"
                   onClick={handleSaveEdited}
                   className="flex items-center gap-2"
-                  disabled={!editorCanvas}
                 >
                   <Save className="w-4 h-4" />
                   Save PDF
@@ -787,13 +676,17 @@ export const PDFEditorTool = () => {
             >
               <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
                 <PDFCanvasViewer url={state.pdfUrl} pageNumber={currentPage + 1} />
-                {viewSize.width > 0 && viewSize.height > 0 && (
+                {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
                   <div className="absolute inset-0 z-20 pointer-events-none" style={{ width: `${viewSize.width}px`, height: `${viewSize.height}px` }}>
                     <div className="pointer-events-auto w-full h-full">
                       <PDFEditorCanvas
                         width={viewSize.width}
                         height={viewSize.height}
-                        onExport={setEditorCanvas}
+                        annotations={pageAnnotations}
+                        onAnnotationAdd={(ann) => addAnnotation(currentPage, ann)}
+                        onAnnotationUpdate={(id, updates) => updateAnnotation(currentPage, id, updates)}
+                        onAnnotationRemove={(id) => removeAnnotation(currentPage, id)}
+                        onObjectSelect={setSelectedObject}
                         snapToGrid={snapToGrid}
                         zoom={zoom}
                       />
@@ -809,7 +702,10 @@ export const PDFEditorTool = () => {
       {state.pdfFile && (
         <div className="flex gap-2">
           <Button
-            onClick={actions.handleClear}
+            onClick={() => {
+              actions.handleClear();
+              clearAll();
+            }}
             variant="outline"
             className="flex items-center gap-2"
           >
