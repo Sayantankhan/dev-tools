@@ -29,6 +29,17 @@ export const PDFEditorCanvas = ({
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const objectMapRef = useRef<Map<string, FabricObject>>(new Map());
 
+  // Callback refs to avoid stale closures
+  const onUpdateRef = useRef(onAnnotationUpdate);
+  const onRemoveRef = useRef(onAnnotationRemove);
+  const onSelectRef = useRef(onObjectSelect);
+  const snapToGridRef = useRef(snapToGrid);
+
+  useEffect(() => { onUpdateRef.current = onAnnotationUpdate; }, [onAnnotationUpdate]);
+  useEffect(() => { onRemoveRef.current = onAnnotationRemove; }, [onAnnotationRemove]);
+  useEffect(() => { onSelectRef.current = onObjectSelect; }, [onObjectSelect]);
+  useEffect(() => { snapToGridRef.current = snapToGrid; }, [snapToGrid]);
+
   console.log('PDFEditorCanvas render:', { width, height, annotationsCount: annotations.length });
 
   // Initialize canvas
@@ -49,7 +60,7 @@ export const PDFEditorCanvas = ({
 
     // Enable object snapping
     canvas.on('object:moving', (e) => {
-      if (!e.target || !snapToGrid) return;
+      if (!e.target || !snapToGridRef.current) return;
       const gridSize = 20;
       e.target.set({
         left: Math.round((e.target.left || 0) / gridSize) * gridSize,
@@ -83,7 +94,7 @@ export const PDFEditorCanvas = ({
         (updates as any).effectiveFontSize = eff;
       }
 
-      onAnnotationUpdate(id, updates);
+      onUpdateRef.current?.(id, updates);
     });
 
     // Ensure final position persists even if 'modified' doesn't fire (e.g., quick drags)
@@ -110,18 +121,18 @@ export const PDFEditorCanvas = ({
         (updates as any).effectiveFontSize = eff;
       }
 
-      onAnnotationUpdate(id, updates);
+      onUpdateRef.current?.(id, updates);
     });
 
     // Handle selection
     canvas.on('selection:created', (e) => {
-      onObjectSelect(e.selected?.[0] || null);
+      onSelectRef.current?.(e.selected?.[0] || null);
     });
     canvas.on('selection:updated', (e) => {
-      onObjectSelect(e.selected?.[0] || null);
+      onSelectRef.current?.(e.selected?.[0] || null);
     });
     canvas.on('selection:cleared', () => {
-      onObjectSelect(null);
+      onSelectRef.current?.(null);
     });
 
     setFabricCanvas(canvas);
@@ -235,7 +246,7 @@ export const PDFEditorCanvas = ({
         fabricCanvas.requestRenderAll();
         const measuredWidth = (textObj.width || annotation.width);
         const measuredHeight = (textObj.height || annotation.height || (annotation.fontSize || 20));
-        onAnnotationUpdate(annotation.id, { width: measuredWidth, height: measuredHeight });
+        onUpdateRef.current?.(annotation.id, { width: measuredWidth, height: measuredHeight });
         fabricCanvas.renderAll();
         console.log('Canvas objects after add:', fabricCanvas.getObjects().length);
       } else if (annotation.imageData) {
