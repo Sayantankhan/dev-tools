@@ -109,16 +109,67 @@ export const PDFEditorCanvas = ({
   useEffect(() => {
     if (!fabricCanvas) return;
 
-    // Clear existing objects
-    fabricCanvas.clear();
-    objectMapRef.current.clear();
+    // Clear existing objects that are not in current annotations
+    const currentAnnotationIds = new Set(annotations.map(a => a.id));
+    const objectsToRemove: FabricObject[] = [];
+    
+    fabricCanvas.getObjects().forEach(obj => {
+      const annotationId = (obj as any).annotationId;
+      if (annotationId && !currentAnnotationIds.has(annotationId)) {
+        objectsToRemove.push(obj);
+        objectMapRef.current.delete(annotationId);
+      }
+    });
+    
+    objectsToRemove.forEach(obj => fabricCanvas.remove(obj));
 
-    // Load annotations
+    // Add or update annotations
     annotations.forEach(annotation => {
-      let obj: FabricObject | null = null;
+      const existingObj = objectMapRef.current.get(annotation.id);
+      
+      if (existingObj) {
+        // Update existing object
+        if (annotation.type === 'text' && existingObj instanceof IText) {
+          existingObj.set({
+            left: annotation.x,
+            top: annotation.y,
+            text: annotation.text || '',
+            fontSize: annotation.fontSize || 20,
+            fill: annotation.color || '#000000',
+            fontFamily: annotation.fontFamily || 'Arial',
+            fontWeight: annotation.fontWeight || 'normal',
+            fontStyle: annotation.fontStyle || 'normal',
+          });
+        } else if (existingObj instanceof FabricImage) {
+          existingObj.set({
+            left: annotation.x,
+            top: annotation.y,
+            angle: annotation.rotation || 0,
+          });
+          (existingObj as any).checkboxState = annotation.checkboxState;
+          
+          // Update image if imageData changed
+          if (annotation.imageData && (existingObj as any).lastImageData !== annotation.imageData) {
+            const imgEl = new Image();
+            imgEl.onload = () => {
+              existingObj.setElement(imgEl);
+              existingObj.set({
+                scaleX: annotation.width / imgEl.width,
+                scaleY: annotation.height / imgEl.height,
+              });
+              (existingObj as any).lastImageData = annotation.imageData;
+              fabricCanvas.renderAll();
+            };
+            imgEl.src = annotation.imageData;
+          }
+        }
+        fabricCanvas.renderAll();
+        return;
+      }
 
+      // Create new object
       if (annotation.type === 'text' && annotation.text) {
-        obj = new IText(annotation.text, {
+        const textObj = new IText(annotation.text, {
           left: annotation.x,
           top: annotation.y,
           fontSize: annotation.fontSize || 20,
@@ -127,6 +178,10 @@ export const PDFEditorCanvas = ({
           fontWeight: annotation.fontWeight || 'normal',
           fontStyle: annotation.fontStyle || 'normal',
         });
+        (textObj as any).annotationId = annotation.id;
+        fabricCanvas.add(textObj);
+        objectMapRef.current.set(annotation.id, textObj);
+        fabricCanvas.renderAll();
       } else if (annotation.imageData) {
         const imgEl = new Image();
         imgEl.onload = () => {
@@ -139,22 +194,14 @@ export const PDFEditorCanvas = ({
           });
           (img as any).annotationId = annotation.id;
           (img as any).checkboxState = annotation.checkboxState;
+          (img as any).lastImageData = annotation.imageData;
           fabricCanvas.add(img);
           objectMapRef.current.set(annotation.id, img);
           fabricCanvas.renderAll();
         };
         imgEl.src = annotation.imageData;
-        return; // Skip adding to canvas here, will be added in onload
-      }
-
-      if (obj) {
-        (obj as any).annotationId = annotation.id;
-        fabricCanvas.add(obj);
-        objectMapRef.current.set(annotation.id, obj);
       }
     });
-
-    fabricCanvas.renderAll();
   }, [annotations, fabricCanvas]);
 
   // Update snap to grid

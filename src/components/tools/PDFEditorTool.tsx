@@ -54,16 +54,30 @@ export const PDFEditorTool = () => {
     getPageAnnotations,
   } = usePDFAnnotations();
 
-  // Measure viewer size
+  // Measure viewer size from the actual PDF canvas
   useEffect(() => {
     if (!viewerWrapperRef.current) return;
-    const el = viewerWrapperRef.current;
-    const update = () => setViewSize({ width: el.clientWidth, height: el.clientHeight });
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    
+    const updateSize = () => {
+      const canvas = viewerWrapperRef.current?.querySelector('canvas');
+      if (canvas) {
+        setViewSize({ 
+          width: canvas.width, 
+          height: canvas.height 
+        });
+      }
+    };
+    
+    // Wait for PDF to load then measure
+    const timer = setTimeout(updateSize, 500);
+    const ro = new ResizeObserver(updateSize);
+    ro.observe(viewerWrapperRef.current);
+    
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+    };
+  }, [state.pdfUrl, currentPage]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -674,23 +688,28 @@ export const PDFEditorTool = () => {
               className="relative border rounded-lg overflow-auto bg-muted" 
               style={{ minHeight: '600px', maxHeight: '800px' }}
             >
-              <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
+              <div className="relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: 'fit-content' }}>
                 <PDFCanvasViewer url={state.pdfUrl} pageNumber={currentPage + 1} />
                 {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
-                  <div className="absolute inset-0 z-20 pointer-events-none" style={{ width: `${viewSize.width}px`, height: `${viewSize.height}px` }}>
-                    <div className="pointer-events-auto w-full h-full">
-                      <PDFEditorCanvas
-                        width={viewSize.width}
-                        height={viewSize.height}
-                        annotations={pageAnnotations}
-                        onAnnotationAdd={(ann) => addAnnotation(currentPage, ann)}
-                        onAnnotationUpdate={(id, updates) => updateAnnotation(currentPage, id, updates)}
-                        onAnnotationRemove={(id) => removeAnnotation(currentPage, id)}
-                        onObjectSelect={setSelectedObject}
-                        snapToGrid={snapToGrid}
-                        zoom={zoom}
-                      />
-                    </div>
+                  <div 
+                    className="absolute top-0 left-0 z-20" 
+                    style={{ 
+                      width: `${viewSize.width}px`, 
+                      height: `${viewSize.height}px`,
+                      pointerEvents: 'auto'
+                    }}
+                  >
+                    <PDFEditorCanvas
+                      width={viewSize.width}
+                      height={viewSize.height}
+                      annotations={pageAnnotations}
+                      onAnnotationAdd={(ann) => addAnnotation(currentPage, ann)}
+                      onAnnotationUpdate={(id, updates) => updateAnnotation(currentPage, id, updates)}
+                      onAnnotationRemove={(id) => removeAnnotation(currentPage, id)}
+                      onObjectSelect={setSelectedObject}
+                      snapToGrid={snapToGrid}
+                      zoom={1}
+                    />
                   </div>
                 )}
               </div>
