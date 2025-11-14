@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import * as pdfjsLib from "pdfjs-dist";
+import { PDF_PREVIEW_SCALE } from "@/lib/pdf";
 
 // Use local worker from pdfjs-dist package
 if (typeof window !== 'undefined' && 'Worker' in window) {
@@ -35,7 +36,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumbe
         loadingTask = pdfjsLib.getDocument({ data });
         const pdf = await loadingTask.promise;
         const page = await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: PDF_PREVIEW_SCALE });
         const canvas = canvasRef.current;
         if (!canvas || destroyed) return;
         const context = canvas.getContext("2d");
