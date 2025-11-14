@@ -173,7 +173,7 @@ export const PDFEditorTool = () => {
   };
 
   const handleAddCheckbox = () => {
-    // Create checkbox with X mark by default
+    // Create checkbox with X mark by default (no box)
     const canvas = document.createElement('canvas');
     canvas.width = 40;
     canvas.height = 40;
@@ -181,8 +181,7 @@ export const PDFEditorTool = () => {
     if (ctx) {
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 3;
-      ctx.strokeRect(2, 2, 36, 36);
-      // Draw X
+      // Draw X (no box)
       ctx.beginPath();
       ctx.moveTo(8, 8);
       ctx.lineTo(32, 32);
@@ -204,17 +203,15 @@ export const PDFEditorTool = () => {
     };
     
     addAnnotation(currentPage, annotation);
-    toast.success("Checkbox added - click to toggle");
+    toast.success("Checkbox added");
   };
 
-  const handleToggleCheckbox = () => {
+  const handleCheckboxChange = (newState: 'x' | 'tick') => {
     if (!selectedObject) return;
     
     const annotationId = (selectedObject as any).annotationId;
-    const state = (selectedObject as any).checkboxState || 'x';
-    const newState = state === 'x' ? 'tick' : 'x';
     
-    // Create new checkbox image
+    // Create new checkbox image (no box, just symbol)
     const canvas = document.createElement('canvas');
     canvas.width = 40;
     canvas.height = 40;
@@ -222,7 +219,6 @@ export const PDFEditorTool = () => {
     if (ctx) {
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 3;
-      ctx.strokeRect(2, 2, 36, 36);
       
       if (newState === 'tick') {
         // Draw checkmark
@@ -465,16 +461,20 @@ export const PDFEditorTool = () => {
                   Mask
                 </Button>
 
-                {/* Checkbox Toggle */}
+                {/* Checkbox Dropdown */}
                 {selectedObject && (selectedObject as any).checkboxState && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleToggleCheckbox}
-                    title="Toggle checkbox"
+                  <Select
+                    value={(selectedObject as any).checkboxState || 'x'}
+                    onValueChange={(value: 'x' | 'tick') => handleCheckboxChange(value)}
                   >
-                    Toggle ✓/✗
-                  </Button>
+                    <SelectTrigger className="w-[100px] h-9 bg-background border-input z-50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-input z-50">
+                      <SelectItem value="x">✗ X</SelectItem>
+                      <SelectItem value="tick">✓ Tick</SelectItem>
+                    </SelectContent>
+                  </Select>
                 )}
                 
                 {/* Zoom Controls */}
