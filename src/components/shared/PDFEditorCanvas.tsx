@@ -86,6 +86,33 @@ export const PDFEditorCanvas = ({
       onAnnotationUpdate(id, updates);
     });
 
+    // Ensure final position persists even if 'modified' doesn't fire (e.g., quick drags)
+    canvas.on('mouse:up', () => {
+      const target = canvas.getActiveObject?.();
+      if (!target) return;
+      const id = (target as any).annotationId;
+      if (!id) return;
+
+      const updates: Partial<PDFAnnotation> = {
+        x: target.left || 0,
+        y: target.top || 0,
+        width: (target.width || 0) * (target.scaleX || 1),
+        height: (target.height || 0) * (target.scaleY || 1),
+        rotation: target.angle || 0,
+      };
+
+      if (target instanceof IText) {
+        updates.text = target.text;
+        const sx = (target.scaleX || 1);
+        const sy = (target.scaleY || 1);
+        const baseFont = (target.fontSize || 20);
+        const eff = baseFont * ((sx + sy) / 2);
+        (updates as any).effectiveFontSize = eff;
+      }
+
+      onAnnotationUpdate(id, updates);
+    });
+
     // Handle selection
     canvas.on('selection:created', (e) => {
       onObjectSelect(e.selected?.[0] || null);
