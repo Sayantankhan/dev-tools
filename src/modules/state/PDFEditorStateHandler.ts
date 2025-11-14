@@ -100,28 +100,39 @@ export const PDFEditorStateHandler = (): ToolHandler => {
           };
 
           for (const annotation of pageAnnotations as any[]) {
+            const vw = viewWidth;
+            const vh = viewHeight;
+
             if (annotation.type === 'text' && annotation.text) {
               const colorHex = annotation.color || '#000000';
               const { r, g, b } = hexToRgb(colorHex);
-              const effectiveSize = annotation.effectiveFontSize || annotation.fontSize || 20;
-              // Scale the font size from canvas to PDF coordinates
-              const pdfSize = effectiveSize * scaleX;
+
+              // Derive font size from visual height to keep WYSIWYG
+              const boxH = (annotation.height || annotation.effectiveFontSize || annotation.fontSize || 20);
+              const pdfSize = (boxH / vh) * height;
+
+              const xPdf = (annotation.x / vw) * width;
+              const yPdf = height - ((annotation.y + boxH) / vh) * height; // bottom-left baseline using box bottom
 
               page.drawText(annotation.text, {
-                x: (annotation.x || 0) * scaleX,
-                // Convert from top-left to bottom-left using bounding height for perfect alignment
-                y: height - (annotation.y || 0) * scaleY - (annotation.height || effectiveSize) * scaleY,
+                x: xPdf,
+                y: yPdf,
                 size: pdfSize,
                 color: rgb(r, g, b),
               });
             } else if (annotation.imageData) {
               try {
                 const img = await embedImage(annotation.imageData);
+                const wPdf = ((annotation.width || 0) / vw) * width;
+                const hPdf = ((annotation.height || 0) / vh) * height;
+                const xPdf = ((annotation.x || 0) / vw) * width;
+                const yPdf = height - (((annotation.y || 0) + (annotation.height || 0)) / vh) * height;
+
                 page.drawImage(img, {
-                  x: (annotation.x || 0) * scaleX,
-                  y: height - (annotation.y || 0) * scaleY - (annotation.height || 0) * scaleY,
-                  width: (annotation.width || 0) * scaleX,
-                  height: (annotation.height || 0) * scaleY,
+                  x: xPdf,
+                  y: yPdf,
+                  width: wPdf,
+                  height: hPdf,
                   rotate: degrees(-(annotation.rotation || 0)),
                 });
               } catch (e) {
