@@ -32,6 +32,7 @@ export const PDFEditorTool = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [isPageLoading, setIsPageLoading] = useState(false);
+  const [pageViewSizes, setPageViewSizes] = useState<Record<number, { width: number; height: number }>>({});
   
   // Text formatting
   const [fontSize, setFontSize] = useState("20");
@@ -324,7 +325,7 @@ export const PDFEditorTool = () => {
   };
 
   const handleSaveEdited = async () => {
-    await actions.handleDownloadEdited(annotations);
+    await actions.handleDownloadEdited(annotations, pageViewSizes);
     toast.success("PDF saved with all annotations!");
   };
 
@@ -338,6 +339,7 @@ export const PDFEditorTool = () => {
     clearAll();
     setCurrentPage(0);
     setViewSize({ width: 0, height: 0 });
+    setPageViewSizes({});
     setIsPageLoading(false);
   };
 
@@ -728,6 +730,7 @@ export const PDFEditorTool = () => {
                   pageNumber={currentPage + 1}
                   onRendered={({ width, height }) => {
                     setViewSize(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
+                    setPageViewSizes(prev => ({ ...prev, [currentPage]: { width, height } }));
                     setIsPageLoading(false);
                   }}
                 />

@@ -47,7 +47,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       }
     },
 
-    handleDownloadEdited: async (annotations: any) => {
+    handleDownloadEdited: async (annotations: any, pageViewSizes?: Record<number, { width: number; height: number }>) => {
       if (!pdfFile) return;
 
       try {
@@ -60,9 +60,11 @@ export const PDFEditorStateHandler = (): ToolHandler => {
           const page = pdfDoc.getPage(pageIndex);
           const { width, height } = page.getSize();
 
-          // Determine scale from preview (uses the same constant as viewer)
-          const viewWidth = width * PDF_PREVIEW_SCALE;
-          const viewHeight = height * PDF_PREVIEW_SCALE;
+          // Scale factors from the ACTUAL rendered view size for that page
+          // Fallback to constant scale if not provided
+          const pageView = pageViewSizes?.[pageIndex];
+          const viewWidth = pageView?.width ?? width * PDF_PREVIEW_SCALE;
+          const viewHeight = pageView?.height ?? height * PDF_PREVIEW_SCALE;
           const scaleX = width / viewWidth;
           const scaleY = height / viewHeight;
 
