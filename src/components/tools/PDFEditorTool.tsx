@@ -54,31 +54,9 @@ export const PDFEditorTool = () => {
     getPageAnnotations,
   } = usePDFAnnotations();
 
-  // Measure viewer size from the actual PDF canvas
+  // Size comes from PDFCanvasViewer via onRendered callback
   useEffect(() => {
-    if (!viewerWrapperRef.current || !state.pdfUrl) return;
-    
-    const updateSize = () => {
-      const canvas = viewerWrapperRef.current?.querySelector('canvas');
-      if (canvas) {
-        console.log('PDF Canvas dimensions:', canvas.width, canvas.height);
-        setViewSize({ 
-          width: canvas.width, 
-          height: canvas.height 
-        });
-      } else {
-        console.log('PDF canvas not found yet');
-      }
-    };
-    
-    // Wait for PDF to load then measure
-    const timer = setTimeout(updateSize, 1000);
-    const interval = setInterval(updateSize, 500);
-    
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
+    setViewSize((s) => s);
   }, [state.pdfUrl, currentPage]);
 
   // Keyboard shortcuts
@@ -700,7 +678,13 @@ export const PDFEditorTool = () => {
               style={{ minHeight: '600px', maxHeight: '800px' }}
             >
               <div className="relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: 'fit-content' }}>
-                <PDFCanvasViewer url={state.pdfUrl} pageNumber={currentPage + 1} />
+                <PDFCanvasViewer 
+                  url={state.pdfUrl} 
+                  pageNumber={currentPage + 1}
+                  onRendered={({ width, height }) => {
+                    setViewSize({ width, height });
+                  }}
+                />
                 {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
                   <div 
                     className="absolute top-0 left-0 z-20" 
