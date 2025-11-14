@@ -14,7 +14,7 @@ if (typeof window !== 'undefined' && 'Worker' in window) {
 interface PDFCanvasViewerProps {
   url: string;
   pageNumber?: number;
-  onRendered?: (size: { width: number; height: number }) => void;
+  onRendered?: (args: { width: number; height: number; pageNumber: number }) => void;
 }
 
 export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumber = 1, onRendered }) => {
