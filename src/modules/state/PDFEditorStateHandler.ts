@@ -159,7 +159,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       setPdfDimensions(null);
       setTotalPages(0);
       setIsLoading(false);
-      toast.success("Cleared!");
+      toast.success("PDF cleared!");
     },
   };
 

@@ -31,6 +31,7 @@ export const PDFEditorTool = () => {
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState(1);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   
   // Text formatting
   const [fontSize, setFontSize] = useState("20");
@@ -308,6 +309,7 @@ export const PDFEditorTool = () => {
 
   const handlePrevPage = () => {
     if (currentPage > 0) {
+      setIsPageLoading(true);
       setCurrentPage(prev => prev - 1);
       toast.info(`Page ${currentPage}`);
     }
@@ -315,6 +317,7 @@ export const PDFEditorTool = () => {
 
   const handleNextPage = () => {
     if (state.totalPages && currentPage < state.totalPages - 1) {
+      setIsPageLoading(true);
       setCurrentPage(prev => prev + 1);
       toast.info(`Page ${currentPage + 2}`);
     }
@@ -328,6 +331,14 @@ export const PDFEditorTool = () => {
   const handleClearCanvas = () => {
     clearPage(currentPage);
     toast.success("Page annotations cleared");
+  };
+
+  const handleClearPDF = () => {
+    actions.handleClear();
+    clearAll();
+    setCurrentPage(0);
+    setViewSize({ width: 0, height: 0 });
+    setIsPageLoading(false);
   };
 
   const pageAnnotations = getPageAnnotations(currentPage);
@@ -365,9 +376,20 @@ export const PDFEditorTool = () => {
                 {state.isLoading ? "Loading..." : "Upload PDF"}
               </Button>
               {state.pdfFile && !state.isLoading && (
-                <span className="flex items-center text-sm text-muted-foreground">
-                  {state.pdfFile.name}
-                </span>
+                <>
+                  <span className="flex items-center text-sm text-muted-foreground">
+                    {state.pdfFile.name}
+                  </span>
+                  <Button
+                    onClick={handleClearPDF}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -692,12 +714,21 @@ export const PDFEditorTool = () => {
               className="relative border rounded-lg overflow-auto bg-muted" 
               style={{ minHeight: '600px', maxHeight: '800px' }}
             >
+              {isPageLoading && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-muted-foreground">Loading page {currentPage + 1}...</p>
+                  </div>
+                </div>
+              )}
               <div className="relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: 'fit-content' }}>
                 <PDFCanvasViewer 
                   url={state.pdfUrl} 
                   pageNumber={currentPage + 1}
                   onRendered={({ width, height }) => {
                     setViewSize(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
+                    setIsPageLoading(false);
                   }}
                 />
                 {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
