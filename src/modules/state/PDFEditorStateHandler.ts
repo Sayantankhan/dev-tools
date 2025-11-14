@@ -97,7 +97,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
             if (annotation.type === 'text' && annotation.text) {
               const colorHex = annotation.color || '#000000';
               const { r, g, b } = hexToRgb(colorHex);
-              const size = annotation.fontSize || 20;
+              const size = annotation.effectiveFontSize || annotation.fontSize || 20;
 
               page.drawText(annotation.text, {
                 x: (annotation.x || 0) * scaleX,
