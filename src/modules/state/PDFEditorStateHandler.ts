@@ -7,6 +7,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [pdfDimensions, setPdfDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [totalPages, setTotalPages] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const actions = {
@@ -23,13 +24,14 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       const url = URL.createObjectURL(file);
       setPdfUrl(url);
 
-      // Get PDF dimensions
+      // Get PDF dimensions and page count
       try {
         const arrayBuffer = await file.arrayBuffer();
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         const firstPage = pdfDoc.getPage(0);
         const { width, height } = firstPage.getSize();
         setPdfDimensions({ width, height });
+        setTotalPages(pdfDoc.getPageCount());
       } catch (error) {
         console.error("Failed to get PDF dimensions:", error);
       }
@@ -93,6 +95,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       setPdfFile(null);
       setPdfUrl("");
       setPdfDimensions(null);
+      setTotalPages(0);
       toast.success("Cleared!");
     },
   };
@@ -102,12 +105,14 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       pdfFile,
       pdfUrl,
       pdfDimensions,
+      totalPages,
       fileInputRef,
     },
     setters: {
       setPdfFile,
       setPdfUrl,
       setPdfDimensions,
+      setTotalPages,
     },
     helpers: {},
     actions,

@@ -12,9 +12,10 @@ if (typeof window !== 'undefined' && 'Worker' in window) {
 
 interface PDFCanvasViewerProps {
   url: string;
+  pageNumber?: number;
 }
 
-export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url }) => {
+export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url, pageNumber = 1 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url }) => {
         const data = await res.arrayBuffer();
         loadingTask = pdfjsLib.getDocument({ data });
         const pdf = await loadingTask.promise;
-        const page = await pdf.getPage(1);
+        const page = await pdf.getPage(pageNumber);
         const viewport = page.getViewport({ scale: 1.5 });
         const canvas = canvasRef.current;
         if (!canvas || destroyed) return;
@@ -48,7 +49,7 @@ export const PDFCanvasViewer: React.FC<PDFCanvasViewerProps> = ({ url }) => {
         loadingTask?.destroy?.();
       } catch {}
     };
-  }, [url]);
+  }, [url, pageNumber]);
 
   return <canvas ref={canvasRef} className="w-full h-auto bg-background" />;
 };
