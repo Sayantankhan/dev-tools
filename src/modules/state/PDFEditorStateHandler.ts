@@ -101,13 +101,15 @@ export const PDFEditorStateHandler = (): ToolHandler => {
             if (annotation.type === 'text' && annotation.text) {
               const colorHex = annotation.color || '#000000';
               const { r, g, b } = hexToRgb(colorHex);
-              const size = annotation.effectiveFontSize || annotation.fontSize || 20;
+              const effectiveSize = annotation.effectiveFontSize || annotation.fontSize || 20;
+              // Scale the font size from canvas to PDF coordinates
+              const pdfSize = effectiveSize * scaleX;
 
               page.drawText(annotation.text, {
                 x: (annotation.x || 0) * scaleX,
                 // Convert from top-left to bottom-left using bounding height for perfect alignment
-                y: height - (annotation.y || 0) * scaleY - (annotation.height || size) * scaleY,
-                size,
+                y: height - (annotation.y || 0) * scaleY - (annotation.height || effectiveSize) * scaleY,
+                size: pdfSize,
                 color: rgb(r, g, b),
               });
             } else if (annotation.imageData) {
