@@ -359,11 +359,12 @@ export const PDFEditorTool = () => {
               <Button
                 onClick={() => state.fileInputRef.current?.click()}
                 className="flex items-center gap-2"
+                disabled={state.isLoading}
               >
                 <Upload className="w-4 h-4" />
-                Upload PDF
+                {state.isLoading ? "Loading..." : "Upload PDF"}
               </Button>
-              {state.pdfFile && (
+              {state.pdfFile && !state.isLoading && (
                 <span className="flex items-center text-sm text-muted-foreground">
                   {state.pdfFile.name}
                 </span>
@@ -373,7 +374,18 @@ export const PDFEditorTool = () => {
         </CardContent>
       </Card>
 
-      {state.pdfUrl && state.pdfDimensions && (
+      {state.isLoading && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center gap-4 py-8">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              <p className="text-muted-foreground">Loading PDF...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {state.pdfUrl && state.pdfDimensions && !state.isLoading && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between flex-wrap gap-2">
