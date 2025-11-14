@@ -56,26 +56,28 @@ export const PDFEditorTool = () => {
 
   // Measure viewer size from the actual PDF canvas
   useEffect(() => {
-    if (!viewerWrapperRef.current) return;
+    if (!viewerWrapperRef.current || !state.pdfUrl) return;
     
     const updateSize = () => {
       const canvas = viewerWrapperRef.current?.querySelector('canvas');
       if (canvas) {
+        console.log('PDF Canvas dimensions:', canvas.width, canvas.height);
         setViewSize({ 
           width: canvas.width, 
           height: canvas.height 
         });
+      } else {
+        console.log('PDF canvas not found yet');
       }
     };
     
     // Wait for PDF to load then measure
-    const timer = setTimeout(updateSize, 500);
-    const ro = new ResizeObserver(updateSize);
-    ro.observe(viewerWrapperRef.current);
+    const timer = setTimeout(updateSize, 1000);
+    const interval = setInterval(updateSize, 500);
     
     return () => {
       clearTimeout(timer);
-      ro.disconnect();
+      clearInterval(interval);
     };
   }, [state.pdfUrl, currentPage]);
 
@@ -109,12 +111,16 @@ export const PDFEditorTool = () => {
   const handleAddText = () => {
     if (!textValue.trim()) return;
     
+    console.log('Adding text annotation:', textValue);
+    console.log('View size:', viewSize);
+    console.log('Current page:', currentPage);
+    
     const annotation: PDFAnnotation = {
       id: `text-${Date.now()}`,
       type: 'text',
       pageIndex: currentPage,
-      x: viewSize.width / 2 - 50,
-      y: viewSize.height / 2,
+      x: 100, // Fixed position for testing
+      y: 100,
       width: 200,
       height: 50,
       text: textValue,
@@ -125,6 +131,7 @@ export const PDFEditorTool = () => {
       fontStyle: isItalic ? 'italic' : 'normal',
     };
     
+    console.log('Annotation created:', annotation);
     addAnnotation(currentPage, annotation);
     setTextValue("");
     setShowTextInput(false);
@@ -350,6 +357,10 @@ export const PDFEditorTool = () => {
   };
 
   const pageAnnotations = getPageAnnotations(currentPage);
+  
+  console.log('Current page annotations:', pageAnnotations);
+  console.log('View size for canvas:', viewSize);
+  console.log('Show overlays:', showOverlays);
 
   return (
     <div className="space-y-6">
