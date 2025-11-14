@@ -29,9 +29,13 @@ export const PDFEditorCanvas = ({
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const objectMapRef = useRef<Map<string, FabricObject>>(new Map());
 
+  console.log('PDFEditorCanvas render:', { width, height, annotationsCount: annotations.length });
+
   // Initialize canvas
   useEffect(() => {
     if (!canvasRef.current) return;
+
+    console.log('Initializing Fabric canvas with dimensions:', width, height);
 
     const canvas = new FabricCanvas(canvasRef.current, {
       width: width,
@@ -40,6 +44,8 @@ export const PDFEditorCanvas = ({
       selection: true,
       preserveObjectStacking: true,
     });
+
+    console.log('Fabric canvas created:', canvas);
 
     // Enable object snapping
     canvas.on('object:moving', (e) => {
@@ -56,6 +62,8 @@ export const PDFEditorCanvas = ({
       if (!e.target) return;
       const id = (e.target as any).annotationId;
       if (!id) return;
+
+      console.log('Object modified:', id);
 
       const updates: Partial<PDFAnnotation> = {
         x: e.target.left || 0,
@@ -87,6 +95,7 @@ export const PDFEditorCanvas = ({
     setFabricCanvas(canvas);
 
     return () => {
+      console.log('Disposing Fabric canvas');
       canvas.dispose();
     };
   }, [width, height]);
@@ -107,7 +116,12 @@ export const PDFEditorCanvas = ({
 
   // Load annotations onto canvas
   useEffect(() => {
-    if (!fabricCanvas) return;
+    if (!fabricCanvas) {
+      console.log('No fabric canvas yet');
+      return;
+    }
+
+    console.log('Loading annotations onto canvas:', annotations);
 
     // Clear existing objects that are not in current annotations
     const currentAnnotationIds = new Set(annotations.map(a => a.id));
@@ -125,9 +139,11 @@ export const PDFEditorCanvas = ({
 
     // Add or update annotations
     annotations.forEach(annotation => {
+      console.log('Processing annotation:', annotation);
       const existingObj = objectMapRef.current.get(annotation.id);
       
       if (existingObj) {
+        console.log('Updating existing object:', annotation.id);
         // Update existing object
         if (annotation.type === 'text' && existingObj instanceof IText) {
           existingObj.set({
@@ -168,6 +184,7 @@ export const PDFEditorCanvas = ({
       }
 
       // Create new object
+      console.log('Creating new object for annotation:', annotation.id);
       if (annotation.type === 'text' && annotation.text) {
         const textObj = new IText(annotation.text, {
           left: annotation.x,
@@ -179,9 +196,11 @@ export const PDFEditorCanvas = ({
           fontStyle: annotation.fontStyle || 'normal',
         });
         (textObj as any).annotationId = annotation.id;
+        console.log('Adding text object to canvas:', textObj);
         fabricCanvas.add(textObj);
         objectMapRef.current.set(annotation.id, textObj);
         fabricCanvas.renderAll();
+        console.log('Canvas objects after add:', fabricCanvas.getObjects().length);
       } else if (annotation.imageData) {
         const imgEl = new Image();
         imgEl.onload = () => {
