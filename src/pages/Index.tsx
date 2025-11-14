@@ -37,6 +37,7 @@ const tools: Tool[] = [
   { id: "text-compare", label: "Text Diff", icon: FileSearch, component: TextCompareTool },
   { id: "log-parser", label: "Log Parser", icon: ScrollText, component: LogParserTool },
   { id: "image", label: "Image", icon: Image, component: ImageTool },
+  { id: "pdf-editor", label: "PDF Editor", icon: FileEdit, component: PDFEditorTool },
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
   { id: "encoder", label: "Encoder/Decoder", icon: FileCode, component: EncoderTool },
@@ -48,7 +49,6 @@ const tools: Tool[] = [
   { id: "bg-remover", label: "BG Remover", icon: Scissors, component: BackgroundRemoverTool },
   { id: "search", label: "Search", icon: Search, component: SearchTool },
   { id: "topology-viewer", label: "Topology", icon: Network, component: TopologyViewerTool },
-  { id: "pdf-editor", label: "PDF Editor", icon: FileEdit, component: PDFEditorTool },
 ];
 
 const Index = () => {
