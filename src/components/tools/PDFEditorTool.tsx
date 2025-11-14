@@ -755,21 +755,6 @@ export const PDFEditorTool = () => {
         </Card>
       )}
 
-      {state.pdfFile && (
-        <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              actions.handleClear();
-              clearAll();
-            }}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear All & Reset
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
