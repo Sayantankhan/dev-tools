@@ -8,6 +8,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [pdfDimensions, setPdfDimensions] = useState<{ width: number; height: number } | null>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const actions = {
@@ -20,6 +21,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
         return;
       }
 
+      setIsLoading(true);
       setPdfFile(file);
       const url = URL.createObjectURL(file);
       setPdfUrl(url);
@@ -32,11 +34,13 @@ export const PDFEditorStateHandler = (): ToolHandler => {
         const { width, height } = firstPage.getSize();
         setPdfDimensions({ width, height });
         setTotalPages(pdfDoc.getPageCount());
+        toast.success(`PDF uploaded (${pdfDoc.getPageCount()} page${pdfDoc.getPageCount() > 1 ? 's' : ''})`);
       } catch (error) {
         console.error("Failed to get PDF dimensions:", error);
+        toast.error("Failed to load PDF");
+      } finally {
+        setIsLoading(false);
       }
-
-      toast.success("PDF uploaded successfully");
 
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -154,6 +158,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       setPdfUrl("");
       setPdfDimensions(null);
       setTotalPages(0);
+      setIsLoading(false);
       toast.success("Cleared!");
     },
   };
@@ -164,6 +169,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       pdfUrl,
       pdfDimensions,
       totalPages,
+      isLoading,
       fileInputRef,
     },
     setters: {
@@ -171,6 +177,7 @@ export const PDFEditorStateHandler = (): ToolHandler => {
       setPdfUrl,
       setPdfDimensions,
       setTotalPages,
+      setIsLoading,
     },
     helpers: {},
     actions,
