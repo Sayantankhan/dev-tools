@@ -11,8 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Copy, Clock, FileCode, Plus, Trash2, Terminal } from "lucide-react";
+import { Send, Copy, Clock, FileCode, Plus, Trash2, Terminal, Webhook, ExternalLink } from "lucide-react";
 import { ApiStateHandler } from "@/modules/state/ApiStateHandler";
 
 export const APITool = () => {
@@ -26,8 +28,21 @@ export const APITool = () => {
 
   return (
     <div className="space-y-6">
-      {/* API Tester */}
-      <div className="space-y-6">
+      <Tabs defaultValue="api" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="api">
+            <Terminal className="w-4 h-4 mr-2" />
+            API Tester
+          </TabsTrigger>
+          <TabsTrigger value="webhook">
+            <Webhook className="w-4 h-4 mr-2" />
+            Webhook Monitor
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="api" className="space-y-6">
+          {/* API Tester */}
+          <div className="space-y-6">
         <div className="grid lg:grid-cols-2 gap-6">
       {/* Left Pane: Request Builder */}
       <div className="space-y-6">
@@ -322,6 +337,162 @@ export const APITool = () => {
       </div>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="webhook" className="space-y-6">
+          {/* Webhook Monitor */}
+          <div className="space-y-6">
+            {/* Webhook URL */}
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">Your Webhook URL</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Use this URL to receive webhook events (Demo Mode)
+                    </p>
+                  </div>
+                  <Badge variant="outline">Demo</Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={state.webhookUrl}
+                    readOnly
+                    className="flex-1 font-mono text-sm"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => actions.handleCopy(state.webhookUrl)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={state.generateNewWebhookUrl}
+                  >
+                    New URL
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={state.addDemoRequest}
+                  >
+                    Add Demo Request
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={state.clearWebhookRequests}
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Webhook Requests List */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Recent Requests</h3>
+                <Badge variant="secondary">{state.webhookRequests.length} requests</Badge>
+              </div>
+
+              {state.webhookRequests.length > 0 ? (
+                <div className="space-y-3">
+                  {state.webhookRequests.map((request: any) => (
+                    <Card 
+                      key={request.id} 
+                      className="p-4 hover:bg-accent/50 cursor-pointer transition-colors"
+                      onClick={() => state.setSelectedRequest(request.id)}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Badge variant={request.method === 'POST' ? 'default' : 'secondary'}>
+                              {request.method}
+                            </Badge>
+                            <span className="text-sm font-medium">{request.path}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            {new Date(request.timestamp).toLocaleTimeString()}
+                          </div>
+                        </div>
+                        
+                        {state.selectedRequest === request.id && (
+                          <div className="mt-4 space-y-3 pt-3 border-t">
+                            {/* Headers */}
+                            <div>
+                              <Label className="text-xs font-semibold">Headers</Label>
+                              <div className="mt-2 p-3 bg-muted/50 rounded-md">
+                                <pre className="text-xs font-mono overflow-auto">
+                                  {JSON.stringify(request.headers, null, 2)}
+                                </pre>
+                              </div>
+                            </div>
+
+                            {/* Body */}
+                            {request.body && (
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <Label className="text-xs font-semibold">Body</Label>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      actions.handleCopy(JSON.stringify(request.body, null, 2));
+                                    }}
+                                  >
+                                    <Copy className="w-3 h-3 mr-1" />
+                                    Copy
+                                  </Button>
+                                </div>
+                                <div className="p-3 bg-muted/50 rounded-md">
+                                  <pre className="text-xs font-mono overflow-auto max-h-64">
+                                    {JSON.stringify(request.body, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Query Params */}
+                            {request.queryParams && Object.keys(request.queryParams).length > 0 && (
+                              <div>
+                                <Label className="text-xs font-semibold">Query Parameters</Label>
+                                <div className="mt-2 p-3 bg-muted/50 rounded-md">
+                                  <pre className="text-xs font-mono overflow-auto">
+                                    {JSON.stringify(request.queryParams, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card className="p-12">
+                  <div className="flex flex-col items-center justify-center text-center space-y-3">
+                    <Webhook className="w-12 h-12 text-muted-foreground/50" />
+                    <div>
+                      <p className="text-lg font-medium">No webhook requests yet</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Click "Add Demo Request" to see how it works
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -24,6 +24,16 @@ interface APIResponse {
     requestHeaders?: Record<string, string>;
 }
 
+interface WebhookRequest {
+    id: string;
+    method: string;
+    path: string;
+    headers: Record<string, string>;
+    body?: any;
+    queryParams?: Record<string, string>;
+    timestamp: number;
+}
+
 export const ApiStateHandler = (): ToolHandler => {
     const [method, setMethod] = useState("GET");
     const [url, setUrl] = useState("");
@@ -34,6 +44,19 @@ export const ApiStateHandler = (): ToolHandler => {
     const [loading, setLoading] = useState(false);
     const [bodyType, setBodyType] = useState<"raw" | "json">("json");
     const [jsonError, setJsonError] = useState<string>("");
+    
+    // Webhook states
+    const [webhookUrl, setWebhookUrl] = useState("");
+    const [webhookRequests, setWebhookRequests] = useState<WebhookRequest[]>([]);
+    const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
+
+    // Generate initial webhook URL
+    useEffect(() => {
+        if (!webhookUrl) {
+            const id = Math.random().toString(36).substring(2, 15);
+            setWebhookUrl(`https://webhook.example.com/${id}`);
+        }
+    }, []);
 
     const helpers = {
         addHeader: () => {
@@ -256,9 +279,9 @@ export const ApiStateHandler = (): ToolHandler => {
             }
         },
 
-        handleCopy: (text: string, label: string) => {
+        handleCopy: (text: string, label?: string) => {
             navigator.clipboard.writeText(text);
-            toast.success(`${label} copied!`);
+            toast.success(`${label || 'Content'} copied!`);
         },
 
         exportCurl: () => {
@@ -267,6 +290,86 @@ export const ApiStateHandler = (): ToolHandler => {
             toast.success("Curl command copied to clipboard!");
         },
     }
+
+    // Webhook helpers
+    const webhookHelpers = {
+        generateNewWebhookUrl: () => {
+            const id = Math.random().toString(36).substring(2, 15);
+            setWebhookUrl(`https://webhook.example.com/${id}`);
+            toast.success("New webhook URL generated");
+        },
+
+        addDemoRequest: () => {
+            const demoRequests = [
+                {
+                    method: 'POST',
+                    path: '/webhook/payment',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'Stripe/1.0',
+                        'X-Stripe-Signature': 'whsec_abc123...'
+                    },
+                    body: {
+                        type: 'payment_intent.succeeded',
+                        data: {
+                            amount: 2999,
+                            currency: 'usd',
+                            status: 'succeeded'
+                        }
+                    }
+                },
+                {
+                    method: 'POST',
+                    path: '/webhook/order',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'Shopify/1.0'
+                    },
+                    body: {
+                        order_id: 12345,
+                        customer: 'john@example.com',
+                        total: 299.99
+                    },
+                    queryParams: {
+                        source: 'shopify',
+                        store: 'my-store'
+                    }
+                },
+                {
+                    method: 'POST',
+                    path: '/webhook/user',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-GitHub-Event': 'push'
+                    },
+                    body: {
+                        event: 'user.created',
+                        user: {
+                            id: 'usr_abc123',
+                            email: 'user@example.com',
+                            name: 'John Doe'
+                        }
+                    }
+                }
+            ];
+
+            const randomDemo = demoRequests[Math.floor(Math.random() * demoRequests.length)];
+            const newRequest: WebhookRequest = {
+                id: Math.random().toString(36).substring(2, 15),
+                timestamp: Date.now(),
+                ...randomDemo
+            };
+
+            setWebhookRequests(prev => [newRequest, ...prev]);
+            toast.success("Demo request added");
+        },
+
+        clearWebhookRequests: () => {
+            setWebhookRequests([]);
+            setSelectedRequest(null);
+            toast.success("All webhook requests cleared");
+        }
+    };
 
     return {
         state: {
@@ -282,6 +385,14 @@ export const ApiStateHandler = (): ToolHandler => {
             addHeader: helpers.addHeader,
             addQueryParam: helpers.addQueryParam,
             addBearerToken: helpers.addBearerToken,
+            // Webhook states
+            webhookUrl,
+            webhookRequests,
+            selectedRequest,
+            setSelectedRequest,
+            generateNewWebhookUrl: webhookHelpers.generateNewWebhookUrl,
+            addDemoRequest: webhookHelpers.addDemoRequest,
+            clearWebhookRequests: webhookHelpers.clearWebhookRequests,
         },
         setters: {
             setMethod,
