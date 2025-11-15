@@ -41,59 +41,60 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
   return (
     <TooltipProvider delayDuration={0}>
       <Sidebar collapsible="icon" className="border-r-0">
-        <SidebarContent className="bg-card/50 backdrop-blur-sm border-r border-border/20">
-        {/* Header */}
+        {/* Sticky Header */}
         <div className={cn(
-          "px-4 py-4 border-b border-border/20",
-          isCollapsed && "px-2"
+          "sticky top-0 z-10 bg-card/50 backdrop-blur-sm border-b border-border/20",
+          isCollapsed ? "px-2 py-4" : "px-6 py-4"
         )}>
           {!isCollapsed && (
             <h2 className="text-lg font-bold gradient-text">Dev Tools</h2>
           )}
         </div>
 
-        {/* Categories */}
-        {Object.entries(categories).map(([categoryName, _]) => {
+        {/* Scrollable Content */}
+        <SidebarContent className="bg-card/50 backdrop-blur-sm border-r border-border/20 overflow-y-auto scrollbar-hide">
+          {/* Categories */}
+          {Object.entries(categories).map(([categoryName, _]) => {
           const categoryTools = getToolsByCategory(categoryName);
           if (categoryTools.length === 0) return null;
 
-          return (
-            <SidebarGroup key={categoryName}>
-              {!isCollapsed && (
-                <SidebarGroupLabel className="text-xs text-muted-foreground">
-                  {categoryName}
-                </SidebarGroupLabel>
-              )}
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {categoryTools.map((tool) => {
-                    const Icon = tool.icon;
-                    const isActive = activeTool === tool.id;
+            return (
+              <SidebarGroup key={categoryName}>
+                {!isCollapsed && (
+                  <SidebarGroupLabel className="text-xs text-muted-foreground">
+                    {categoryName}
+                  </SidebarGroupLabel>
+                )}
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {categoryTools.map((tool) => {
+                      const Icon = tool.icon;
+                      const isActive = activeTool === tool.id;
 
-                    return (
-                      <SidebarMenuItem key={tool.id}>
-                        <SidebarMenuButton
-                          onClick={() => onToolChange(tool.id)}
-                          isActive={isActive}
-                          tooltip={tool.label}
-                          className={cn(
-                            "transition-all duration-200",
-                            isActive && "bg-primary/10 text-primary font-medium"
-                          )}
-                        >
-                          <Icon className="w-4 h-4" />
-                          {!isCollapsed && <span>{tool.label}</span>}
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          );
-        })}
-      </SidebarContent>
-    </Sidebar>
+                      return (
+                        <SidebarMenuItem key={tool.id}>
+                          <SidebarMenuButton
+                            onClick={() => onToolChange(tool.id)}
+                            isActive={isActive}
+                            tooltip={tool.label}
+                            className={cn(
+                              "transition-all duration-200",
+                              isActive && "bg-primary/10 text-primary font-medium"
+                            )}
+                          >
+                            <Icon className="w-4 h-4" />
+                            {!isCollapsed && <span>{tool.label}</span>}
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })}
+        </SidebarContent>
+      </Sidebar>
     </TooltipProvider>
   );
 }
