@@ -22,13 +22,6 @@ interface APIResponse {
     data: any;
 }
 
-interface WebhookTest {
-    timestamp: string;
-    status: number;
-    statusText: string;
-    responseTime: number;
-}
-
 export const ApiStateHandler = (): ToolHandler => {
     const [method, setMethod] = useState("GET");
     const [url, setUrl] = useState("");
@@ -38,10 +31,6 @@ export const ApiStateHandler = (): ToolHandler => {
     const [response, setResponse] = useState<APIResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [bodyType, setBodyType] = useState<"raw" | "json">("json");
-    const [webhookUrl, setWebhookUrl] = useState("");
-    const [webhookTests, setWebhookTests] = useState<WebhookTest[]>([]);
-    const [webhookBody, setWebhookBody] = useState('{\n  "test": "data"\n}');
-    const [isTestingWebhook, setIsTestingWebhook] = useState(false);
 
     const helpers = {
         addHeader: () => {
@@ -98,59 +87,6 @@ export const ApiStateHandler = (): ToolHandler => {
             if (bytes < 1024) return `${bytes} B`;
             if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
             return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-        },
-
-        testWebhook: async () => {
-            if (!webhookUrl) {
-                toast.error("Please enter a webhook URL");
-                return;
-            }
-
-            setIsTestingWebhook(true);
-            const startTime = performance.now();
-
-            try {
-                const res = await fetch(webhookUrl, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: webhookBody,
-                });
-
-                const endTime = performance.now();
-
-                const test: WebhookTest = {
-                    timestamp: new Date().toISOString(),
-                    status: res.status || 200,
-                    statusText: res.statusText || "Sent (no-cors mode)",
-                    responseTime: endTime - startTime,
-                };
-
-                setWebhookTests([test, ...webhookTests]);
-
-                toast.success("Webhook request sent", {
-                    description: `Response time: ${Math.round(endTime - startTime)}ms`,
-                });
-            } catch (error: any) {
-                const endTime = performance.now();
-                
-                const test: WebhookTest = {
-                    timestamp: new Date().toISOString(),
-                    status: 0,
-                    statusText: error.message,
-                    responseTime: endTime - startTime,
-                };
-
-                setWebhookTests([test, ...webhookTests]);
-
-                toast.error("Webhook test failed", {
-                    description: error.message,
-                });
-            } finally {
-                setIsTestingWebhook(false);
-            }
         },
     }
 
@@ -232,12 +168,6 @@ export const ApiStateHandler = (): ToolHandler => {
             navigator.clipboard.writeText(text);
             toast.success(`${label} copied!`);
         },
-
-        clearWebhookTests: () => {
-            setWebhookTests([]);
-            toast.success("Test history cleared");
-        },
-
     }
 
     return {
@@ -250,10 +180,6 @@ export const ApiStateHandler = (): ToolHandler => {
             response,
             loading,
             bodyType,
-            webhookUrl,
-            webhookTests,
-            webhookBody,
-            isTestingWebhook,
             addHeader: helpers.addHeader,
             addQueryParam: helpers.addQueryParam,
             addBearerToken: helpers.addBearerToken,
@@ -263,8 +189,6 @@ export const ApiStateHandler = (): ToolHandler => {
             setUrl,
             setBody,
             setBodyType,
-            setWebhookUrl,
-            setWebhookBody,
         },
         helpers,
         actions
