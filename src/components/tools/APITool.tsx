@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Send, Copy, Clock, FileCode, Plus, Trash2, Save } from "lucide-react";
+import { Send, Copy, Clock, FileCode, Plus, Trash2, Save, Webhook } from "lucide-react";
 import { ApiStateHandler } from "@/modules/state/ApiStateHandler";
 
 export const APITool = () => {
@@ -25,7 +25,17 @@ export const APITool = () => {
   } = ApiStateHandler();
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      {/* Main Tabs */}
+      <Tabs defaultValue="api-tester" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="api-tester">API Tester</TabsTrigger>
+          <TabsTrigger value="webhook">Webhook Monitor</TabsTrigger>
+        </TabsList>
+
+        {/* API Tester Tab */}
+        <TabsContent value="api-tester" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
       {/* Left Pane: Request Builder */}
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Request</h3>
@@ -250,6 +260,52 @@ export const APITool = () => {
           </div>
         )}
       </div>
+          </div>
+        </TabsContent>
+
+        {/* Webhook Monitor Tab */}
+        <TabsContent value="webhook" className="space-y-6">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Webhook Receiver</h3>
+              {!state.isWebhookActive ? (
+                <Button onClick={actions.startWebhook} className="btn-gradient">
+                  <Webhook className="w-4 h-4 mr-2" />
+                  Generate URL
+                </Button>
+              ) : (
+                <Button onClick={actions.stopWebhook} variant="destructive">
+                  Stop
+                </Button>
+              )}
+            </div>
+
+            {state.isWebhookActive && state.webhookUrl ? (
+              <>
+                <div className="space-y-2">
+                  <Label>Webhook URL</Label>
+                  <div className="flex gap-2">
+                    <Input value={state.webhookUrl} readOnly className="font-mono" />
+                    <Button variant="outline" onClick={() => actions.handleCopy(state.webhookUrl, "Webhook URL")}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <Button onClick={() => window.open(state.webhookUrl, '_blank')}>
+                  View Dashboard
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
+                <div className="text-center text-muted-foreground">
+                  <Webhook className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>Generate a webhook URL to start receiving requests</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

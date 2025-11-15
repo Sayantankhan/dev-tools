@@ -7,8 +7,10 @@ import { Lock, Unlock, Copy, Download, Trash2, Hash } from "lucide-react";
 import { Base64EnStateHandler } from "@/modules/state/Base64EnStateHandler";
 import { URLStateHandler } from "@/modules/state/URLStateHandler";
 import { SHA256StateHandler } from "@/modules/state/SHA256StateHandler";
+import { MD5StateHandler } from "@/modules/state/MD5StateHandler";
+import { SHA1StateHandler } from "@/modules/state/SHA1StateHandler";
 
-type EncodingType = "base64" | "url" | "sha256";
+type EncodingType = "base64" | "url" | "sha256" | "md5" | "sha1";
 
 export const EncoderTool = () => {
   const [encodingType, setEncodingType] = useState<EncodingType>("base64");
@@ -16,12 +18,16 @@ export const EncoderTool = () => {
   const base64Handler = Base64EnStateHandler();
   const urlHandler = URLStateHandler();
   const sha256Handler = SHA256StateHandler();
+  const md5Handler = MD5StateHandler();
+  const sha1Handler = SHA1StateHandler();
 
   // Clear input/output when encoding type changes
   const handleEncodingTypeChange = (value: EncodingType) => {
     base64Handler.actions.handleClear();
     urlHandler.actions.handleClear();
     sha256Handler.actions.handleClear();
+    md5Handler.actions.handleClear();
+    sha1Handler.actions.handleClear();
     setEncodingType(value);
   };
 
@@ -34,11 +40,15 @@ export const EncoderTool = () => {
         return urlHandler;
       case "sha256":
         return sha256Handler;
+      case "md5":
+        return md5Handler;
+      case "sha1":
+        return sha1Handler;
     }
   };
 
   const handler = getCurrentHandler();
-  const showDecode = encodingType !== "sha256";
+  const showDecode = !["sha256", "md5", "sha1"].includes(encodingType);
 
   return (
     <div className="space-y-6">
@@ -52,6 +62,8 @@ export const EncoderTool = () => {
           <SelectContent>
             <SelectItem value="base64">Base64</SelectItem>
             <SelectItem value="url">URL</SelectItem>
+            <SelectItem value="md5">MD5 Hash</SelectItem>
+            <SelectItem value="sha1">SHA-1 Hash</SelectItem>
             <SelectItem value="sha256">SHA-256 Hash</SelectItem>
           </SelectContent>
         </Select>
@@ -94,7 +106,21 @@ export const EncoderTool = () => {
         {encodingType === "sha256" && (
           <Button onClick={sha256Handler.actions.handleHash} className="btn-gradient">
             <Hash className="w-4 h-4 mr-2" />
-            Generate Hash
+            Generate SHA-256 Hash
+          </Button>
+        )}
+        
+        {encodingType === "md5" && (
+          <Button onClick={md5Handler.actions.handleHash} className="btn-gradient">
+            <Hash className="w-4 h-4 mr-2" />
+            Generate MD5 Hash
+          </Button>
+        )}
+        
+        {encodingType === "sha1" && (
+          <Button onClick={sha1Handler.actions.handleHash} className="btn-gradient">
+            <Hash className="w-4 h-4 mr-2" />
+            Generate SHA-1 Hash
           </Button>
         )}
 
