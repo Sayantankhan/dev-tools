@@ -40,7 +40,7 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
 
   return (
     <TooltipProvider delayDuration={0}>
-      <Sidebar collapsible="icon" className="border-r-0 w-52 data-[state=collapsed]:w-14">
+      <Sidebar collapsible="icon" className="border-r-0 w-48 data-[state=collapsed]:w-14">
         {/* Sticky Header */}
         <div className={cn(
           "sticky top-0 z-10 bg-card/50 backdrop-blur-sm border-b border-border/20",
@@ -76,10 +76,10 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
                           <SidebarMenuButton
                             onClick={() => onToolChange(tool.id)}
                             isActive={isActive}
-                            tooltip={tool.label}
+                            tooltip={{ children: tool.label, hidden: !isCollapsed, side: "right", align: "center" }}
                             className={cn(
                               "transition-all duration-200 px-3",
-                              isActive && "bg-primary/10 text-primary font-medium"
+                              isActive && "bg-primary/15 text-primary font-medium border-l-2 border-primary pl-2"
                             )}
                           >
                             <Icon className="w-4 h-4" />
