@@ -134,22 +134,44 @@ export const APITool = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Body</Label>
-              <Select value={state.bodyType} onValueChange={(v: any) => setters.setBodyType(v)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="json">JSON</SelectItem>
-                  <SelectItem value="raw">Raw</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                {state.bodyType === "json" && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={helpers.formatJSON}
+                    disabled={!state.body.trim()}
+                  >
+                    <FileCode className="w-3 h-3 mr-1" />
+                    Format
+                  </Button>
+                )}
+                <Select value={state.bodyType} onValueChange={(v: any) => setters.setBodyType(v)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="json">JSON</SelectItem>
+                    <SelectItem value="raw">Raw</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <Textarea
               value={state.body}
               onChange={(e) => setters.setBody(e.target.value)}
               placeholder={state.bodyType === "json" ? '{"key": "value"}' : "Request body..."}
-              className="code-editor min-h-[150px]"
+              className={`code-editor min-h-[150px] font-mono ${state.jsonError ? 'border-destructive' : ''}`}
             />
+            {state.jsonError && (
+              <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <span className="text-destructive text-xs font-bold mt-0.5">!</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-destructive">Invalid JSON</p>
+                  <p className="text-xs text-foreground/70 mt-1">{state.jsonError}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
