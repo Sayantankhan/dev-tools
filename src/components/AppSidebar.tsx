@@ -78,7 +78,7 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
                             isActive={isActive}
                             tooltip={{ children: tool.label, hidden: !isCollapsed, side: "right", align: "center" }}
                             className={cn(
-                              "transition-all duration-200 px-3",
+                              "transition-all duration-200 px-4",
                               isActive && "bg-primary/15 text-primary font-medium border-l-2 border-primary pl-2"
                             )}
                           >
