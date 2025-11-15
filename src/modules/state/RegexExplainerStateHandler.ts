@@ -17,20 +17,6 @@ export const RegexExplainerStateHandler = (): ToolHandler => {
   const [error, setError] = useState("");
   
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const performMatching = useCallback((regexPattern: string, regexFlags: string, text: string) => {
-    const validationError = helpers.validateRegex(regexPattern);
-    setError(validationError);
-    
-    if (!validationError && regexPattern) {
-      setExplanation(helpers.explainPattern(regexPattern));
-      const foundMatches = helpers.findMatches(regexPattern, regexFlags, text);
-      setMatches(foundMatches);
-    } else {
-      setMatches([]);
-      setExplanation(regexPattern ? "" : "Enter a regex pattern to see explanation");
-    }
-  }, []);
 
   const helpers = {
     explainPattern: (regexPattern: string): string => {
@@ -103,6 +89,20 @@ export const RegexExplainerStateHandler = (): ToolHandler => {
       }
     },
   };
+  
+  const performMatching = useCallback((regexPattern: string, regexFlags: string, text: string) => {
+    const validationError = helpers.validateRegex(regexPattern);
+    setError(validationError);
+    
+    if (!validationError && regexPattern) {
+      setExplanation(helpers.explainPattern(regexPattern));
+      const foundMatches = helpers.findMatches(regexPattern, regexFlags, text);
+      setMatches(foundMatches);
+    } else {
+      setMatches([]);
+      setExplanation(regexPattern ? "" : "Enter a regex pattern to see explanation");
+    }
+  }, []);
 
   const actions = {
     updatePattern: (value: string) => {
