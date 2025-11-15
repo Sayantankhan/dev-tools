@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Send, Copy, Clock, FileCode, Plus, Trash2 } from "lucide-react";
+import { Send, Copy, Clock, FileCode, Plus, Trash2, Terminal } from "lucide-react";
 import { ApiStateHandler } from "@/modules/state/ApiStateHandler";
 
 export const APITool = () => {
@@ -186,6 +186,14 @@ export const APITool = () => {
                 Send
               </>
             )}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={actions.exportCurl}
+            disabled={!state.url}
+          >
+            <Terminal className="w-4 h-4 mr-2" />
+            Export Curl
           </Button>
         </div>
       </div>
