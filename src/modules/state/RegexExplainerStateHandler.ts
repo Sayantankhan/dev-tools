@@ -146,38 +146,31 @@ export const RegexExplainerStateHandler = (): ToolHandler => {
 
     applyPreset: (preset: string) => {
       let presetPattern = "";
-      let presetSample = "";
 
       switch (preset) {
         case "email":
           presetPattern = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}";
-          presetSample = "Contact us at support@example.com or admin@test.org";
           break;
         case "url":
           presetPattern = "https?://[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+";
-          presetSample = "Visit https://example.com or http://test.org/path";
           break;
         case "phone":
           presetPattern = "\\+?\\d{1,3}?[-.\\s]?\\(?\\d{1,4}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}";
-          presetSample = "Call +1-234-567-8900 or (555) 123-4567";
           break;
         case "ipv4":
           presetPattern = "\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b";
-          presetSample = "Server IPs: 192.168.1.1 and 10.0.0.1";
           break;
         case "date":
           presetPattern = "\\d{4}-\\d{2}-\\d{2}";
-          presetSample = "Event dates: 2024-01-15 and 2024-12-31";
           break;
         default:
           return;
       }
 
       setPattern(presetPattern);
-      setSampleText(presetSample);
       setError("");
       setExplanation(helpers.explainPattern(presetPattern));
-      const foundMatches = helpers.findMatches(presetPattern, flags, presetSample);
+      const foundMatches = helpers.findMatches(presetPattern, flags, sampleText);
       setMatches(foundMatches);
       toast.success("Preset applied!");
     },
