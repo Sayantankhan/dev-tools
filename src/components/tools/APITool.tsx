@@ -174,6 +174,21 @@ export const APITool = () => {
 
         {state.response ? (
           <>
+            {/* Error Display */}
+            {state.response.error && (
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center mt-0.5">
+                    <span className="text-destructive text-xs font-bold">!</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-destructive mb-1">Request Failed</h4>
+                    <p className="text-sm text-foreground/80">{state.response.error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Status & Metrics */}
             <div className="flex flex-wrap gap-4 p-4 bg-card/50 rounded-lg">
               <div>
@@ -185,7 +200,7 @@ export const APITool = () => {
                       : "text-destructive"
                   }`}
                 >
-                  {state.response.status} {state.response.statusText}
+                  {state.response.status > 0 ? `${state.response.status} ${state.response.statusText}` : "Failed"}
                 </p>
               </div>
               <div>
@@ -199,6 +214,7 @@ export const APITool = () => {
             </div>
 
             {/* Response Tabs */}
+            {!state.response.error && (
             <Tabs defaultValue="body" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="body">Body</TabsTrigger>
@@ -242,6 +258,7 @@ export const APITool = () => {
                 ))}
               </TabsContent>
             </Tabs>
+            )}
           </>
         ) : (
           <div className="flex items-center justify-center h-64 text-muted-foreground">
