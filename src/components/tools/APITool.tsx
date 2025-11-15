@@ -14,7 +14,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Copy, Clock, FileCode, Plus, Trash2, Terminal, Webhook, ExternalLink } from "lucide-react";
+import { Send, Copy, Clock, FileCode, Plus, Trash2, Terminal, Webhook, ExternalLink, Code } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ApiStateHandler } from "@/modules/state/ApiStateHandler";
 
 export const APITool = () => {
@@ -206,14 +212,35 @@ export const APITool = () => {
               </>
             )}
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={actions.exportCurl}
-            disabled={!state.url}
-          >
-            <Terminal className="w-4 h-4 mr-2" />
-            Export Curl
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                disabled={!state.url}
+              >
+                <Code className="w-4 h-4 mr-2" />
+                Export Code
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={actions.exportCurl}>
+                <Terminal className="w-4 h-4 mr-2" />
+                cURL
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={actions.exportJavaScript}>
+                <FileCode className="w-4 h-4 mr-2" />
+                JavaScript
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={actions.exportJava}>
+                <FileCode className="w-4 h-4 mr-2" />
+                Java
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={actions.exportGo}>
+                <FileCode className="w-4 h-4 mr-2" />
+                Go
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
