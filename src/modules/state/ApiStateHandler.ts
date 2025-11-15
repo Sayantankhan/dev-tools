@@ -124,6 +124,35 @@ export const ApiStateHandler = (): ToolHandler => {
                 setJsonError(error.message);
             }
         },
+
+        generateCurl: (): string => {
+            const finalURL = helpers.buildURL();
+            let curl = `curl -X ${method} '${finalURL}'`;
+
+            // Add headers
+            const requestHeaders: Record<string, string> = {};
+            headers.forEach((header) => {
+                if (header.key) {
+                    requestHeaders[header.key] = header.value;
+                }
+            });
+
+            if (bodyType === "json" && body) {
+                requestHeaders["Content-Type"] = "application/json";
+            }
+
+            Object.entries(requestHeaders).forEach(([key, value]) => {
+                curl += ` \\\n  -H '${key}: ${value}'`;
+            });
+
+            // Add body
+            if (method !== "GET" && method !== "HEAD" && body) {
+                const escapedBody = body.replace(/'/g, "'\\''");
+                curl += ` \\\n  -d '${escapedBody}'`;
+            }
+
+            return curl;
+        },
     }
 
     const actions = {
@@ -230,6 +259,12 @@ export const ApiStateHandler = (): ToolHandler => {
         handleCopy: (text: string, label: string) => {
             navigator.clipboard.writeText(text);
             toast.success(`${label} copied!`);
+        },
+
+        exportCurl: () => {
+            const curlCommand = helpers.generateCurl();
+            navigator.clipboard.writeText(curlCommand);
+            toast.success("Curl command copied to clipboard!");
         },
     }
 
