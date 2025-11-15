@@ -32,6 +32,7 @@ export const ApiStateHandler = (): ToolHandler => {
     const [response, setResponse] = useState<APIResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [bodyType, setBodyType] = useState<"raw" | "json">("json");
+    const [jsonError, setJsonError] = useState<string>("");
 
     const helpers = {
         addHeader: () => {
@@ -89,12 +90,51 @@ export const ApiStateHandler = (): ToolHandler => {
             if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
             return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
         },
+
+        validateJSON: (jsonString: string): boolean => {
+            if (!jsonString.trim()) {
+                setJsonError("");
+                return true;
+            }
+
+            try {
+                JSON.parse(jsonString);
+                setJsonError("");
+                return true;
+            } catch (error: any) {
+                setJsonError(error.message);
+                return false;
+            }
+        },
+
+        formatJSON: () => {
+            if (!body.trim()) return;
+
+            try {
+                const parsed = JSON.parse(body);
+                const formatted = JSON.stringify(parsed, null, 2);
+                setBody(formatted);
+                setJsonError("");
+                toast.success("JSON formatted");
+            } catch (error: any) {
+                toast.error("Invalid JSON", {
+                    description: error.message,
+                });
+                setJsonError(error.message);
+            }
+        },
     }
 
     const actions = {
         handleSend: async () => {
             if (!url) {
                 toast.error("Please enter a URL");
+                return;
+            }
+
+            // Validate JSON before sending
+            if (bodyType === "json" && body.trim() && !helpers.validateJSON(body)) {
+                toast.error("Invalid JSON in request body");
                 return;
             }
 
@@ -200,6 +240,7 @@ export const ApiStateHandler = (): ToolHandler => {
             response,
             loading,
             bodyType,
+            jsonError,
             addHeader: helpers.addHeader,
             addQueryParam: helpers.addQueryParam,
             addBearerToken: helpers.addBearerToken,
@@ -207,8 +248,20 @@ export const ApiStateHandler = (): ToolHandler => {
         setters: {
             setMethod,
             setUrl,
-            setBody,
-            setBodyType,
+            setBody: (value: string) => {
+                setBody(value);
+                if (bodyType === "json") {
+                    helpers.validateJSON(value);
+                }
+            },
+            setBodyType: (value: "raw" | "json") => {
+                setBodyType(value);
+                if (value === "json" && body) {
+                    helpers.validateJSON(body);
+                } else {
+                    setJsonError("");
+                }
+            },
         },
         helpers,
         actions
