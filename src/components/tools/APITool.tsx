@@ -172,7 +172,12 @@ export const APITool = () => {
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Response</h3>
 
-        {state.response ? (
+        {state.loading ? (
+          <div className="flex flex-col items-center justify-center h-64 space-y-4">
+            <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <p className="text-muted-foreground">Sending request...</p>
+          </div>
+        ) : state.response ? (
           <>
             {/* Error Display */}
             {state.response.error && (
