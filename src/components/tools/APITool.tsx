@@ -263,43 +263,100 @@ export const APITool = () => {
           </div>
         </TabsContent>
 
-        {/* Webhook Monitor Tab */}
+        {/* Webhook Tester Tab */}
         <TabsContent value="webhook" className="space-y-6">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Webhook Receiver</h3>
-              {!state.isWebhookActive ? (
-                <Button onClick={actions.startWebhook} className="btn-gradient">
-                  <Webhook className="w-4 h-4 mr-2" />
-                  Generate URL
-                </Button>
-              ) : (
-                <Button onClick={actions.stopWebhook} variant="destructive">
-                  Stop
+            <h3 className="text-lg font-semibold">Webhook Tester</h3>
+            
+            {/* Webhook URL Input */}
+            <div className="space-y-2">
+              <Label>Webhook URL</Label>
+              <Input
+                value={state.webhookUrl}
+                onChange={(e) => setters.setWebhookUrl(e.target.value)}
+                placeholder="https://your-webhook-url.com/endpoint"
+                className="font-mono"
+              />
+            </div>
+
+            {/* Request Body */}
+            <div className="space-y-2">
+              <Label>Request Body (JSON)</Label>
+              <Textarea
+                value={state.webhookBody}
+                onChange={(e) => setters.setWebhookBody(e.target.value)}
+                placeholder='{"test": "data"}'
+                className="code-editor min-h-[150px] font-mono"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={helpers.testWebhook} 
+                disabled={state.isTestingWebhook || !state.webhookUrl}
+                className="btn-gradient"
+              >
+                {state.isTestingWebhook ? (
+                  "Testing..."
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Test Webhook
+                  </>
+                )}
+              </Button>
+              {state.webhookTests.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={actions.clearWebhookTests}
+                >
+                  Clear History
                 </Button>
               )}
             </div>
 
-            {state.isWebhookActive && state.webhookUrl ? (
-              <>
-                <div className="space-y-2">
-                  <Label>Webhook URL</Label>
-                  <div className="flex gap-2">
-                    <Input value={state.webhookUrl} readOnly className="font-mono" />
-                    <Button variant="outline" onClick={() => actions.handleCopy(state.webhookUrl, "Webhook URL")}>
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                <Button onClick={() => window.open(state.webhookUrl, '_blank')}>
-                  View Dashboard
-                </Button>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
-                <div className="text-center text-muted-foreground">
-                  <Webhook className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>Generate a webhook URL to start receiving requests</p>
+            {/* Test History */}
+            {state.webhookTests.length > 0 && (
+              <div className="space-y-3">
+                <Label>Test History</Label>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {state.webhookTests.map((test, index) => (
+                    <div
+                      key={index}
+                      className="p-4 bg-card/50 rounded-lg space-y-2"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Status</p>
+                            <p
+                              className={`font-bold ${
+                                test.status >= 200 && test.status < 300
+                                  ? "text-success"
+                                  : "text-destructive"
+                              }`}
+                            >
+                              {test.status > 0 ? `${test.status} ${test.statusText}` : "Failed"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Response Time</p>
+                            <p className="font-mono">{Math.round(test.responseTime)}ms</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">Timestamp</p>
+                          <p className="font-mono text-sm">
+                            {new Date(test.timestamp).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                      {test.status === 0 && (
+                        <p className="text-sm text-destructive">{test.statusText}</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
