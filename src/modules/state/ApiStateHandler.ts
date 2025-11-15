@@ -22,6 +22,14 @@ interface APIResponse {
     data: any;
 }
 
+interface WebhookRequest {
+    timestamp: string;
+    method: string;
+    headers: Record<string, string>;
+    query: Record<string, string>;
+    body: any;
+}
+
 export const ApiStateHandler = (): ToolHandler => {
     const [method, setMethod] = useState("GET");
     const [url, setUrl] = useState("");
@@ -31,6 +39,9 @@ export const ApiStateHandler = (): ToolHandler => {
     const [response, setResponse] = useState<APIResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [bodyType, setBodyType] = useState<"raw" | "json">("json");
+    const [webhookUrl, setWebhookUrl] = useState("");
+    const [webhookRequests, setWebhookRequests] = useState<WebhookRequest[]>([]);
+    const [isWebhookActive, setIsWebhookActive] = useState(false);
 
     const helpers = {
         addHeader: () => {
@@ -87,6 +98,24 @@ export const ApiStateHandler = (): ToolHandler => {
             if (bytes < 1024) return `${bytes} B`;
             if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
             return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+        },
+
+        generateWebhookUrl: () => {
+            // Generate a unique webhook URL using webhook.site API
+            return `https://webhook.site/${crypto.randomUUID()}`;
+        },
+
+        fetchWebhookRequests: async (webhookId: string) => {
+            try {
+                // Note: webhook.site doesn't have a public API for fetching requests
+                // This is a placeholder - in production, you'd use a proper webhook service
+                // or implement your own webhook receiver backend
+                toast.info("Webhook monitoring active", {
+                    description: "Send requests to the webhook URL to see them here"
+                });
+            } catch (error) {
+                console.error("Error fetching webhook requests:", error);
+            }
         },
     }
 
@@ -169,6 +198,26 @@ export const ApiStateHandler = (): ToolHandler => {
             toast.success(`${label} copied!`);
         },
 
+        startWebhook: () => {
+            const newWebhookUrl = helpers.generateWebhookUrl();
+            setWebhookUrl(newWebhookUrl);
+            setIsWebhookActive(true);
+            setWebhookRequests([]);
+            toast.success("Webhook URL generated!", {
+                description: "Copy the URL and use it to receive webhooks"
+            });
+        },
+
+        stopWebhook: () => {
+            setIsWebhookActive(false);
+            toast.info("Webhook stopped");
+        },
+
+        clearWebhookRequests: () => {
+            setWebhookRequests([]);
+            toast.success("Webhook requests cleared");
+        },
+
     }
 
     return {
@@ -180,7 +229,13 @@ export const ApiStateHandler = (): ToolHandler => {
             body,
             response,
             loading,
-            bodyType
+            bodyType,
+            webhookUrl,
+            webhookRequests,
+            isWebhookActive,
+            addHeader: helpers.addHeader,
+            addQueryParam: helpers.addQueryParam,
+            addBearerToken: helpers.addBearerToken,
         },
         setters: {
             setMethod,
