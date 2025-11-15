@@ -76,7 +76,7 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
                           <SidebarMenuButton
                             onClick={() => onToolChange(tool.id)}
                             isActive={isActive}
-                            tooltip={isCollapsed ? tool.label : undefined}
+                            tooltip={tool.label}
                             className={cn(
                               "transition-all duration-200 px-3",
                               isActive && "bg-primary/10 text-primary font-medium"
