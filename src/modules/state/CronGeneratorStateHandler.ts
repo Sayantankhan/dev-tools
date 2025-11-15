@@ -74,7 +74,10 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
       const runs: string[] = [];
       let current = new Date(now);
 
-      for (let i = 0; i < count * 100 && runs.length < count; i++) {
+      // In cron, if both day and weekday are specified (not *), it's an OR condition
+      const bothDaysSpecified = dayPart !== "*" && weekdayPart !== "*";
+
+      for (let i = 0; i < count * 1000 && runs.length < count; i++) {
         current = new Date(current.getTime() + 60000); // Add 1 minute
 
         const minute = current.getMinutes();
@@ -83,13 +86,18 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
         const month = current.getMonth() + 1;
         const weekday = current.getDay();
 
-        if (
-          helpers.matchesCronPart(minute, minutePart) &&
-          helpers.matchesCronPart(hour, hourPart) &&
-          helpers.matchesCronPart(day, dayPart) &&
-          helpers.matchesCronPart(month, monthPart) &&
-          helpers.matchesCronPart(weekday, weekdayPart)
-        ) {
+        const minuteMatch = helpers.matchesCronPart(minute, minutePart);
+        const hourMatch = helpers.matchesCronPart(hour, hourPart);
+        const dayMatch = helpers.matchesCronPart(day, dayPart);
+        const monthMatch = helpers.matchesCronPart(month, monthPart);
+        const weekdayMatch = helpers.matchesCronPart(weekday, weekdayPart);
+
+        // Handle day/weekday OR logic when both are specified
+        const dayCondition = bothDaysSpecified 
+          ? (dayMatch || weekdayMatch)
+          : (dayMatch && weekdayMatch);
+
+        if (minuteMatch && hourMatch && dayCondition && monthMatch) {
           runs.push(current.toLocaleString());
         }
       }
