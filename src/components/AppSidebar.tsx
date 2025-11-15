@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface AppSidebarProps {
@@ -38,8 +39,9 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarContent className="bg-card/50 backdrop-blur-sm border-r border-border/20">
+    <TooltipProvider delayDuration={0}>
+      <Sidebar collapsible="icon" className="border-r-0">
+        <SidebarContent className="bg-card/50 backdrop-blur-sm border-r border-border/20">
         {/* Header */}
         <div className={cn(
           "px-4 py-4 border-b border-border/20",
@@ -73,7 +75,7 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
                         <SidebarMenuButton
                           onClick={() => onToolChange(tool.id)}
                           isActive={isActive}
-                          tooltip={isCollapsed ? tool.label : undefined}
+                          tooltip={tool.label}
                           className={cn(
                             "transition-all duration-200",
                             isActive && "bg-primary/10 text-primary font-medium"
@@ -92,5 +94,6 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
         })}
       </SidebarContent>
     </Sidebar>
+    </TooltipProvider>
   );
 }
