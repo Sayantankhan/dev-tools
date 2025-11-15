@@ -80,6 +80,15 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .glass-card {
     @apply bg-card/80 backdrop-blur-xl border border-border rounded-xl shadow-[0_10px_40px_hsl(210_35%_3%/0.5)];
   }

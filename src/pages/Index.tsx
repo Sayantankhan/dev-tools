@@ -80,6 +80,7 @@ const Index = () => {
   }, []);
 
   const ActiveComponent = tools.find((t) => t.id === activeTool)?.component;
+  const activeToolLabel = tools.find((t) => t.id === activeTool)?.label;
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -97,7 +98,7 @@ const Index = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold gradient-text">Developer Tools</h1>
               <p className="text-xs text-muted-foreground">
-                All client-side, secure, and fast
+                {activeToolLabel} • All client-side, secure, and fast
               </p>
             </div>
           </header>
