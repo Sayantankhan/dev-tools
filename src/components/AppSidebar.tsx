@@ -40,14 +40,14 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
 
   return (
     <TooltipProvider delayDuration={0}>
-      <Sidebar collapsible="icon" className="border-r-0 w-48 data-[state=collapsed]:w-14">
+      <Sidebar collapsible="icon" className="border-r-0 w-48 data-[state=collapsed]:w-14 transition-all duration-300 ease-in-out">
         {/* Sticky Header */}
         <div className={cn(
-          "sticky top-0 z-10 bg-card/50 backdrop-blur-sm border-b border-border/20",
+          "sticky top-0 z-10 bg-card/50 backdrop-blur-sm border-b border-border/20 transition-all duration-300",
           isCollapsed ? "px-2 py-4" : "px-4 py-4"
         )}>
           {!isCollapsed && (
-            <h2 className="text-lg font-bold gradient-text">Dev Tools</h2>
+            <h2 className="text-lg font-bold gradient-text animate-fade-in">Dev Tools</h2>
           )}
         </div>
 
@@ -82,8 +82,8 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
                               isActive && "bg-primary/15 text-primary font-medium border-l-2 border-primary pl-2"
                             )}
                           >
-                            <Icon className="w-4 h-4" />
-                            {!isCollapsed && <span>{tool.label}</span>}
+                            <Icon className="w-4 h-4 transition-transform duration-300" />
+                            {!isCollapsed && <span className="animate-fade-in">{tool.label}</span>}
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );
