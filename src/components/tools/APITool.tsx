@@ -243,9 +243,10 @@ export const APITool = () => {
             {/* Response Tabs */}
             {!state.response.error && (
             <Tabs defaultValue="body" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="body">Body</TabsTrigger>
-                <TabsTrigger value="headers">Headers</TabsTrigger>
+                <TabsTrigger value="headers">Response Headers</TabsTrigger>
+                <TabsTrigger value="request-headers">Request Headers</TabsTrigger>
               </TabsList>
 
               <TabsContent value="body" className="space-y-3">
@@ -283,6 +284,24 @@ export const APITool = () => {
                     <code className="text-sm text-foreground/70">{String(value)}</code>
                   </div>
                 ))}
+              </TabsContent>
+
+              <TabsContent value="request-headers" className="space-y-2">
+                {state.response.requestHeaders && Object.entries(state.response.requestHeaders).length > 0 ? (
+                  Object.entries(state.response.requestHeaders).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex justify-between p-3 bg-card/50 rounded-lg"
+                    >
+                      <code className="text-sm text-primary">{key}</code>
+                      <code className="text-sm text-foreground/70">{String(value)}</code>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground">
+                    <p>No request headers sent</p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
             )}
