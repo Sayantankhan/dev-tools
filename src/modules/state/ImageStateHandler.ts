@@ -121,6 +121,11 @@ export const ImageStateHandler = (): ToolHandler => {
                             const url = URL.createObjectURL(blob);
                             setConvertedImage(url);
                             setConvertedSize(blob.size);
+                            // Update preview to current state for next operation
+                            setPreview(url);
+                            setOriginalDimensions({ width: targetWidth, height: targetHeight || img.height });
+                            setWidth(targetWidth);
+                            setHeight(targetHeight || img.height);
                             setProcessing(false);
                             toast.success("Image converted!", {
                                 description: `Size reduced by ${((1 - blob.size / originalSize) * 100).toFixed(1)}%`,
@@ -192,8 +197,14 @@ export const ImageStateHandler = (): ToolHandler => {
                             const url = URL.createObjectURL(blob);
                             setConvertedImage(url);
                             setConvertedSize(blob.size);
-                            setProcessing(false);
+                            // Update preview to current state for next operation
+                            setPreview(url);
+                            setOriginalDimensions({ width: cropArea.width, height: cropArea.height });
+                            setWidth(cropArea.width);
+                            setHeight(cropArea.height);
                             setCropMode(false);
+                            setCropArea({ x: 0, y: 0, width: 0, height: 0 });
+                            setProcessing(false);
                             toast.success("Image cropped!");
                         }
                     },
@@ -272,6 +283,8 @@ export const ImageStateHandler = (): ToolHandler => {
                             const url = URL.createObjectURL(blob);
                             setConvertedImage(url);
                             setConvertedSize(blob.size);
+                            // Update preview to current state for next operation
+                            setPreview(url);
                             setProcessing(false);
                             toast.success("Watermark removal attempted!", {
                                 description: "Bottom region blurred"
