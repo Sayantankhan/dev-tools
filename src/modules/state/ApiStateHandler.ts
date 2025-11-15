@@ -234,7 +234,7 @@ export const ApiStateHandler = (): ToolHandler => {
                                    errorMessage.includes("NetworkError");
                 
                 const displayError = isCorsError 
-                    ? "CORS Error: The server doesn't allow requests from this origin. Check the server's CORS configuration."
+                    ? "CORS Error: The server must include 'Access-Control-Allow-Origin' in its RESPONSE headers (not request headers). This is a browser security restriction - curl works because it doesn't enforce CORS. The server needs to allow your origin in its response."
                     : errorMessage;
 
                 setResponse({
