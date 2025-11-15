@@ -533,6 +533,80 @@ export const APITool = () => {
                   )}
                 </div>
 
+                {/* Query Parameters */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Query Parameters</Label>
+                    <Button size="sm" variant="ghost" onClick={state.addWsQueryParam} disabled={state.wsConnected}>
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  {state.wsQueryParams.map((param: any, index: number) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder="Key"
+                        value={param.key}
+                        onChange={(e) => helpers.updateWsQueryParam(index, "key", e.target.value)}
+                        className="flex-1"
+                        disabled={state.wsConnected}
+                      />
+                      <Input
+                        placeholder="Value"
+                        value={param.value}
+                        onChange={(e) => helpers.updateWsQueryParam(index, "value", e.target.value)}
+                        className="flex-1"
+                        disabled={state.wsConnected}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => helpers.removeWsQueryParam(index)}
+                        disabled={state.wsConnected}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Headers/Cookies */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Headers (Note: Browser WebSocket API doesn't support custom headers)</Label>
+                    <Button size="sm" variant="ghost" onClick={state.addWsHeader} disabled={state.wsConnected}>
+                      <Plus className="w-3 h-3 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  {state.wsHeaders.map((header: any, index: number) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder="Cookie/Sec-WebSocket-Protocol"
+                        value={header.key}
+                        onChange={(e) => helpers.updateWsHeader(index, "key", e.target.value)}
+                        className="flex-1"
+                        disabled={state.wsConnected}
+                      />
+                      <Input
+                        placeholder="Value"
+                        value={header.value}
+                        onChange={(e) => helpers.updateWsHeader(index, "value", e.target.value)}
+                        className="flex-1"
+                        disabled={state.wsConnected}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => helpers.removeWsHeader(index)}
+                        disabled={state.wsConnected}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
                 {/* Message Input */}
                 <div className="space-y-2">
                   <Label>Send Message</Label>

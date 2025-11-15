@@ -56,6 +56,8 @@ export const ApiStateHandler = (): ToolHandler => {
     const [wsMessage, setWsMessage] = useState("");
     const [wsMessages, setWsMessages] = useState<any[]>([]);
     const [wsInstance, setWsInstance] = useState<WebSocket | null>(null);
+    const [wsQueryParams, setWsQueryParams] = useState<QueryParam[]>([{ key: "", value: "" }]);
+    const [wsHeaders, setWsHeaders] = useState<Header[]>([{ key: "", value: "" }]);
 
     // Generate initial webhook URL
     useEffect(() => {
@@ -389,6 +391,48 @@ export const ApiStateHandler = (): ToolHandler => {
 
     // WebSocket helpers
     const websocketHelpers = {
+        addWsQueryParam: () => {
+            setWsQueryParams([...wsQueryParams, { key: "", value: "" }]);
+        },
+
+        updateWsQueryParam: (index: number, field: "key" | "value", value: string) => {
+            const updated = [...wsQueryParams];
+            updated[index][field] = value;
+            setWsQueryParams(updated);
+        },
+
+        removeWsQueryParam: (index: number) => {
+            setWsQueryParams(wsQueryParams.filter((_, i) => i !== index));
+        },
+
+        addWsHeader: () => {
+            setWsHeaders([...wsHeaders, { key: "", value: "" }]);
+        },
+
+        updateWsHeader: (index: number, field: "key" | "value", value: string) => {
+            const updated = [...wsHeaders];
+            updated[index][field] = value;
+            setWsHeaders(updated);
+        },
+
+        removeWsHeader: (index: number) => {
+            setWsHeaders(wsHeaders.filter((_, i) => i !== index));
+        },
+
+        buildWsURL: () => {
+            try {
+                const urlObj = new URL(wsUrl);
+                wsQueryParams.forEach((param) => {
+                    if (param.key) {
+                        urlObj.searchParams.set(param.key, param.value);
+                    }
+                });
+                return urlObj.toString();
+            } catch {
+                return wsUrl;
+            }
+        },
+
         connectWebSocket: () => {
             if (!wsUrl) {
                 toast.error("Please enter a WebSocket URL");
@@ -396,7 +440,12 @@ export const ApiStateHandler = (): ToolHandler => {
             }
 
             try {
-                const ws = new WebSocket(wsUrl);
+                const finalUrl = websocketHelpers.buildWsURL();
+                
+                // Note: WebSocket constructor doesn't support custom headers in browser
+                // Headers would need to be sent in the initial HTTP upgrade request
+                // which is not controllable from browser JavaScript
+                const ws = new WebSocket(finalUrl);
 
                 ws.onopen = () => {
                     setWsConnected(true);
@@ -510,7 +559,11 @@ export const ApiStateHandler = (): ToolHandler => {
             wsConnected,
             wsMessage,
             wsMessages,
+            wsQueryParams,
+            wsHeaders,
             clearWebSocketMessages: websocketHelpers.clearWebSocketMessages,
+            addWsQueryParam: websocketHelpers.addWsQueryParam,
+            addWsHeader: websocketHelpers.addWsHeader,
         },
         setters: {
             setMethod,
@@ -532,7 +585,13 @@ export const ApiStateHandler = (): ToolHandler => {
             setWsUrl,
             setWsMessage,
         },
-        helpers,
+        helpers: {
+            ...helpers,
+            updateWsQueryParam: websocketHelpers.updateWsQueryParam,
+            removeWsQueryParam: websocketHelpers.removeWsQueryParam,
+            updateWsHeader: websocketHelpers.updateWsHeader,
+            removeWsHeader: websocketHelpers.removeWsHeader,
+        },
         actions: {
             ...actions,
             connectWebSocket: websocketHelpers.connectWebSocket,
