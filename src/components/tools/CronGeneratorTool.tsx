@@ -131,16 +131,11 @@ export const CronGeneratorTool = () => {
         <div className="p-4 bg-muted rounded-lg font-mono text-lg">
           {state.cronExpression}
         </div>
-      </div>
-
-      {/* Human Readable Explanation */}
-      <div className="space-y-2">
-        <Label>Human Readable</Label>
-        <div className="p-4 bg-muted/50 rounded-lg">
-          {state.cronExpression && (
-            <p className="text-sm">{state.helpers?.explainCron(state.cronExpression)}</p>
-          )}
-        </div>
+        {state.cronExpression && (
+          <p className="text-sm text-muted-foreground">
+            {state.helpers?.explainCron(state.cronExpression)}
+          </p>
+        )}
       </div>
 
       {/* Next Run Times */}
