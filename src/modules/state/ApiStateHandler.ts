@@ -57,7 +57,6 @@ export const ApiStateHandler = (): ToolHandler => {
     const [wsMessages, setWsMessages] = useState<any[]>([]);
     const [wsInstance, setWsInstance] = useState<WebSocket | null>(null);
     const [wsQueryParams, setWsQueryParams] = useState<QueryParam[]>([{ key: "", value: "" }]);
-    const [wsHeaders, setWsHeaders] = useState<Header[]>([{ key: "", value: "" }]);
 
     // Generate initial webhook URL
     useEffect(() => {
@@ -405,20 +404,6 @@ export const ApiStateHandler = (): ToolHandler => {
             setWsQueryParams(wsQueryParams.filter((_, i) => i !== index));
         },
 
-        addWsHeader: () => {
-            setWsHeaders([...wsHeaders, { key: "", value: "" }]);
-        },
-
-        updateWsHeader: (index: number, field: "key" | "value", value: string) => {
-            const updated = [...wsHeaders];
-            updated[index][field] = value;
-            setWsHeaders(updated);
-        },
-
-        removeWsHeader: (index: number) => {
-            setWsHeaders(wsHeaders.filter((_, i) => i !== index));
-        },
-
         buildWsURL: () => {
             try {
                 const urlObj = new URL(wsUrl);
@@ -441,10 +426,6 @@ export const ApiStateHandler = (): ToolHandler => {
 
             try {
                 const finalUrl = websocketHelpers.buildWsURL();
-                
-                // Note: WebSocket constructor doesn't support custom headers in browser
-                // Headers would need to be sent in the initial HTTP upgrade request
-                // which is not controllable from browser JavaScript
                 const ws = new WebSocket(finalUrl);
 
                 ws.onopen = () => {
@@ -560,10 +541,8 @@ export const ApiStateHandler = (): ToolHandler => {
             wsMessage,
             wsMessages,
             wsQueryParams,
-            wsHeaders,
             clearWebSocketMessages: websocketHelpers.clearWebSocketMessages,
             addWsQueryParam: websocketHelpers.addWsQueryParam,
-            addWsHeader: websocketHelpers.addWsHeader,
         },
         setters: {
             setMethod,
@@ -589,8 +568,6 @@ export const ApiStateHandler = (): ToolHandler => {
             ...helpers,
             updateWsQueryParam: websocketHelpers.updateWsQueryParam,
             removeWsQueryParam: websocketHelpers.removeWsQueryParam,
-            updateWsHeader: websocketHelpers.updateWsHeader,
-            removeWsHeader: websocketHelpers.removeWsHeader,
         },
         actions: {
             ...actions,
