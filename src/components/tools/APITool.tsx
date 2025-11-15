@@ -29,7 +29,7 @@ export const APITool = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="api" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="api">
             <Terminal className="w-4 h-4 mr-2" />
             API Tester
@@ -37,6 +37,10 @@ export const APITool = () => {
           <TabsTrigger value="webhook">
             <Webhook className="w-4 h-4 mr-2" />
             Webhook Monitor
+          </TabsTrigger>
+          <TabsTrigger value="websocket">
+            <ExternalLink className="w-4 h-4 mr-2" />
+            WebSocket
           </TabsTrigger>
         </TabsList>
 
@@ -489,6 +493,156 @@ export const APITool = () => {
                   </div>
                 </Card>
               )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="websocket" className="space-y-6">
+          {/* WebSocket Tester */}
+          <div className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Left: Connection & Send */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Connection</h3>
+                
+                {/* WebSocket URL */}
+                <div className="space-y-2">
+                  <Label>WebSocket URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={state.wsUrl}
+                      onChange={(e) => setters.setWsUrl(e.target.value)}
+                      placeholder="wss://echo.websocket.org"
+                      className="flex-1"
+                      disabled={state.wsConnected}
+                    />
+                    {!state.wsConnected ? (
+                      <Button onClick={actions.connectWebSocket}>
+                        Connect
+                      </Button>
+                    ) : (
+                      <Button variant="destructive" onClick={actions.disconnectWebSocket}>
+                        Disconnect
+                      </Button>
+                    )}
+                  </div>
+                  {state.wsConnected && (
+                    <Badge variant="default" className="mt-2">
+                      Connected
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <div className="space-y-2">
+                  <Label>Send Message</Label>
+                  <div className="space-y-2">
+                    <Textarea
+                      value={state.wsMessage}
+                      onChange={(e) => setters.setWsMessage(e.target.value)}
+                      placeholder='{"type": "message", "content": "Hello"}'
+                      className="font-mono text-sm min-h-32"
+                      disabled={!state.wsConnected}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={actions.sendWebSocketMessage}
+                        disabled={!state.wsConnected || !state.wsMessage}
+                        className="flex-1"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Send
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          try {
+                            const formatted = JSON.stringify(JSON.parse(state.wsMessage), null, 2);
+                            setters.setWsMessage(formatted);
+                            toast.success("JSON formatted");
+                          } catch {
+                            toast.error("Invalid JSON");
+                          }
+                        }}
+                        disabled={!state.wsMessage}
+                      >
+                        Format JSON
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Messages */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Messages</h3>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">{state.wsMessages.length} messages</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={state.clearWebSocketMessages}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg h-[500px] overflow-auto bg-muted/20">
+                  {state.wsMessages.length > 0 ? (
+                    <div className="space-y-2 p-4">
+                      {state.wsMessages.map((msg: any, index: number) => (
+                        <Card
+                          key={index}
+                          className={`p-3 ${
+                            msg.type === 'sent' 
+                              ? 'bg-primary/10 border-primary/20' 
+                              : msg.type === 'received'
+                              ? 'bg-secondary/10 border-secondary/20'
+                              : 'bg-muted/50 border-muted'
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Badge 
+                                variant={
+                                  msg.type === 'sent' ? 'default' : 
+                                  msg.type === 'received' ? 'secondary' : 
+                                  'outline'
+                                }
+                              >
+                                {msg.type === 'sent' ? 'Sent' : 
+                                 msg.type === 'received' ? 'Received' : 
+                                 msg.type}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(msg.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <pre className="text-xs font-mono overflow-auto flex-1 bg-background/50 p-2 rounded">
+                                {msg.data}
+                              </pre>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => actions.handleCopy(msg.data)}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <p>No messages yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>

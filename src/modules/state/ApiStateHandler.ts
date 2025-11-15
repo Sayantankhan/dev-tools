@@ -50,6 +50,13 @@ export const ApiStateHandler = (): ToolHandler => {
     const [webhookRequests, setWebhookRequests] = useState<WebhookRequest[]>([]);
     const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
 
+    // WebSocket states
+    const [wsUrl, setWsUrl] = useState("");
+    const [wsConnected, setWsConnected] = useState(false);
+    const [wsMessage, setWsMessage] = useState("");
+    const [wsMessages, setWsMessages] = useState<any[]>([]);
+    const [wsInstance, setWsInstance] = useState<WebSocket | null>(null);
+
     // Generate initial webhook URL
     useEffect(() => {
         if (!webhookUrl) {
@@ -57,6 +64,15 @@ export const ApiStateHandler = (): ToolHandler => {
             setWebhookUrl(`https://webhook.example.com/${id}`);
         }
     }, []);
+
+    // Cleanup WebSocket on unmount
+    useEffect(() => {
+        return () => {
+            if (wsInstance) {
+                wsInstance.close();
+            }
+        };
+    }, [wsInstance]);
 
     const helpers = {
         addHeader: () => {
@@ -371,6 +387,102 @@ export const ApiStateHandler = (): ToolHandler => {
         }
     };
 
+    // WebSocket helpers
+    const websocketHelpers = {
+        connectWebSocket: () => {
+            if (!wsUrl) {
+                toast.error("Please enter a WebSocket URL");
+                return;
+            }
+
+            try {
+                const ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    setWsConnected(true);
+                    setWsMessages(prev => [...prev, {
+                        type: 'connection',
+                        data: 'Connected to WebSocket',
+                        timestamp: Date.now()
+                    }]);
+                    toast.success("WebSocket connected");
+                };
+
+                ws.onmessage = (event) => {
+                    setWsMessages(prev => [...prev, {
+                        type: 'received',
+                        data: event.data,
+                        timestamp: Date.now()
+                    }]);
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    toast.error("WebSocket error");
+                    setWsMessages(prev => [...prev, {
+                        type: 'error',
+                        data: 'Connection error occurred',
+                        timestamp: Date.now()
+                    }]);
+                };
+
+                ws.onclose = () => {
+                    setWsConnected(false);
+                    setWsMessages(prev => [...prev, {
+                        type: 'connection',
+                        data: 'Disconnected from WebSocket',
+                        timestamp: Date.now()
+                    }]);
+                    toast.info("WebSocket disconnected");
+                };
+
+                setWsInstance(ws);
+            } catch (error: any) {
+                toast.error("Failed to connect", {
+                    description: error.message
+                });
+            }
+        },
+
+        disconnectWebSocket: () => {
+            if (wsInstance) {
+                wsInstance.close();
+                setWsInstance(null);
+            }
+        },
+
+        sendWebSocketMessage: () => {
+            if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
+                toast.error("WebSocket not connected");
+                return;
+            }
+
+            if (!wsMessage) {
+                toast.error("Please enter a message");
+                return;
+            }
+
+            try {
+                wsInstance.send(wsMessage);
+                setWsMessages(prev => [...prev, {
+                    type: 'sent',
+                    data: wsMessage,
+                    timestamp: Date.now()
+                }]);
+                toast.success("Message sent");
+            } catch (error: any) {
+                toast.error("Failed to send message", {
+                    description: error.message
+                });
+            }
+        },
+
+        clearWebSocketMessages: () => {
+            setWsMessages([]);
+            toast.success("Messages cleared");
+        }
+    };
+
     return {
         state: {
             method,
@@ -393,6 +505,12 @@ export const ApiStateHandler = (): ToolHandler => {
             generateNewWebhookUrl: webhookHelpers.generateNewWebhookUrl,
             addDemoRequest: webhookHelpers.addDemoRequest,
             clearWebhookRequests: webhookHelpers.clearWebhookRequests,
+            // WebSocket states
+            wsUrl,
+            wsConnected,
+            wsMessage,
+            wsMessages,
+            clearWebSocketMessages: websocketHelpers.clearWebSocketMessages,
         },
         setters: {
             setMethod,
@@ -411,9 +529,16 @@ export const ApiStateHandler = (): ToolHandler => {
                     setJsonError("");
                 }
             },
+            setWsUrl,
+            setWsMessage,
         },
         helpers,
-        actions
+        actions: {
+            ...actions,
+            connectWebSocket: websocketHelpers.connectWebSocket,
+            disconnectWebSocket: websocketHelpers.disconnectWebSocket,
+            sendWebSocketMessage: websocketHelpers.sendWebSocketMessage,
+        }
     }
 
 }
