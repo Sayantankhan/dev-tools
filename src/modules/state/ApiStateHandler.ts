@@ -21,6 +21,7 @@ interface APIResponse {
     headers: Record<string, string>;
     data: any;
     error?: string;
+    requestHeaders?: Record<string, string>;
 }
 
 export const ApiStateHandler = (): ToolHandler => {
@@ -141,18 +142,18 @@ export const ApiStateHandler = (): ToolHandler => {
             setLoading(true);
             const startTime = performance.now();
 
-            try {
-                const requestHeaders: Record<string, string> = {};
-                headers.forEach((header) => {
-                    if (header.key) {
-                        requestHeaders[header.key] = header.value;
-                    }
-                });
-
-                if (bodyType === "json" && body) {
-                    requestHeaders["Content-Type"] = "application/json";
+            const requestHeaders: Record<string, string> = {};
+            headers.forEach((header) => {
+                if (header.key) {
+                    requestHeaders[header.key] = header.value;
                 }
+            });
 
+            if (bodyType === "json" && body) {
+                requestHeaders["Content-Type"] = "application/json";
+            }
+
+            try {
                 const finalURL = helpers.buildURL();
 
                 const fetchOptions: RequestInit = {
@@ -190,6 +191,7 @@ export const ApiStateHandler = (): ToolHandler => {
                     size: responseSize,
                     headers: responseHeaders,
                     data,
+                    requestHeaders,
                 });
 
                 toast.success(`${res.status} ${res.statusText}`, {
@@ -214,6 +216,7 @@ export const ApiStateHandler = (): ToolHandler => {
                     headers: {},
                     data: null,
                     error: displayError,
+                    requestHeaders,
                 });
 
                 toast.error("Request failed", {
