@@ -193,6 +193,116 @@ export const ApiStateHandler = (): ToolHandler => {
 
             return curl;
         },
+
+        generateJavaScript: (): string => {
+            const finalURL = helpers.buildURL();
+            const requestHeaders: Record<string, string> = {};
+            
+            headers.forEach((header) => {
+                if (header.key) {
+                    requestHeaders[header.key] = header.value;
+                }
+            });
+
+            if (bodyType === "json" && body) {
+                requestHeaders["Content-Type"] = "application/json";
+            }
+
+            let code = `fetch('${finalURL}', {\n  method: '${method}'`;
+            
+            if (Object.keys(requestHeaders).length > 0) {
+                code += `,\n  headers: ${JSON.stringify(requestHeaders, null, 4).replace(/\n/g, '\n  ')}`;
+            }
+
+            if (method !== "GET" && method !== "HEAD" && body) {
+                code += `,\n  body: ${body ? `'${body.replace(/'/g, "\\'")}'` : "''"}`;
+            }
+
+            code += `\n})\n  .then(response => response.json())\n  .then(data => console.log(data))\n  .catch(error => console.error('Error:', error));`;
+
+            return code;
+        },
+
+        generateJava: (): string => {
+            const finalURL = helpers.buildURL();
+            const requestHeaders: Record<string, string> = {};
+            
+            headers.forEach((header) => {
+                if (header.key) {
+                    requestHeaders[header.key] = header.value;
+                }
+            });
+
+            if (bodyType === "json" && body) {
+                requestHeaders["Content-Type"] = "application/json";
+            }
+
+            let code = `import java.net.http.HttpClient;\nimport java.net.http.HttpRequest;\nimport java.net.http.HttpResponse;\nimport java.net.URI;\n\n`;
+            code += `public class APIRequest {\n  public static void main(String[] args) throws Exception {\n`;
+            code += `    HttpClient client = HttpClient.newHttpClient();\n\n`;
+            code += `    HttpRequest.Builder builder = HttpRequest.newBuilder()\n`;
+            code += `      .uri(URI.create("${finalURL}"))\n`;
+            code += `      .method("${method}", `;
+
+            if (method !== "GET" && method !== "HEAD" && body) {
+                code += `HttpRequest.BodyPublishers.ofString("${body.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"))\n`;
+            } else {
+                code += `HttpRequest.BodyPublishers.noBody())\n`;
+            }
+
+            Object.entries(requestHeaders).forEach(([key, value]) => {
+                code += `      .header("${key}", "${value}")\n`;
+            });
+
+            code += `      .build();\n\n`;
+            code += `    HttpResponse<String> response = client.send(builder, HttpResponse.BodyHandlers.ofString());\n`;
+            code += `    System.out.println(response.body());\n`;
+            code += `  }\n}`;
+
+            return code;
+        },
+
+        generateGo: (): string => {
+            const finalURL = helpers.buildURL();
+            const requestHeaders: Record<string, string> = {};
+            
+            headers.forEach((header) => {
+                if (header.key) {
+                    requestHeaders[header.key] = header.value;
+                }
+            });
+
+            if (bodyType === "json" && body) {
+                requestHeaders["Content-Type"] = "application/json";
+            }
+
+            let code = `package main\n\nimport (\n  "fmt"\n  "io"\n  "net/http"\n`;
+            
+            if (method !== "GET" && method !== "HEAD" && body) {
+                code += `  "strings"\n`;
+            }
+            
+            code += `)\n\nfunc main() {\n`;
+            code += `  url := "${finalURL}"\n\n`;
+
+            if (method !== "GET" && method !== "HEAD" && body) {
+                code += `  payload := strings.NewReader(\`${body}\`)\n`;
+                code += `  req, _ := http.NewRequest("${method}", url, payload)\n\n`;
+            } else {
+                code += `  req, _ := http.NewRequest("${method}", url, nil)\n\n`;
+            }
+
+            Object.entries(requestHeaders).forEach(([key, value]) => {
+                code += `  req.Header.Add("${key}", "${value}")\n`;
+            });
+
+            code += `\n  res, _ := http.DefaultClient.Do(req)\n`;
+            code += `  defer res.Body.Close()\n`;
+            code += `  body, _ := io.ReadAll(res.Body)\n\n`;
+            code += `  fmt.Println(string(body))\n}`;
+
+            return code;
+        },
     }
 
     const actions = {
@@ -304,7 +414,25 @@ export const ApiStateHandler = (): ToolHandler => {
         exportCurl: () => {
             const curlCommand = helpers.generateCurl();
             navigator.clipboard.writeText(curlCommand);
-            toast.success("Curl command copied to clipboard!");
+            toast.success("cURL command copied to clipboard!");
+        },
+
+        exportJavaScript: () => {
+            const jsCode = helpers.generateJavaScript();
+            navigator.clipboard.writeText(jsCode);
+            toast.success("JavaScript code copied to clipboard!");
+        },
+
+        exportJava: () => {
+            const javaCode = helpers.generateJava();
+            navigator.clipboard.writeText(javaCode);
+            toast.success("Java code copied to clipboard!");
+        },
+
+        exportGo: () => {
+            const goCode = helpers.generateGo();
+            navigator.clipboard.writeText(goCode);
+            toast.success("Go code copied to clipboard!");
         },
     }
 
