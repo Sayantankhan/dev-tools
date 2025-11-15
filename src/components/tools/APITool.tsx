@@ -89,7 +89,7 @@ export const APITool = () => {
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={() => helpers.emoveQueryParam(index)}
+                onClick={() => helpers.removeQueryParam(index)}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -248,7 +248,7 @@ export const APITool = () => {
                     className="flex justify-between p-3 bg-card/50 rounded-lg"
                   >
                     <code className="text-sm text-primary">{key}</code>
-                    <code className="text-sm text-foreground/70">{state.value}</code>
+                    <code className="text-sm text-foreground/70">{String(value)}</code>
                   </div>
                 ))}
               </TabsContent>
