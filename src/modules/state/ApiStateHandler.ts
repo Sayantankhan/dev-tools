@@ -20,6 +20,7 @@ interface APIResponse {
     size: number;
     headers: Record<string, string>;
     data: any;
+    error?: string;
 }
 
 export const ApiStateHandler = (): ToolHandler => {
@@ -155,10 +156,29 @@ export const ApiStateHandler = (): ToolHandler => {
                     description: `${Math.round(endTime - startTime)}ms`,
                 });
             } catch (error: any) {
-                toast.error("Request failed", {
-                    description: error.message,
+                const endTime = performance.now();
+                const errorMessage = error.message || "Unknown error";
+                const isCorsError = errorMessage.includes("Failed to fetch") || 
+                                   errorMessage.includes("CORS") ||
+                                   errorMessage.includes("NetworkError");
+                
+                const displayError = isCorsError 
+                    ? "CORS Error: The server doesn't allow requests from this origin. Check the server's CORS configuration."
+                    : errorMessage;
+
+                setResponse({
+                    status: 0,
+                    statusText: "Error",
+                    time: endTime - startTime,
+                    size: 0,
+                    headers: {},
+                    data: null,
+                    error: displayError,
                 });
-                setResponse(null);
+
+                toast.error("Request failed", {
+                    description: isCorsError ? "CORS Error - Check server configuration" : errorMessage,
+                });
             } finally {
                 setLoading(false);
             }
