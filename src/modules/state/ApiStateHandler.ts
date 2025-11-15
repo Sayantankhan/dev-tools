@@ -51,7 +51,7 @@ export const ApiStateHandler = (): ToolHandler => {
     const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
 
     // WebSocket states
-    const [wsUrl, setWsUrl] = useState("");
+    const [wsUrl, setWsUrl] = useState("wss://echo.websocket.org");
     const [wsConnected, setWsConnected] = useState(false);
     const [wsMessage, setWsMessage] = useState("");
     const [wsMessages, setWsMessages] = useState<any[]>([]);
