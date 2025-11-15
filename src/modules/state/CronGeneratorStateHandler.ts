@@ -121,7 +121,6 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
       const expression = helpers.generateCronExpression(newFields);
       setCronExpression(expression);
       setNextRuns(helpers.calculateNextRuns(expression));
-      toast.success("Cron expression updated!");
     },
 
     applyPreset: (preset: string) => {
