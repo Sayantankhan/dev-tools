@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Send, Copy, Clock, FileCode, Plus, Trash2, Save, Webhook } from "lucide-react";
+import { Send, Copy, Clock, FileCode, Plus, Trash2 } from "lucide-react";
 import { ApiStateHandler } from "@/modules/state/ApiStateHandler";
 
 export const APITool = () => {
@@ -26,16 +26,9 @@ export const APITool = () => {
 
   return (
     <div className="space-y-6">
-      {/* Main Tabs */}
-      <Tabs defaultValue="api-tester" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="api-tester">API Tester</TabsTrigger>
-          <TabsTrigger value="webhook">Webhook Monitor</TabsTrigger>
-        </TabsList>
-
-        {/* API Tester Tab */}
-        <TabsContent value="api-tester" className="space-y-6">
-          <div className="grid lg:grid-cols-2 gap-6">
+      {/* API Tester */}
+      <div className="space-y-6">
+        <div className="grid lg:grid-cols-2 gap-6">
       {/* Left Pane: Request Builder */}
       <div className="space-y-6">
         <h3 className="text-lg font-semibold">Request</h3>
@@ -172,10 +165,6 @@ export const APITool = () => {
               </>
             )}
           </Button>
-          <Button variant="outline">
-            <Save className="w-4 h-4 mr-2" />
-            Save
-          </Button>
         </div>
       </div>
 
@@ -260,109 +249,8 @@ export const APITool = () => {
           </div>
         )}
       </div>
-          </div>
-        </TabsContent>
-
-        {/* Webhook Tester Tab */}
-        <TabsContent value="webhook" className="space-y-6">
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Webhook Tester</h3>
-            
-            {/* Webhook URL Input */}
-            <div className="space-y-2">
-              <Label>Webhook URL</Label>
-              <Input
-                value={state.webhookUrl}
-                onChange={(e) => setters.setWebhookUrl(e.target.value)}
-                placeholder="https://your-webhook-url.com/endpoint"
-                className="font-mono"
-              />
-            </div>
-
-            {/* Request Body */}
-            <div className="space-y-2">
-              <Label>Request Body (JSON)</Label>
-              <Textarea
-                value={state.webhookBody}
-                onChange={(e) => setters.setWebhookBody(e.target.value)}
-                placeholder='{"test": "data"}'
-                className="code-editor min-h-[150px] font-mono"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              <Button 
-                onClick={helpers.testWebhook} 
-                disabled={state.isTestingWebhook || !state.webhookUrl}
-                className="btn-gradient"
-              >
-                {state.isTestingWebhook ? (
-                  "Testing..."
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Test Webhook
-                  </>
-                )}
-              </Button>
-              {state.webhookTests.length > 0 && (
-                <Button 
-                  variant="outline" 
-                  onClick={actions.clearWebhookTests}
-                >
-                  Clear History
-                </Button>
-              )}
-            </div>
-
-            {/* Test History */}
-            {state.webhookTests.length > 0 && (
-              <div className="space-y-3">
-                <Label>Test History</Label>
-                <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                  {state.webhookTests.map((test, index) => (
-                    <div
-                      key={index}
-                      className="p-4 bg-card/50 rounded-lg space-y-2"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex gap-4">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Status</p>
-                            <p
-                              className={`font-bold ${
-                                test.status >= 200 && test.status < 300
-                                  ? "text-success"
-                                  : "text-destructive"
-                              }`}
-                            >
-                              {test.status > 0 ? `${test.status} ${test.statusText}` : "Failed"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Response Time</p>
-                            <p className="font-mono">{Math.round(test.responseTime)}ms</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Timestamp</p>
-                          <p className="font-mono text-sm">
-                            {new Date(test.timestamp).toLocaleTimeString()}
-                          </p>
-                        </div>
-                      </div>
-                      {test.status === 0 && (
-                        <p className="text-sm text-destructive">{test.statusText}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
