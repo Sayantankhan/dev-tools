@@ -40,11 +40,11 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
 
   return (
     <TooltipProvider delayDuration={0}>
-      <Sidebar collapsible="icon" className="border-r-0">
+      <Sidebar collapsible="icon" className="border-r-0 w-52 data-[state=collapsed]:w-14">
         {/* Sticky Header */}
         <div className={cn(
           "sticky top-0 z-10 bg-card/50 backdrop-blur-sm border-b border-border/20",
-          isCollapsed ? "px-2 py-4" : "px-6 py-4"
+          isCollapsed ? "px-2 py-4" : "px-4 py-4"
         )}>
           {!isCollapsed && (
             <h2 className="text-lg font-bold gradient-text">Dev Tools</h2>
@@ -61,7 +61,7 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
             return (
               <SidebarGroup key={categoryName}>
                 {!isCollapsed && (
-                  <SidebarGroupLabel className="text-xs text-muted-foreground">
+                  <SidebarGroupLabel className="text-xs text-muted-foreground px-2">
                     {categoryName}
                   </SidebarGroupLabel>
                 )}
@@ -76,9 +76,9 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
                           <SidebarMenuButton
                             onClick={() => onToolChange(tool.id)}
                             isActive={isActive}
-                            tooltip={tool.label}
+                            tooltip={isCollapsed ? tool.label : undefined}
                             className={cn(
-                              "transition-all duration-200",
+                              "transition-all duration-200 px-3",
                               isActive && "bg-primary/10 text-primary font-medium"
                             )}
                           >
