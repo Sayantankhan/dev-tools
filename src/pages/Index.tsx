@@ -4,7 +4,8 @@ import { ImageTool } from "@/components/tools/ImageTool";
 import { JWTTool } from "@/components/tools/JWTTool";
 import { APITool } from "@/components/tools/APITool";
 import { EncoderTool } from "@/components/tools/EncoderTool";
-import { TabNavigation } from "@/components/TabNavigation";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network, FileEdit, Clock, Info } from "lucide-react";
 
@@ -81,55 +82,57 @@ const Index = () => {
   const ActiveComponent = tools.find((t) => t.id === activeTool)?.component;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <header className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold gradient-text mb-2">Developer Tools</h1>
-          <p className="text-muted-foreground">
-            Handy utilities for developers — all client-side, secure, and fast
-          </p>
-        </header>
-
-        {/* Tab Navigation */}
-        <TabNavigation
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar
           tools={tools}
           activeTool={activeTool}
           onToolChange={setActiveTool}
         />
 
-        {/* Active Tool Panel */}
-        <div className="mt-6 animate-fade-in">
-          <div className="glass-card p-6">
-            {ActiveComponent && (
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              }>
-                <ActiveComponent />
-              </Suspense>
-            )}
-          </div>
-        </div>
+        <SidebarInset className="flex-1">
+          {/* Header with Sidebar Toggle */}
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/40 bg-background/95 backdrop-blur-sm px-6">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold gradient-text">Developer Tools</h1>
+              <p className="text-xs text-muted-foreground">
+                All client-side, secure, and fast
+              </p>
+            </div>
+          </header>
 
-        {/* Footer */}
-        <footer className="mt-12 text-center text-sm text-muted-foreground">
-          <p>
-            All operations run locally in your browser. Your data never leaves your device.
-          </p>
-          <p className="mt-4">
-            © {new Date().getFullYear()} Sayantan Khan.
-          </p>
-          {/* <p className="mt-2">
-            Keyboard shortcuts: <kbd className="px-2 py-1 bg-muted rounded text-xs">1-5</kbd> to
-            switch tools
-          </p> */}
-        </footer>
+          {/* Active Tool Panel */}
+          <main className="flex-1 p-6">
+            <div className="animate-fade-in">
+              <div className="glass-card p-6">
+                {ActiveComponent && (
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  }>
+                    <ActiveComponent />
+                  </Suspense>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <footer className="mt-12 text-center text-sm text-muted-foreground">
+              <p>
+                All operations run locally in your browser. Your data never leaves your device.
+              </p>
+              <p className="mt-4">
+                © {new Date().getFullYear()} Sayantan Khan.
+              </p>
+            </footer>
+          </main>
+        </SidebarInset>
+
+        <Toaster />
       </div>
-
-      <Toaster />
-    </div>
+    </SidebarProvider>
   );
 };
 
