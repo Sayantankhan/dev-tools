@@ -97,8 +97,8 @@ const Index = () => {
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1">
               <h1 className="text-2xl font-bold gradient-text">Developer Tools</h1>
-              <p className="text-xs text-muted-foreground">
-                {activeToolLabel} • All client-side, secure, and fast
+              <p className="text-sm md:text-base text-muted-foreground">
+                <span className="text-foreground font-medium">{activeToolLabel}</span> • All client-side, secure, and fast
               </p>
             </div>
           </header>
