@@ -92,7 +92,7 @@ const Index = () => {
 
         <SidebarInset className="flex-1">
           {/* Header with Sidebar Toggle */}
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/40 bg-background/95 backdrop-blur-sm px-6">
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/20 bg-background/95 backdrop-blur-sm px-6">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1">
               <h1 className="text-2xl font-bold gradient-text">Developer Tools</h1>

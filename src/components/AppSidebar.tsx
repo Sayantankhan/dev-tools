@@ -38,11 +38,11 @@ export function AppSidebar({ tools, activeTool, onToolChange }: AppSidebarProps)
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/40">
-      <SidebarContent className="bg-background/95 backdrop-blur-sm">
+    <Sidebar collapsible="icon" className="border-r-0">
+      <SidebarContent className="bg-card/50 backdrop-blur-sm border-r border-border/20">
         {/* Header */}
         <div className={cn(
-          "px-4 py-4 border-b border-border/40",
+          "px-4 py-4 border-b border-border/20",
           isCollapsed && "px-2"
         )}>
           {!isCollapsed && (
