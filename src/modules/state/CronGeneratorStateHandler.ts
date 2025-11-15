@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ToolHandler } from "@/modules/types/ToolHandler";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
   });
   const [cronExpression, setCronExpression] = useState("* * * * *");
   const [nextRuns, setNextRuns] = useState<string[]>([]);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const helpers = {
     generateCronExpression: (fields: CronFields): string => {
@@ -66,10 +67,11 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
     },
 
     calculateNextRuns: (expression: string, count: number = 5): string[] => {
-      const parts = expression.split(" ");
+      const parts = expression.trim().split(" ");
       if (parts.length !== 5) return [];
 
-      const [minutePart, hourPart, dayPart, monthPart, weekdayPart] = parts;
+      const [minutePart, hourPart, dayPart, monthPart, weekdayPartRaw] = parts;
+      const weekdayPart = weekdayPartRaw.replace(/\b7\b/g, "0");
       const now = new Date();
       const runs: string[] = [];
       let current = new Date(now);
@@ -77,8 +79,17 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
       // In cron, if both day and weekday are specified (not *), it's an OR condition
       const bothDaysSpecified = dayPart !== "*" && weekdayPart !== "*";
 
-      for (let i = 0; i < count * 1000 && runs.length < count; i++) {
-        current = new Date(current.getTime() + 60000); // Add 1 minute
+      // Dynamically choose a reasonable search horizon based on specificity
+      let horizonDays = 2 * count; // default small horizon for frequent schedules
+      if (monthPart !== "*") {
+        horizonDays = 40 * count; // up to ~5 months
+      } else if (dayPart !== "*" || weekdayPart !== "*") {
+        horizonDays = 14 * count; // up to ~10 weeks
+      }
+      const limit = horizonDays * 1440; // minutes
+
+      for (let i = 0; i < limit && runs.length < count; i++) {
+        current = new Date(current.getTime() + 60000); // +1 minute
 
         const minute = current.getMinutes();
         const hour = current.getHours();
@@ -86,16 +97,13 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
         const month = current.getMonth() + 1;
         const weekday = current.getDay();
 
-        const minuteMatch = helpers.matchesCronPart(minute, minutePart);
-        const hourMatch = helpers.matchesCronPart(hour, hourPart);
-        const dayMatch = helpers.matchesCronPart(day, dayPart);
-        const monthMatch = helpers.matchesCronPart(month, monthPart);
-        const weekdayMatch = helpers.matchesCronPart(weekday, weekdayPart);
+        const minuteMatch = helpers.matchesCronPart(minute, minutePart, 0);
+        const hourMatch = helpers.matchesCronPart(hour, hourPart, 0);
+        const dayMatch = helpers.matchesCronPart(day, dayPart, 1);
+        const monthMatch = helpers.matchesCronPart(month, monthPart, 1);
+        const weekdayMatch = helpers.matchesCronPart(weekday, weekdayPart, 0);
 
-        // Handle day/weekday OR logic when both are specified
-        const dayCondition = bothDaysSpecified 
-          ? (dayMatch || weekdayMatch)
-          : (dayMatch && weekdayMatch);
+        const dayCondition = bothDaysSpecified ? (dayMatch || weekdayMatch) : (dayMatch && weekdayMatch);
 
         if (minuteMatch && hourMatch && dayCondition && monthMatch) {
           runs.push(current.toLocaleString());
@@ -105,20 +113,31 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
       return runs;
     },
 
-    matchesCronPart: (value: number, part: string): boolean => {
+    matchesCronPart: (value: number, part: string, offset: number = 0): boolean => {
       if (part === "*") return true;
+
+      // Step values, e.g., */5 or 1/10
       if (part.includes("/")) {
-        const [, step] = part.split("/");
-        return value % parseInt(step) === 0;
+        const [base, stepStr] = part.split("/");
+        const step = parseInt(stepStr, 10);
+        const start = base === "*" || base === "" ? offset : parseInt(base, 10);
+        if (isNaN(step) || isNaN(start)) return false;
+        return value >= start && ((value - start) % step === 0);
       }
+
+      // Lists, e.g., 1,2,5
       if (part.includes(",")) {
-        return part.split(",").some(p => parseInt(p) === value);
+        return part.split(",").some((p) => helpers.matchesCronPart(value, p, offset));
       }
+
+      // Ranges, e.g., 1-5
       if (part.includes("-")) {
-        const [start, end] = part.split("-").map(Number);
+        const [start, end] = part.split("-").map((n) => parseInt(n, 10));
         return value >= start && value <= end;
       }
-      return parseInt(part) === value;
+
+      // Exact value
+      return parseInt(part, 10) === value;
     },
   };
 
@@ -128,7 +147,11 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
       setCronFields(newFields);
       const expression = helpers.generateCronExpression(newFields);
       setCronExpression(expression);
-      setNextRuns(helpers.calculateNextRuns(expression));
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        setNextRuns(helpers.calculateNextRuns(expression));
+      }, 250);
     },
 
     applyPreset: (preset: string) => {
@@ -157,7 +180,10 @@ export const CronGeneratorStateHandler = (): ToolHandler => {
       setCronFields(newFields);
       const expression = helpers.generateCronExpression(newFields);
       setCronExpression(expression);
-      setNextRuns(helpers.calculateNextRuns(expression));
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        setNextRuns(helpers.calculateNextRuns(expression));
+      }, 0);
       toast.success("Preset applied!");
     },
 
