@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { ToolHandler } from "@/modules/types/ToolHandler";
 import { toast } from "sonner";
 
@@ -15,6 +15,22 @@ export const RegexExplainerStateHandler = (): ToolHandler => {
   const [matches, setMatches] = useState<RegexMatch[]>([]);
   const [explanation, setExplanation] = useState("");
   const [error, setError] = useState("");
+  
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const performMatching = useCallback((regexPattern: string, regexFlags: string, text: string) => {
+    const validationError = helpers.validateRegex(regexPattern);
+    setError(validationError);
+    
+    if (!validationError && regexPattern) {
+      setExplanation(helpers.explainPattern(regexPattern));
+      const foundMatches = helpers.findMatches(regexPattern, regexFlags, text);
+      setMatches(foundMatches);
+    } else {
+      setMatches([]);
+      setExplanation(regexPattern ? "" : "Enter a regex pattern to see explanation");
+    }
+  }, []);
 
   const helpers = {
     explainPattern: (regexPattern: string): string => {
@@ -91,33 +107,41 @@ export const RegexExplainerStateHandler = (): ToolHandler => {
   const actions = {
     updatePattern: (value: string) => {
       setPattern(value);
-      const validationError = helpers.validateRegex(value);
-      setError(validationError);
       
-      if (!validationError) {
-        setExplanation(helpers.explainPattern(value));
-        const foundMatches = helpers.findMatches(value, flags, sampleText);
-        setMatches(foundMatches);
-        if (foundMatches.length > 0) {
-          toast.success(`Found ${foundMatches.length} match(es)!`);
-        }
+      // Debounce expensive regex matching
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
+      
+      debounceTimerRef.current = setTimeout(() => {
+        performMatching(value, flags, sampleText);
+      }, 300);
     },
 
     updateFlags: (value: string) => {
       setFlags(value);
-      if (pattern && !error) {
-        const foundMatches = helpers.findMatches(pattern, value, sampleText);
-        setMatches(foundMatches);
+      
+      // Debounce expensive regex matching
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
+      
+      debounceTimerRef.current = setTimeout(() => {
+        performMatching(pattern, value, sampleText);
+      }, 300);
     },
 
     updateSampleText: (value: string) => {
       setSampleText(value);
-      if (pattern && !error) {
-        const foundMatches = helpers.findMatches(pattern, flags, value);
-        setMatches(foundMatches);
+      
+      // Debounce expensive regex matching
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
+      
+      debounceTimerRef.current = setTimeout(() => {
+        performMatching(pattern, flags, value);
+      }, 300);
     },
 
     applyPreset: (preset: string) => {
