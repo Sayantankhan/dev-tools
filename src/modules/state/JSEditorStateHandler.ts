@@ -2,11 +2,21 @@ import { useState, useRef } from "react";
 import { ToolHandler } from "@/modules/types/ToolHandler";
 import { toast } from "sonner";
 
+interface ExecutionStep {
+  line: number;
+  stack: string[];
+  heap: Record<string, any>;
+  eventQueue: string[];
+  microtaskQueue: string[];
+}
+
 export const JSEditorStateHandler = (): ToolHandler => {
   const [code, setCode] = useState('// Write your JavaScript code here\nconsole.log("Hello, World!");');
   const [output, setOutput] = useState<string[]>([]);
   const [metrics, setMetrics] = useState<string[]>([]);
   const [error, setError] = useState<string>("");
+  const [visualizeExecution, setVisualizeExecution] = useState<boolean>(false);
+  const [currentExecutionStep, setCurrentExecutionStep] = useState<ExecutionStep | null>(null);
   const [currentRunId, setCurrentRunId] = useState<number | null>(null);
   const currentRunIdRef = useRef<number | null>(null);
 
@@ -49,6 +59,7 @@ export const JSEditorStateHandler = (): ToolHandler => {
 
       setError("");
       setOutput([]);
+      setCurrentExecutionStep(null);
 
       const runId = Date.now();
       setCurrentRunId(runId);
@@ -62,6 +73,7 @@ export const JSEditorStateHandler = (): ToolHandler => {
         if (currentRunIdRef.current !== runId) return; // ignore logs from old runs
         setOutput((prev) => [...prev, msg]);
       };
+      
       const scopedConsole = {
         log: (...args: any[]) => push(args.map(String).join(" ")),
         error: (...args: any[]) => push(`[ERROR] ${args.map(String).join(" ")}`),
@@ -69,9 +81,82 @@ export const JSEditorStateHandler = (): ToolHandler => {
       } as Console;
 
       try {
-        // Execute the code with injected console
-        const func = new Function("console", code);
-        func(scopedConsole);
+        if (visualizeExecution) {
+          // Enhanced execution with visualization
+          const executionContext = {
+            stack: ["<global>"],
+            heap: {} as Record<string, any>,
+            eventQueue: [] as string[],
+            microtaskQueue: [] as string[],
+          };
+
+          // Create instrumented console and environment
+          const instrumentedEnv = {
+            console: scopedConsole,
+            setTimeout: (fn: Function, delay: number) => {
+              executionContext.eventQueue.push(`setTimeout(${delay}ms)`);
+              setCurrentExecutionStep({ line: 0, ...executionContext });
+              return window.setTimeout(() => {
+                executionContext.stack.push("setTimeout callback");
+                setCurrentExecutionStep({ line: 0, ...executionContext });
+                fn();
+                executionContext.stack.pop();
+                const idx = executionContext.eventQueue.indexOf(`setTimeout(${delay}ms)`);
+                if (idx > -1) executionContext.eventQueue.splice(idx, 1);
+                setCurrentExecutionStep({ line: 0, ...executionContext });
+              }, delay);
+            },
+            Promise: class InstrumentedPromise<T> extends Promise<T> {
+              constructor(executor: (resolve: (value: T) => void, reject: (reason?: any) => void) => void) {
+                super((resolve, reject) => {
+                  executor(
+                    (value) => {
+                      executionContext.microtaskQueue.push("Promise.then");
+                      setCurrentExecutionStep({ line: 0, ...executionContext });
+                      queueMicrotask(() => {
+                        const idx = executionContext.microtaskQueue.indexOf("Promise.then");
+                        if (idx > -1) executionContext.microtaskQueue.splice(idx, 1);
+                        setCurrentExecutionStep({ line: 0, ...executionContext });
+                      });
+                      resolve(value);
+                    },
+                    reject
+                  );
+                });
+              }
+            },
+          };
+
+          // Parse code to track variable declarations
+          const varRegex = /(?:const|let|var)\s+(\w+)\s*=\s*(.+?)(?:;|$)/gm;
+          let match;
+          while ((match = varRegex.exec(code)) !== null) {
+            const [, varName] = match;
+            executionContext.heap[varName] = "undefined";
+          }
+
+          setCurrentExecutionStep({ line: 0, ...executionContext });
+
+          // Execute with instrumentation
+          const func = new Function(
+            "console",
+            "setTimeout", 
+            "Promise",
+            `
+            ${code}
+            `
+          );
+          
+          func(instrumentedEnv.console, instrumentedEnv.setTimeout, instrumentedEnv.Promise);
+
+          // Update visualization after execution
+          executionContext.stack = [];
+          setCurrentExecutionStep({ line: code.split("\n").length, ...executionContext });
+        } else {
+          // Normal execution without visualization
+          const func = new Function("console", code);
+          func(scopedConsole);
+        }
 
         const endTime = performance.now();
         const endMemory = (performance as any).memory?.usedJSHeapSize;
@@ -90,8 +175,6 @@ export const JSEditorStateHandler = (): ToolHandler => {
         ].filter(Boolean) as string[];
 
         setMetrics(metricsData);
-        // No placeholder when there is no output
-
 
         toast.success("Code executed!");
       } catch (err: any) {
@@ -124,6 +207,7 @@ export const JSEditorStateHandler = (): ToolHandler => {
       setOutput([]);
       setMetrics([]);
       setError("");
+      setCurrentExecutionStep(null);
       setCurrentRunId(null);
       if (currentRunIdRef) currentRunIdRef.current = null;
       toast.success("Cleared!");
@@ -136,12 +220,15 @@ export const JSEditorStateHandler = (): ToolHandler => {
       output,
       metrics,
       error,
+      visualizeExecution,
+      currentExecutionStep,
     },
     setters: {
       setCode,
       setOutput,
       setMetrics,
       setError,
+      setVisualizeExecution,
     },
     helpers,
     actions,
