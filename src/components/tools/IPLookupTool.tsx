@@ -123,7 +123,7 @@ export const IPLookupTool = () => {
               />
             </div>
             <a
-              href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=10/${lat}/${lng}`}
+              href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`}
               target="_blank"
               rel="noreferrer"
               className="text-xs text-muted-foreground hover:text-primary mt-2 inline-block"
