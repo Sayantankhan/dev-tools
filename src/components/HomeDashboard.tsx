@@ -3,6 +3,7 @@ import { Search, Command, Shield, ArrowRight } from "lucide-react";
 import { useRecentTools } from "@/hooks/useRecentTools";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Props {
   tools: Tool[];
