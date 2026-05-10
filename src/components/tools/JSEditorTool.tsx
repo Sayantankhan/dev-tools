@@ -24,9 +24,9 @@ export const JSEditorTool = () => {
   const hasOutput = state.output.length > 0 || state.error;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full gap-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border shrink-0">
         <div className="flex items-center gap-1.5">
           <Button onClick={actions.handleRun} size="sm" className="h-8 gap-1.5">
             <Play className="w-3.5 h-3.5" />
@@ -60,11 +60,11 @@ export const JSEditorTool = () => {
       </div>
 
       {/* Editor */}
-      <div>
+      <div className="flex-1 min-h-0 flex flex-col">
         <SectionLabel hint="javascript">Source</SectionLabel>
-        <div className="rounded-md border border-border overflow-hidden bg-card">
+        <div className="flex-1 min-h-0 rounded-md border border-border overflow-hidden bg-card">
           <Editor
-            height="420px"
+            height="100%"
             defaultLanguage="javascript"
             value={state.code}
             onChange={(value) => setters.setCode(value || "")}
@@ -85,9 +85,9 @@ export const JSEditorTool = () => {
 
       {/* Visualization */}
       {state.visualizeExecution && (
-        <div>
+        <div className="flex-1 min-h-0 flex flex-col">
           <SectionLabel hint="call stack · heap · loop">Execution</SectionLabel>
-          <div className="rounded-md border border-border p-4 bg-card">
+          <div className="flex-1 min-h-0 rounded-md border border-border p-4 bg-card overflow-auto">
             <JSExecutionVisualizer currentStep={state.currentExecutionStep} />
           </div>
         </div>
@@ -95,9 +95,9 @@ export const JSEditorTool = () => {
 
       {/* Output */}
       {hasOutput && (
-        <div>
+        <div className="shrink-0 max-h-[200px] flex flex-col">
           <SectionLabel hint="console">Output</SectionLabel>
-          <div className="rounded-md border border-border bg-card font-mono text-xs p-3 min-h-[160px] max-h-[280px] overflow-auto">
+          <div className="rounded-md border border-border bg-card font-mono text-xs p-3 overflow-auto">
             {state.error ? (
               <div className="text-destructive whitespace-pre-wrap">
                 <span className="opacity-60">error → </span>
@@ -116,7 +116,7 @@ export const JSEditorTool = () => {
       )}
 
       {/* Footer */}
-      <div className="flex items-center gap-2 pt-2 text-[11px] text-muted-foreground">
+      <div className="flex items-center gap-2 pt-2 text-[11px] text-muted-foreground shrink-0">
         <Kbd>Ctrl</Kbd>+<Kbd>Enter</Kbd> run · use <code className="font-mono text-foreground/70">console.log()</code> · sandboxed in your browser
       </div>
     </div>
