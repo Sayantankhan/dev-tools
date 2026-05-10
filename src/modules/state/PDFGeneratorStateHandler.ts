@@ -182,25 +182,31 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
         const pdfBuffers: ArrayBuffer[] = [];
 
         for (const item of items) {
+          if (item.kind === "pdf") {
+            pdfBuffers.push(item.data as ArrayBuffer);
+            continue;
+          }
+
+          // Decide whether to start a new page for this item
+          if (!firstContent && !item.samePageAsPrevious) {
+            doc.addPage();
+            y = margin;
+          } else if (!firstContent) {
+            // Same-page grouping: just add a small gap
+            y += 4;
+          }
+
           if (item.kind === "image") {
-            if (!firstContent) y += 4;
             await addImage(item.data as string);
-            firstContent = false;
           } else if (item.kind === "text") {
-            if (!firstContent) {
-              doc.addPage();
-              y = margin;
-            }
             ensureSpace(8);
             doc.setFont("helvetica", "bold");
             doc.text(item.name, margin, y);
             y += 8;
             doc.setFont("helvetica", "normal");
             writeText(item.data as string);
-            firstContent = false;
-          } else if (item.kind === "pdf") {
-            pdfBuffers.push(item.data as ArrayBuffer);
           }
+          firstContent = false;
         }
 
         // Get jsPDF output then merge any PDFs onto the end with pdf-lib
