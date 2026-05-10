@@ -8,9 +8,12 @@ interface IPInfo {
   region: string;
   country: string;
   loc: string;
+  latitude: number | null;
+  longitude: number | null;
   org: string;
   postal: string;
   timezone: string;
+  version: "IPv4" | "IPv6" | "Unknown";
 }
 
 export const IPLookupStateHandler = (): ToolHandler => {
