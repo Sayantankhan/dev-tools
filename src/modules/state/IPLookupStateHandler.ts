@@ -104,10 +104,9 @@ export const IPLookupStateHandler = (): ToolHandler => {
         const response = await fetch("https://api.ipify.org?format=json");
         const data = await response.json();
         setIpAddress(data.ip);
-        toast.success("Your IP address loaded");
+        await actions.handleLookup(data.ip);
       } catch (error) {
         toast.error("Failed to get your IP address");
-      } finally {
         setLoading(false);
       }
     },
