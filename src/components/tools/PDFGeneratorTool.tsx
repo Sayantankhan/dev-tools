@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileDown, Trash2, X, FileText, FileType, Image as ImageIcon, ArrowUp, ArrowDown, Loader2, Link2, Link2Off } from "lucide-react";
+import { Upload, FileDown, Trash2, X, FileText, FileType, Image as ImageIcon, ArrowUp, ArrowDown, Loader2, Link2, Link2Off, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { PDFGeneratorStateHandler, PdfSourceItem } from "@/modules/state/PDFGeneratorStateHandler";
+import PDFCanvasViewer from "@/components/shared/PDFCanvasViewer";
 
 const KindIcon = ({ kind }: { kind: PdfSourceItem["kind"] }) => {
   if (kind === "image") return <ImageIcon className="w-4 h-4 text-primary" />;
@@ -42,13 +43,22 @@ export const PDFGeneratorTool = () => {
           Add Files
         </Button>
 
+        <Button onClick={actions.handleGeneratePreview} variant="outline" disabled={state.isGenerating}>
+          {state.isGenerating ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Eye className="w-4 h-4 mr-2" />
+          )}
+          Preview
+        </Button>
+
         <Button onClick={actions.handleGeneratePDF} className="btn-gradient" disabled={state.isGenerating}>
           {state.isGenerating ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           ) : (
             <FileDown className="w-4 h-4 mr-2" />
           )}
-          Generate PDF
+          Download PDF
         </Button>
 
         <Button onClick={actions.handleClear} variant="outline">
@@ -142,6 +152,43 @@ export const PDFGeneratorTool = () => {
           </div>
         </div>
       )}
+
+      {/* Live Preview */}
+      {state.previewUrl && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>Preview</Label>
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={actions.handlePrevPage}
+                disabled={state.previewPage <= 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground tabular-nums">
+                Page {state.previewPage} / {state.previewPageCount}
+              </span>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={actions.handleNextPage}
+                disabled={state.previewPage >= state.previewPageCount}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={actions.handleClosePreview}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-muted overflow-hidden max-h-[70vh] overflow-y-auto">
+            <PDFCanvasViewer url={state.previewUrl} pageNumber={state.previewPage} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
