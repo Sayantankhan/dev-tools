@@ -157,7 +157,7 @@ export const EncoderTool = () => {
                 ? "Enter URL to encode/decode/parse..."
                 : "Enter text to hash..."
             }
-            className="code-editor min-h-[400px]"
+            className="code-editor min-h-[calc(100vh-260px)]"
           />
         </div>
 
@@ -165,7 +165,7 @@ export const EncoderTool = () => {
         <div className="space-y-3">
           <Label>Output</Label>
           {encodingType === "base64" && base64Handler.state.isImagePreview && base64Handler.state.output.startsWith("/9j/") ? (
-            <div className="bg-input border border-border rounded-lg p-4 min-h-[400px] flex items-center justify-center">
+            <div className="bg-input border border-border rounded-lg p-4 min-h-[calc(100vh-260px)] flex items-center justify-center">
               <img
                 src={`data:image/jpeg;base64,${base64Handler.state.output}`}
                 alt="Preview"
@@ -180,7 +180,7 @@ export const EncoderTool = () => {
               value={handler.state.output}
               readOnly
               placeholder="Result will appear here..."
-              className="code-editor min-h-[400px]"
+              className="code-editor min-h-[calc(100vh-260px)]"
             />
           )}
         </div>
