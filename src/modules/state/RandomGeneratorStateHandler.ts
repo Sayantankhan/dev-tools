@@ -116,8 +116,12 @@ export const RandomGeneratorStateHandler = (): ToolHandler => {
         let result = "";
 
         switch (format) {
-          case "uuid":
-            result = helpers.generateUUID();
+          case "uuid-v4":
+            result = Array.from({ length: Math.max(1, count) }, () => helpers.generateUUIDv4()).join("\n");
+            break;
+
+          case "uuid-v7":
+            result = Array.from({ length: Math.max(1, count) }, () => helpers.generateUUIDv7()).join("\n");
             break;
 
           case "json": {
