@@ -17,56 +17,95 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  :root {
-    /* Linear-inspired stark theme */
-    /* #0a0a0f */
-    --background: 240 22% 5%;
-    /* #e2e2e8 */
-    --foreground: 240 10% 90%;
+  /* Light theme — warm paper, ink text, teal accent */
+  :root,
+  .light {
+    --background: 40 24% 97%;        /* #f8f6f1 warm paper */
+    --foreground: 220 18% 14%;       /* #1d2230 ink */
 
-    /* #111118 — surface, slightly elevated */
-    --card: 240 17% 8%;
-    --card-foreground: 240 10% 90%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 18% 14%;
 
-    --popover: 240 17% 8%;
-    --popover-foreground: 240 10% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 18% 14%;
 
-    /* Purple accent #8b5cf6 */
-    --primary: 258 90% 66%;
+    --primary: 174 72% 36%;          /* #1aa39a teal */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 12% 14%;
-    --secondary-foreground: 240 10% 90%;
+    --secondary: 40 18% 92%;
+    --secondary-foreground: 220 18% 14%;
 
-    --muted: 240 12% 14%;
-    /* #6b6b78 */
-    --muted-foreground: 240 6% 45%;
+    --muted: 40 18% 92%;
+    --muted-foreground: 220 10% 42%;
 
-    --accent: 258 90% 66%;
+    --accent: 24 90% 56%;            /* #f3833e warm orange highlight */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 55%;
+    --destructive: 358 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 70% 42%;
+    --success: 158 64% 38%;
     --success-foreground: 0 0% 100%;
 
-    --border: 240 10% 14%;
-    --input: 240 14% 10%;
-    --ring: 258 90% 66%;
+    --border: 40 14% 86%;
+    --input: 40 18% 94%;
+    --ring: 174 72% 36%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 240 22% 5%;
-    --sidebar-foreground: 240 10% 90%;
-    --sidebar-primary: 258 90% 66%;
+    --sidebar-background: 40 24% 97%;
+    --sidebar-foreground: 220 18% 14%;
+    --sidebar-primary: 174 72% 36%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 12% 12%;
-    --sidebar-accent-foreground: 240 10% 90%;
-    --sidebar-border: 240 10% 14%;
-    --sidebar-ring: 258 90% 66%;
+    --sidebar-accent: 40 18% 92%;
+    --sidebar-accent-foreground: 220 18% 14%;
+    --sidebar-border: 40 14% 86%;
+    --sidebar-ring: 174 72% 36%;
 
     --transition-smooth: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Dark theme — deep slate, soft ivory text, teal accent */
+  .dark {
+    --background: 220 20% 7%;        /* #0e1219 */
+    --foreground: 40 18% 92%;        /* #ece7dc soft ivory */
+
+    --card: 220 18% 10%;             /* #141923 */
+    --card-foreground: 40 18% 92%;
+
+    --popover: 220 18% 10%;
+    --popover-foreground: 40 18% 92%;
+
+    --primary: 172 70% 48%;          /* #25cdbb teal */
+    --primary-foreground: 220 25% 8%;
+
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 40 18% 92%;
+
+    --muted: 220 14% 16%;
+    --muted-foreground: 220 10% 62%;
+
+    --accent: 24 90% 60%;            /* #f1934e warm orange highlight */
+    --accent-foreground: 220 25% 8%;
+
+    --destructive: 358 70% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 158 64% 48%;
+    --success-foreground: 220 25% 8%;
+
+    --border: 220 14% 18%;
+    --input: 220 16% 13%;
+    --ring: 172 70% 48%;
+
+    --sidebar-background: 220 20% 7%;
+    --sidebar-foreground: 40 18% 92%;
+    --sidebar-primary: 172 70% 48%;
+    --sidebar-primary-foreground: 220 25% 8%;
+    --sidebar-accent: 220 14% 14%;
+    --sidebar-accent-foreground: 40 18% 92%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 172 70% 48%;
   }
 }
 
