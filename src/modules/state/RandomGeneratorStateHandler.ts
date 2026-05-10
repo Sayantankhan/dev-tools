@@ -4,8 +4,9 @@ import { toast } from "sonner";
 
 export const RandomGeneratorStateHandler = (): ToolHandler => {
   const [output, setOutput] = useState("");
-  const [format, setFormat] = useState<"json" | "xml" | "yaml" | "uuid">("json");
+  const [format, setFormat] = useState<"json" | "xml" | "yaml" | "uuid-v4" | "uuid-v7">("json");
   const [complexity, setComplexity] = useState(3);
+  const [count, setCount] = useState(1);
 
   const helpers = {
     generateRandomString: (length: number = 8): string => {
