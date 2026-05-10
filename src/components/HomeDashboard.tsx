@@ -38,7 +38,7 @@ const categories: { name: string; ids: ToolId[] }[] = [
   { name: "API & Network", ids: ["api", "jwt", "ip-lookup", "search"] },
   { name: "Text & Code", ids: ["text-compare", "js-editor", "regex-explainer"] },
   { name: "Images & Media", ids: ["image", "bg-remover"] },
-  { name: "Documents", ids: ["pdf-editor"] },
+  { name: "Documents", ids: ["pdf-editor", "pdf-generator"] },
   { name: "Utilities", ids: ["random-generator", "data-viz", "topology-viewer", "cron-generator"] },
 ];
 
