@@ -58,7 +58,10 @@ export function HomeDashboard({ tools, onToolChange, onOpenPalette }: Props) {
   }, [query, tools]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-16">
+    <div className="mx-auto w-full max-w-5xl px-6 py-16 relative">
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
       {/* Hero */}
       <div className="text-center mb-10">
         <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
