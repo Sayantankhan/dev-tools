@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle,
   ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network,
-  FileEdit, Clock, Info,
+  FileEdit, Clock, Info, FilePlus,
 } from "lucide-react";
 import { HomeDashboard } from "@/components/HomeDashboard";
 import { ToolShell } from "@/components/ToolShell";
@@ -26,10 +26,11 @@ const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRe
 const SearchTool = lazy(() => import("@/components/tools/SearchTool").then(m => ({ default: m.SearchTool })));
 const TopologyViewerTool = lazy(() => import("@/components/tools/TopologyViewerTool").then(m => ({ default: m.TopologyViewerTool })));
 const PDFEditorTool = lazy(() => import("@/components/tools/PDFEditorTool").then(m => ({ default: m.PDFEditorTool })));
+const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool").then(m => ({ default: m.PDFGeneratorTool })));
 const CronGeneratorTool = lazy(() => import("@/components/tools/CronGeneratorTool").then(m => ({ default: m.CronGeneratorTool })));
 const RegexExplainerTool = lazy(() => import("@/components/tools/RegexExplainerTool").then(m => ({ default: m.RegexExplainerTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "cron-generator" | "regex-explainer";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer";
 
 export interface Tool {
   id: ToolId;
@@ -44,6 +45,7 @@ const tools: Tool[] = [
   { id: "log-parser", label: "Log Parser", icon: ScrollText, component: LogParserTool },
   { id: "image", label: "Image", icon: Image, component: ImageTool },
   { id: "pdf-editor", label: "PDF Editor", icon: FileEdit, component: PDFEditorTool },
+  { id: "pdf-generator", label: "PDF Generator", icon: FilePlus, component: PDFGeneratorTool },
   { id: "jwt", label: "JWT", icon: Key, component: JWTTool },
   { id: "api", label: "API", icon: Globe, component: APITool },
   { id: "encoder", label: "Encoder/Decoder", icon: FileCode, component: EncoderTool },

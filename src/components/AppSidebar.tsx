@@ -25,7 +25,7 @@ const categories = {
   "API & Network": ["api", "jwt", "ip-lookup", "search"],
   "Text & Code": ["text-compare", "js-editor", "regex-explainer"],
   "Images & Media": ["image", "bg-remover"],
-  "Documents": ["pdf-editor"],
+  "Documents": ["pdf-editor", "pdf-generator"],
   "Utilities": ["random-generator", "data-viz", "topology-viewer", "cron-generator"],
 };
 
