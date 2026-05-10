@@ -17,6 +17,7 @@ const descriptions: Record<string, string> = {
   "log-parser": "Parse and cluster logs",
   image: "Crop, convert, edit images",
   "pdf-editor": "Annotate and edit PDFs",
+  "pdf-generator": "Build PDFs from images, text & docs",
   jwt: "Decode & inspect JWTs",
   api: "Test HTTP requests",
   encoder: "Base64 / URL / hash",
