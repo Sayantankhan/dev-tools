@@ -68,7 +68,7 @@ export const TextCompareTool = () => {
             value={state.leftText}
             onChange={(e) => setters.setLeftText(e.target.value)}
             placeholder="Paste original text…"
-            className="font-mono text-xs min-h-[280px] bg-card resize-none"
+            className="font-mono text-xs min-h-[calc(100vh-280px)] bg-card resize-none"
           />
         </div>
         <div>
@@ -77,7 +77,7 @@ export const TextCompareTool = () => {
             value={state.rightText}
             onChange={(e) => setters.setRightText(e.target.value)}
             placeholder="Paste modified text…"
-            className="font-mono text-xs min-h-[280px] bg-card resize-none"
+            className="font-mono text-xs min-h-[calc(100vh-280px)] bg-card resize-none"
           />
         </div>
       </div>

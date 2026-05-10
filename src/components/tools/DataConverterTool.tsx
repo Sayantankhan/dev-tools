@@ -70,7 +70,7 @@ export const DataConverterTool = () => {
             value={state.input}
             onChange={(e) => setters.setInput(e.target.value)}
             placeholder={`Enter ${state.fromFormat.toUpperCase()} data...`}
-            className="code-editor min-h-[400px]"
+            className="code-editor min-h-[calc(100vh-260px)]"
           />
         </div>
 
@@ -80,7 +80,7 @@ export const DataConverterTool = () => {
             value={state.output}
             readOnly
             placeholder="Converted data will appear here..."
-            className="code-editor min-h-[400px]"
+            className="code-editor min-h-[calc(100vh-260px)]"
           />
         </div>
       </div>

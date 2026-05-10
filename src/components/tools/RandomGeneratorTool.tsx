@@ -65,7 +65,7 @@ export const RandomGeneratorTool = () => {
           value={state.output}
           readOnly
           placeholder="Click Generate to create random data..."
-          className="code-editor min-h-[400px]"
+          className="code-editor min-h-[calc(100vh-260px)]"
         />
       </div>
 

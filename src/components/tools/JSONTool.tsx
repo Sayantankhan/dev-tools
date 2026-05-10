@@ -70,7 +70,7 @@ export const JSONTool = () => {
             value={state.input}
             onChange={(e) => setters.setInput(e.target.value)}
             placeholder="Paste your JSON here..."
-            className="code-editor min-h-[400px]"
+            className="code-editor min-h-[calc(100vh-260px)]"
           />
           <p className="text-xs text-muted-foreground">
             Tip: Press <kbd className="px-1 py-0.5 bg-muted rounded">Ctrl+Enter</kbd> to prettify
@@ -83,7 +83,7 @@ export const JSONTool = () => {
             {state.isDestructured ? "JSON Paths" : "Output"}
           </Label>
           {state.isDestructured ? (
-            <div className="bg-input border border-border rounded-lg p-4 min-h-[400px] max-h-[600px] overflow-y-auto">
+            <div className="bg-input border border-border rounded-lg p-4 min-h-[calc(100vh-260px)] max-h-[600px] overflow-y-auto">
               <div className="space-y-2">
                 {state.paths.map((item, index) => (
                   <div
@@ -167,7 +167,7 @@ export const JSONTool = () => {
               value={state.output}
               readOnly
               placeholder="Formatted JSON will appear here..."
-              className="code-editor min-h-[400px]"
+              className="code-editor min-h-[calc(100vh-260px)]"
             />
           )}
         </div>
