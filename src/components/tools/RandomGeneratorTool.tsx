@@ -24,12 +24,27 @@ export const RandomGeneratorTool = () => {
               <SelectItem value="json">JSON</SelectItem>
               <SelectItem value="xml">XML</SelectItem>
               <SelectItem value="yaml">YAML</SelectItem>
-              <SelectItem value="uuid">UUID</SelectItem>
+              <SelectItem value="uuid-v4">UUID v4</SelectItem>
+              <SelectItem value="uuid-v7">UUID v7</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {state.format !== "uuid" && (
+        {(state.format === "uuid-v4" || state.format === "uuid-v7") && (
+          <div className="w-[120px]">
+            <Label>Count</Label>
+            <Input
+              type="number"
+              min={1}
+              max={1000}
+              value={state.count}
+              onChange={(e) => setters.setCount(Math.max(1, Math.min(1000, parseInt(e.target.value) || 1)))}
+              className="mt-1"
+            />
+          </div>
+        )}
+
+        {state.format !== "uuid-v4" && state.format !== "uuid-v7" && (
           <div className="flex-1 min-w-[200px]">
             <Label>Complexity: {state.complexity}</Label>
             <Slider
