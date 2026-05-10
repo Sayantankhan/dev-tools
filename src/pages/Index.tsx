@@ -26,10 +26,11 @@ const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRe
 const SearchTool = lazy(() => import("@/components/tools/SearchTool").then(m => ({ default: m.SearchTool })));
 const TopologyViewerTool = lazy(() => import("@/components/tools/TopologyViewerTool").then(m => ({ default: m.TopologyViewerTool })));
 const PDFEditorTool = lazy(() => import("@/components/tools/PDFEditorTool").then(m => ({ default: m.PDFEditorTool })));
+const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool").then(m => ({ default: m.PDFGeneratorTool })));
 const CronGeneratorTool = lazy(() => import("@/components/tools/CronGeneratorTool").then(m => ({ default: m.CronGeneratorTool })));
 const RegexExplainerTool = lazy(() => import("@/components/tools/RegexExplainerTool").then(m => ({ default: m.RegexExplainerTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "cron-generator" | "regex-explainer";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer";
 
 export interface Tool {
   id: ToolId;
