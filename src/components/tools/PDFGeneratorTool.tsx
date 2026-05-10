@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileDown, Trash2, X, FileText, FileType, Image as ImageIcon, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { Upload, FileDown, Trash2, X, FileText, FileType, Image as ImageIcon, ArrowUp, ArrowDown, Loader2, Link2, Link2Off } from "lucide-react";
 import { PDFGeneratorStateHandler, PdfSourceItem } from "@/modules/state/PDFGeneratorStateHandler";
 
 const KindIcon = ({ kind }: { kind: PdfSourceItem["kind"] }) => {
@@ -75,12 +75,12 @@ export const PDFGeneratorTool = () => {
       {/* File list */}
       {items.length > 0 && (
         <div className="space-y-3">
-          <Label>Files ({items.length}) — drag order via the arrows</Label>
+          <Label>Files ({items.length}) — reorder, or link an item to the previous to share a page</Label>
           <div className="space-y-2">
             {items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50"
+                className={`flex items-center gap-3 p-3 rounded-lg border bg-card/50 ${item.samePageAsPrevious ? "border-primary/60" : "border-border"}`}
               >
                 {item.kind === "image" && item.preview ? (
                   <img
@@ -100,6 +100,19 @@ export const PDFGeneratorTool = () => {
                 </div>
 
                 <div className="flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => actions.handleToggleSamePage(index)}
+                    disabled={index === 0}
+                    title={item.samePageAsPrevious ? "On same page as previous — click to move to a new page" : "Starts a new page — click to keep on same page as previous"}
+                  >
+                    {item.samePageAsPrevious ? (
+                      <Link2 className="w-4 h-4 text-primary" />
+                    ) : (
+                      <Link2Off className="w-4 h-4" />
+                    )}
+                  </Button>
                   <Button
                     size="icon"
                     variant="ghost"

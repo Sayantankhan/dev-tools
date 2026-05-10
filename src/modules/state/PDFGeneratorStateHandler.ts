@@ -14,6 +14,8 @@ export interface PdfSourceItem {
   // image: data URL; text: extracted text; pdf: ArrayBuffer
   data: string | ArrayBuffer;
   preview?: string; // for images
+  /** When true, render on the same page as the previous item instead of starting a new page */
+  samePageAsPrevious?: boolean;
 }
 
 const TEXT_EXTS = ["txt", "md", "markdown", "csv", "tsv", "json", "log", "html", "htm", "xml", "yml", "yaml", "js", "ts", "tsx", "jsx", "css", "py", "sh"];
@@ -117,6 +119,12 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
       });
     },
 
+    handleToggleSamePage: (index: number) => {
+      setItems((prev) =>
+        prev.map((it, i) => (i === index ? { ...it, samePageAsPrevious: !it.samePageAsPrevious } : it)),
+      );
+    },
+
     handleGeneratePDF: async () => {
       if (!textContent.trim() && items.length === 0) {
         toast.error("Please add text or files to generate PDF");
@@ -180,25 +188,31 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
         const pdfBuffers: ArrayBuffer[] = [];
 
         for (const item of items) {
+          if (item.kind === "pdf") {
+            pdfBuffers.push(item.data as ArrayBuffer);
+            continue;
+          }
+
+          // Decide whether to start a new page for this item
+          if (!firstContent && !item.samePageAsPrevious) {
+            doc.addPage();
+            y = margin;
+          } else if (!firstContent) {
+            // Same-page grouping: just add a small gap
+            y += 4;
+          }
+
           if (item.kind === "image") {
-            if (!firstContent) y += 4;
             await addImage(item.data as string);
-            firstContent = false;
           } else if (item.kind === "text") {
-            if (!firstContent) {
-              doc.addPage();
-              y = margin;
-            }
             ensureSpace(8);
             doc.setFont("helvetica", "bold");
             doc.text(item.name, margin, y);
             y += 8;
             doc.setFont("helvetica", "normal");
             writeText(item.data as string);
-            firstContent = false;
-          } else if (item.kind === "pdf") {
-            pdfBuffers.push(item.data as ArrayBuffer);
           }
+          firstContent = false;
         }
 
         // Get jsPDF output then merge any PDFs onto the end with pdf-lib
