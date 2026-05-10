@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileDown, Trash2, X, FileText, FileType, Image as ImageIcon, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { Upload, FileDown, Trash2, X, FileText, FileType, Image as ImageIcon, ArrowUp, ArrowDown, Loader2, Link2, Link2Off } from "lucide-react";
 import { PDFGeneratorStateHandler, PdfSourceItem } from "@/modules/state/PDFGeneratorStateHandler";
 
 const KindIcon = ({ kind }: { kind: PdfSourceItem["kind"] }) => {
