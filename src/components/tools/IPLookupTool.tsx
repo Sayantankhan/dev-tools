@@ -1,28 +1,47 @@
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Search, Locate, Trash2, Loader2 } from "lucide-react";
 import { IPLookupStateHandler } from "@/modules/state/IPLookupStateHandler";
 
 export const IPLookupTool = () => {
   const { state, setters, actions } = IPLookupStateHandler();
+  const didInit = useRef(false);
+
+  useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+    actions.handleGetMyIP();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const lat = state.ipInfo?.latitude;
+  const lng = state.ipInfo?.longitude;
+  const hasCoords = typeof lat === "number" && typeof lng === "number";
+  const delta = 0.5;
+  const bbox = hasCoords
+    ? `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`
+    : null;
 
   return (
     <div className="space-y-6">
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-[200px]">
-          <Label>IP Address</Label>
+          <Label>IP Address (IPv4 or IPv6)</Label>
           <Input
             value={state.ipAddress}
             onChange={(e) => setters.setIpAddress(e.target.value)}
-            placeholder="Enter IP address (e.g., 8.8.8.8)"
-            className="mt-1"
+            placeholder="e.g. 8.8.8.8 or 2001:4860:4860::8888"
+            className="mt-1 font-mono"
+            onKeyDown={(e) => e.key === "Enter" && actions.handleLookup()}
           />
         </div>
 
-        <Button onClick={actions.handleLookup} className="btn-gradient" disabled={state.loading}>
+        <Button onClick={() => actions.handleLookup()} className="btn-gradient" disabled={state.loading}>
           {state.loading ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           ) : (
@@ -45,14 +64,15 @@ export const IPLookupTool = () => {
       {/* IP Information */}
       {state.ipInfo && (
         <Card className="bg-card/50 border-border">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">IP Information</CardTitle>
+            <Badge variant="outline">{state.ipInfo.version}</Badge>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">IP Address</p>
-                <p className="text-sm font-mono mt-1">{state.ipInfo.ip}</p>
+                <p className="text-sm font-mono mt-1 break-all">{state.ipInfo.ip}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">City</p>
@@ -87,10 +107,37 @@ export const IPLookupTool = () => {
         </Card>
       )}
 
+      {/* World Map */}
+      {hasCoords && bbox && (
+        <Card className="bg-card/50 border-border overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-lg">Location on Map</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full aspect-[16/9] rounded-md overflow-hidden border border-border">
+              <iframe
+                key={`${lat},${lng}`}
+                title="IP location map"
+                className="w-full h-full"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`}
+              />
+            </div>
+            <a
+              href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=10/${lat}/${lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary mt-2 inline-block"
+            >
+              View larger map
+            </a>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Info Message */}
-      {!state.ipInfo && !state.loading && (
+      {!state.ipInfo && state.loading && (
         <div className="p-4 bg-card/50 rounded-lg text-sm text-muted-foreground text-center">
-          Enter an IP address and click Lookup to get geolocation information
+          Detecting your IP address…
         </div>
       )}
     </div>

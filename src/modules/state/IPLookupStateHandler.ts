@@ -8,9 +8,12 @@ interface IPInfo {
   region: string;
   country: string;
   loc: string;
+  latitude: number | null;
+  longitude: number | null;
   org: string;
   postal: string;
   timezone: string;
+  version: "IPv4" | "IPv6" | "Unknown";
 }
 
 export const IPLookupStateHandler = (): ToolHandler => {
@@ -21,24 +24,31 @@ export const IPLookupStateHandler = (): ToolHandler => {
   const helpers = {
     isValidIP: (ip: string): boolean => {
       const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-      const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+      // Full IPv6 incl. compressed (::), embedded IPv4, and zone IDs
+      const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$/;
       return ipv4Regex.test(ip) || ipv6Regex.test(ip);
     },
   };
 
-  const actions = {
-    handleLookup: async () => {
-      const ip = ipAddress.trim();
-      
-      if (!ip) {
-        toast.error("Please enter an IP address");
-        return;
-      }
+  const performLookup = async (ipOverride?: string) => {
+    const ip = (ipOverride ?? ipAddress).trim();
 
-      if (!helpers.isValidIP(ip)) {
-        toast.error("Invalid IP address format");
-        return;
-      }
+    if (!ip) {
+      toast.error("Please enter an IP address");
+      return;
+    }
+
+    if (!helpers.isValidIP(ip)) {
+      toast.error("Invalid IP address format");
+      return;
+    }
+    return ip;
+  };
+
+  const actions = {
+    handleLookup: async (ipOverride?: string) => {
+      const ip = await performLookup(ipOverride);
+      if (!ip) return;
 
       setLoading(true);
 
@@ -55,15 +65,26 @@ export const IPLookupStateHandler = (): ToolHandler => {
           throw new Error(data.reason || "Invalid IP address");
         }
 
+        const lat = typeof data.latitude === "number" ? data.latitude : null;
+        const lng = typeof data.longitude === "number" ? data.longitude : null;
+        const version: IPInfo["version"] = data.version === "IPv6" || (data.ip || "").includes(":")
+          ? "IPv6"
+          : data.version === "IPv4" || /^(\d{1,3}\.){3}\d{1,3}$/.test(data.ip || "")
+            ? "IPv4"
+            : "Unknown";
+
         const info: IPInfo = {
           ip: data.ip,
           city: data.city || "N/A",
           region: data.region || "N/A",
           country: data.country_name || "N/A",
-          loc: data.latitude && data.longitude ? `${data.latitude}, ${data.longitude}` : "N/A",
+          loc: lat !== null && lng !== null ? `${lat}, ${lng}` : "N/A",
+          latitude: lat,
+          longitude: lng,
           org: data.org || "N/A",
           postal: data.postal || "N/A",
           timezone: data.timezone || "N/A",
+          version,
         };
 
         setIpInfo(info);
@@ -83,10 +104,9 @@ export const IPLookupStateHandler = (): ToolHandler => {
         const response = await fetch("https://api.ipify.org?format=json");
         const data = await response.json();
         setIpAddress(data.ip);
-        toast.success("Your IP address loaded");
+        await actions.handleLookup(data.ip);
       } catch (error) {
         toast.error("Failed to get your IP address");
-      } finally {
         setLoading(false);
       }
     },
