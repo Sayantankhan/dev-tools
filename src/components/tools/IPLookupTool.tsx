@@ -114,7 +114,7 @@ export const IPLookupTool = () => {
             <CardTitle className="text-lg">Location on Map</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="w-full aspect-[16/9] rounded-md overflow-hidden border border-border">
+            <div className="w-full h-[600px] md:h-[720px] rounded-md overflow-hidden border border-border">
               <iframe
                 key={`${lat},${lng}`}
                 title="IP location map"
