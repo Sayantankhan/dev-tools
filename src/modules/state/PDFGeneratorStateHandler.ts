@@ -14,6 +14,8 @@ export interface PdfSourceItem {
   // image: data URL; text: extracted text; pdf: ArrayBuffer
   data: string | ArrayBuffer;
   preview?: string; // for images
+  /** When true, render on the same page as the previous item instead of starting a new page */
+  samePageAsPrevious?: boolean;
 }
 
 const TEXT_EXTS = ["txt", "md", "markdown", "csv", "tsv", "json", "log", "html", "htm", "xml", "yml", "yaml", "js", "ts", "tsx", "jsx", "css", "py", "sh"];
