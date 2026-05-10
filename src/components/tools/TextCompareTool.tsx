@@ -1,114 +1,135 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { ArrowLeftRight, Trash2, FileSearch } from "lucide-react";
+import { ArrowLeftRight, Trash2, FileSearch, Plus, Minus, Equal } from "lucide-react";
 import { TextCompareStateHandler } from "@/modules/state/TextCompareStateHandler";
+
+const SectionLabel = ({ children, hint }: { children: React.ReactNode; hint?: string }) => (
+  <div className="flex items-center justify-between mb-2">
+    <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
+      {children}
+    </span>
+    {hint && (
+      <span className="text-[10px] font-mono text-muted-foreground/70">{hint}</span>
+    )}
+  </div>
+);
+
+const Kbd = ({ children }: { children: React.ReactNode }) => (
+  <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-muted border border-border rounded text-muted-foreground">
+    {children}
+  </kbd>
+);
 
 export const TextCompareTool = () => {
   const { state, setters, actions, helpers } = TextCompareStateHandler();
+  const hasResult = state.diffResult.length > 0;
 
   return (
-    <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap gap-3">
-        <Button onClick={actions.handleCompare} className="btn-gradient">
-          <FileSearch className="w-4 h-4 mr-2" />
-          Compare
-        </Button>
-        <Button onClick={actions.handleSwap} variant="outline">
-          <ArrowLeftRight className="w-4 h-4 mr-2" />
-          Swap
-        </Button>
-        <Button onClick={actions.handleClear} variant="outline">
-          <Trash2 className="w-4 h-4 mr-2" />
-          Clear
-        </Button>
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
+        <div className="flex items-center gap-1.5">
+          <Button onClick={actions.handleCompare} size="sm" className="h-8 gap-1.5">
+            <FileSearch className="w-3.5 h-3.5" />
+            Compare
+          </Button>
+          <Button onClick={actions.handleSwap} size="sm" variant="ghost" className="h-8 gap-1.5">
+            <ArrowLeftRight className="w-3.5 h-3.5" />
+            Swap
+          </Button>
+          <Button onClick={actions.handleClear} size="sm" variant="ghost" className="h-8 gap-1.5">
+            <Trash2 className="w-3.5 h-3.5" />
+            Clear
+          </Button>
+        </div>
+        {hasResult && (
+          <div className="flex items-center gap-3 text-[11px] font-mono">
+            <span className="flex items-center gap-1 text-success">
+              <Plus className="w-3 h-3" />
+              {state.stats.additions}
+            </span>
+            <span className="flex items-center gap-1 text-destructive">
+              <Minus className="w-3 h-3" />
+              {state.stats.deletions}
+            </span>
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <Equal className="w-3 h-3" />
+              {state.stats.unchanged}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Input Fields */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-3">
-          <Label>Original Text</Label>
+      {/* Inputs */}
+      <div className="grid md:grid-cols-2 gap-3">
+        <div>
+          <SectionLabel hint="original">A</SectionLabel>
           <Textarea
             value={state.leftText}
             onChange={(e) => setters.setLeftText(e.target.value)}
-            placeholder="Enter original text..."
-            className="code-editor min-h-[300px]"
+            placeholder="Paste original text…"
+            className="font-mono text-xs min-h-[280px] bg-card resize-none"
           />
         </div>
-
-        <div className="space-y-3">
-          <Label>Modified Text</Label>
+        <div>
+          <SectionLabel hint="modified">B</SectionLabel>
           <Textarea
             value={state.rightText}
             onChange={(e) => setters.setRightText(e.target.value)}
-            placeholder="Enter modified text..."
-            className="code-editor min-h-[300px]"
+            placeholder="Paste modified text…"
+            className="font-mono text-xs min-h-[280px] bg-card resize-none"
           />
         </div>
       </div>
 
-      {/* Stats */}
-      {state.diffResult.length > 0 && (
-        <div className="flex gap-4 p-4 bg-card/50 rounded-lg text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-green-500"></span>
-            <span className="text-muted-foreground">
-              Additions: <span className="font-medium text-foreground">{state.stats.additions}</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500"></span>
-            <span className="text-muted-foreground">
-              Deletions: <span className="font-medium text-foreground">{state.stats.deletions}</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-gray-500"></span>
-            <span className="text-muted-foreground">
-              Unchanged: <span className="font-medium text-foreground">{state.stats.unchanged}</span>
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Diff Result */}
-      {state.diffResult.length > 0 && (
-        <div className="space-y-3">
-          <Label>Comparison Result (Git-style Diff)</Label>
-          <div className="code-editor p-4 min-h-[300px] max-h-[600px] overflow-auto">
-            <div className="font-mono text-xs">
+      {/* Diff */}
+      {hasResult && (
+        <div>
+          <SectionLabel hint="unified diff">Result</SectionLabel>
+          <div className="rounded-md border border-border bg-card overflow-hidden">
+            <div className="font-mono text-xs max-h-[520px] overflow-auto">
               {helpers.generateLineDiff(state.diffResult).map((line: any, index: number) => {
-                  const bgColor = line.type === 'add'
-                    ? "bg-green-500/20"
-                    : line.type === 'remove'
-                    ? "bg-red-500/20"
+                const bg =
+                  line.type === "add"
+                    ? "bg-success/10"
+                    : line.type === "remove"
+                    ? "bg-destructive/10"
                     : "bg-transparent";
-                  const textColor = line.type === 'add'
-                    ? "text-green-400"
-                    : line.type === 'remove'
-                    ? "text-red-400"
-                    : "text-foreground";
-                  const prefix = line.type === 'add' ? "+ " : line.type === 'remove' ? "- " : "  ";
-
-                  return (
-                    <div key={index} className={`${bgColor} ${textColor} flex hover:bg-opacity-30 transition-colors`}>
-                      <span className="text-muted-foreground select-none w-16 flex-shrink-0 text-right pr-2 border-r border-border">
-                        {line.oldLineNum || ''}
-                      </span>
-                      <span className="text-muted-foreground select-none w-16 flex-shrink-0 text-right pr-4 border-r border-border">
-                        {line.lineNum || ''}
-                      </span>
-                      <span className="pl-4 flex-1 whitespace-pre">
-                        <span className="select-none">{prefix}</span>{line.content}
-                      </span>
-                    </div>
+                const accent =
+                  line.type === "add"
+                    ? "border-l-success"
+                    : line.type === "remove"
+                    ? "border-l-destructive"
+                    : "border-l-transparent";
+                const text =
+                  line.type === "add"
+                    ? "text-success"
+                    : line.type === "remove"
+                    ? "text-destructive"
+                    : "text-foreground/80";
+                const prefix = line.type === "add" ? "+" : line.type === "remove" ? "−" : " ";
+                return (
+                  <div key={index} className={`${bg} ${accent} ${text} flex border-l-2`}>
+                    <span className="select-none w-10 flex-shrink-0 text-right pr-2 text-muted-foreground/60">
+                      {line.oldLineNum || ""}
+                    </span>
+                    <span className="select-none w-10 flex-shrink-0 text-right pr-2 text-muted-foreground/60 border-r border-border">
+                      {line.lineNum || ""}
+                    </span>
+                    <span className="select-none w-6 text-center text-muted-foreground/80">{prefix}</span>
+                    <span className="flex-1 whitespace-pre pr-3">{line.content}</span>
+                  </div>
                 );
               })}
             </div>
           </div>
         </div>
       )}
+
+      {/* Footer hint */}
+      <div className="flex items-center gap-2 pt-2 text-[11px] text-muted-foreground">
+        <Kbd>Tab</Kbd> to indent · processed locally — your text never leaves the device
+      </div>
     </div>
   );
 };

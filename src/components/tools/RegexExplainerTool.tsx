@@ -1,210 +1,164 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Copy, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { RegexExplainerStateHandler } from "@/modules/state/RegexExplainerStateHandler";
+
+const PRESETS = [
+  { id: "email", label: "Email" },
+  { id: "url", label: "URL" },
+  { id: "phone", label: "Phone" },
+  { id: "ipv4", label: "IPv4" },
+  { id: "date", label: "Date" },
+];
+
+const SectionLabel = ({ children, hint }: { children: React.ReactNode; hint?: string }) => (
+  <div className="flex items-center justify-between mb-2">
+    <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
+      {children}
+    </span>
+    {hint && <span className="text-[10px] font-mono text-muted-foreground/70">{hint}</span>}
+  </div>
+);
 
 export const RegexExplainerTool = () => {
   const { state, actions } = RegexExplainerStateHandler();
 
   const highlightMatches = () => {
-    if (!state.sampleText || state.matches.length === 0) {
-      return state.sampleText;
-    }
-
+    if (!state.sampleText || state.matches.length === 0) return state.sampleText;
     const parts: JSX.Element[] = [];
     let lastIndex = 0;
-
     state.matches.forEach((match, idx) => {
-      // Add text before match
       if (match.index > lastIndex) {
-        parts.push(
-          <span key={`text-${idx}`}>
-            {state.sampleText.substring(lastIndex, match.index)}
-          </span>
-        );
+        parts.push(<span key={`t-${idx}`}>{state.sampleText.substring(lastIndex, match.index)}</span>);
       }
-
-      // Add highlighted match
       parts.push(
-        <mark
-          key={`match-${idx}`}
-          className="bg-primary/30 text-primary-foreground px-1 rounded"
-        >
+        <mark key={`m-${idx}`} className="bg-primary/25 text-primary px-0.5 rounded-sm border-b border-primary/60">
           {match.text}
         </mark>
       );
-
       lastIndex = match.index + match.text.length;
     });
-
-    // Add remaining text
     if (lastIndex < state.sampleText.length) {
-      parts.push(
-        <span key="text-end">{state.sampleText.substring(lastIndex)}</span>
-      );
+      parts.push(<span key="end">{state.sampleText.substring(lastIndex)}</span>);
     }
-
     return parts;
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Regex Explainer & Tester</h2>
-        <div className="flex gap-2">
-          <Button onClick={actions.handleCopy} variant="outline" size="sm">
-            <Copy className="w-4 h-4 mr-2" />
-            Copy Pattern
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
+        <div className="flex items-center gap-1.5">
+          {PRESETS.map((p) => (
+            <Button
+              key={p.id}
+              onClick={() => actions.applyPreset(p.id)}
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-[11px] font-mono"
+            >
+              {p.label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Button onClick={actions.handleCopy} size="sm" variant="ghost" className="h-8 gap-1.5">
+            <Copy className="w-3.5 h-3.5" />
+            Copy
           </Button>
-          <Button onClick={actions.handleClear} variant="outline" size="sm">
-            <Trash2 className="w-4 h-4 mr-2" />
+          <Button onClick={actions.handleClear} size="sm" variant="ghost" className="h-8 gap-1.5">
+            <Trash2 className="w-3.5 h-3.5" />
             Clear
           </Button>
         </div>
       </div>
 
-      {/* Presets */}
-      <div className="space-y-2">
-        <Label>Quick Presets</Label>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => actions.applyPreset("email")}
-            variant="outline"
-            size="sm"
-          >
-            Email
-          </Button>
-          <Button
-            onClick={() => actions.applyPreset("url")}
-            variant="outline"
-            size="sm"
-          >
-            URL
-          </Button>
-          <Button
-            onClick={() => actions.applyPreset("phone")}
-            variant="outline"
-            size="sm"
-          >
-            Phone
-          </Button>
-          <Button
-            onClick={() => actions.applyPreset("ipv4")}
-            variant="outline"
-            size="sm"
-          >
-            IPv4
-          </Button>
-          <Button
-            onClick={() => actions.applyPreset("date")}
-            variant="outline"
-            size="sm"
-          >
-            Date (YYYY-MM-DD)
-          </Button>
-        </div>
-      </div>
-
-      {/* Regex Pattern Input */}
-      <div className="space-y-2">
-        <Label>Regex Pattern</Label>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Input
-              value={state.pattern}
-              onChange={(e) => actions.updatePattern(e.target.value)}
-              placeholder="Enter regex pattern (e.g., \d{3}-\d{4})"
-              className={state.error ? "border-destructive" : ""}
-            />
-          </div>
+      {/* Pattern */}
+      <div>
+        <SectionLabel hint={state.error ? "invalid" : state.pattern ? "valid" : "/pattern/flags"}>
+          Pattern
+        </SectionLabel>
+        <div className="flex items-stretch gap-0 rounded-md border border-border bg-card overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+          <span className="px-3 flex items-center text-muted-foreground font-mono text-sm select-none border-r border-border">/</span>
+          <Input
+            value={state.pattern}
+            onChange={(e) => actions.updatePattern(e.target.value)}
+            placeholder={`\\d{3}-\\d{4}`}
+            className="flex-1 border-0 bg-transparent font-mono text-sm h-10 focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+          <span className="px-2 flex items-center text-muted-foreground font-mono text-sm select-none border-l border-border">/</span>
           <Input
             value={state.flags}
             onChange={(e) => actions.updateFlags(e.target.value)}
-            placeholder="Flags"
-            className="w-20"
+            placeholder="gim"
+            className="w-20 border-0 bg-transparent font-mono text-sm h-10 focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
-        {state.error && (
-          <div className="flex items-center gap-2 text-destructive text-sm">
-            <AlertCircle className="w-4 h-4" />
-            {state.error}
-          </div>
-        )}
-        {!state.error && state.pattern && (
-          <div className="flex items-center gap-2 text-green-600 text-sm">
-            <CheckCircle2 className="w-4 h-4" />
-            Valid regex pattern
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Common flags: g (global), i (case-insensitive), m (multiline)
-        </p>
+        <div className="mt-1.5 min-h-[16px] text-[11px] font-mono">
+          {state.error ? (
+            <span className="flex items-center gap-1.5 text-destructive">
+              <AlertCircle className="w-3 h-3" />
+              {state.error}
+            </span>
+          ) : state.pattern ? (
+            <span className="flex items-center gap-1.5 text-success">
+              <CheckCircle2 className="w-3 h-3" />
+              valid · {state.matches.length} match{state.matches.length !== 1 ? "es" : ""}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">flags: g (global) · i (case-insensitive) · m (multiline)</span>
+          )}
+        </div>
       </div>
 
-      {/* Explanation */}
-      {state.explanation && (
-        <div className="space-y-2">
-          <Label>Pattern Explanation</Label>
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <pre className="text-sm whitespace-pre-wrap font-mono">
-              {state.explanation}
+      {/* Two-column: explanation + sample */}
+      <div className="grid md:grid-cols-2 gap-3">
+        <div>
+          <SectionLabel hint="breakdown">Explanation</SectionLabel>
+          <div className="rounded-md border border-border bg-card p-3 min-h-[180px]">
+            <pre className="text-xs whitespace-pre-wrap font-mono text-foreground/80 leading-relaxed">
+              {state.explanation || "Enter a pattern to see explanation."}
             </pre>
           </div>
         </div>
-      )}
-
-      {/* Sample Text */}
-      <div className="space-y-2">
-        <Label>Sample Text</Label>
-        <Textarea
-          value={state.sampleText}
-          onChange={(e) => actions.updateSampleText(e.target.value)}
-          placeholder="Enter sample text to test the pattern..."
-          rows={6}
-        />
+        <div>
+          <SectionLabel hint="test against">Sample</SectionLabel>
+          <Textarea
+            value={state.sampleText}
+            onChange={(e) => actions.updateSampleText(e.target.value)}
+            placeholder="Paste text to test the pattern…"
+            className="font-mono text-xs min-h-[180px] bg-card resize-none"
+          />
+        </div>
       </div>
 
-      {/* Highlighted Matches */}
+      {/* Highlighted preview */}
       {state.sampleText && (
-        <div className="space-y-2">
-          <Label>
-            Matches Found: {state.matches.length}
-          </Label>
-          <div className="p-4 bg-muted/30 rounded-lg border border-border/50 font-mono text-sm whitespace-pre-wrap">
+        <div>
+          <SectionLabel hint={`${state.matches.length} highlighted`}>Matches</SectionLabel>
+          <div className="rounded-md border border-border bg-card p-3 font-mono text-xs whitespace-pre-wrap leading-relaxed max-h-[240px] overflow-auto">
             {highlightMatches()}
           </div>
         </div>
       )}
 
-      {/* Match Details */}
+      {/* Match details */}
       {state.matches.length > 0 && (
-        <div className="space-y-2">
-          <Label>Match Details</Label>
-          <div className="space-y-2">
+        <div>
+          <SectionLabel hint="captures">Details</SectionLabel>
+          <div className="rounded-md border border-border bg-card divide-y divide-border max-h-[280px] overflow-auto">
             {state.matches.map((match, index) => (
-              <div
-                key={index}
-                className="p-3 bg-muted/30 rounded border border-border/50"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm font-semibold">
-                    Match {index + 1}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Position: {match.index}
-                  </span>
+              <div key={index} className="px-3 py-2 hover:bg-muted/40 transition-colors">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-muted-foreground">#{index + 1}</span>
+                  <span className="text-muted-foreground/70">pos {match.index}</span>
                 </div>
-                <p className="font-mono text-sm mt-1">&quot;{match.text}&quot;</p>
+                <p className="font-mono text-xs mt-0.5 text-foreground">{match.text}</p>
                 {match.groups && match.groups.length > 0 && (
-                  <div className="mt-2 text-xs">
-                    <span className="text-muted-foreground">Groups: </span>
-                    {match.groups.map((group, idx) => (
-                      <span key={idx} className="font-mono">
-                        {idx > 0 && ", "}
-                        &quot;{group}&quot;
-                      </span>
+                  <div className="mt-1 text-[11px] font-mono text-muted-foreground">
+                    groups: {match.groups.map((g, i) => (
+                      <span key={i} className="text-foreground/80">{i > 0 && ", "}{g || "∅"}</span>
                     ))}
                   </div>
                 )}
@@ -214,17 +168,12 @@ export const RegexExplainerTool = () => {
         </div>
       )}
 
-      {/* Helper Text */}
-      <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
-        <p className="text-sm text-muted-foreground">
-          <strong>Common Patterns:</strong>
-          <br />
-          \d = digit | \w = word char | \s = whitespace | . = any char
-          <br />
-          * = 0+ times | + = 1+ times | ? = optional | {"{n,m}"} = n to m times
-          <br />
-          ^ = start | $ = end | [abc] = a or b or c | (x|y) = x or y
-        </p>
+      {/* Cheatsheet */}
+      <div className="pt-2 text-[11px] font-mono text-muted-foreground leading-relaxed border-t border-border">
+        <span className="text-foreground/80">\d</span> digit · <span className="text-foreground/80">\w</span> word ·{" "}
+        <span className="text-foreground/80">\s</span> space · <span className="text-foreground/80">.</span> any ·{" "}
+        <span className="text-foreground/80">*</span> 0+ · <span className="text-foreground/80">+</span> 1+ ·{" "}
+        <span className="text-foreground/80">?</span> optional · <span className="text-foreground/80">^$</span> anchors
       </div>
     </div>
   );
