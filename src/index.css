@@ -47,8 +47,8 @@ All colors MUST be HSL.
     --success: 158 64% 38%;
     --success-foreground: 0 0% 100%;
 
-    --border: 40 14% 86%;
-    --input: 40 18% 94%;
+    --border: 40 14% 80%;
+    --input: 0 0% 100%;
     --ring: 174 72% 36%;
 
     --radius: 0.5rem;
@@ -94,8 +94,8 @@ All colors MUST be HSL.
     --success: 158 64% 48%;
     --success-foreground: 220 25% 8%;
 
-    --border: 220 14% 18%;
-    --input: 220 16% 13%;
+    --border: 220 14% 22%;
+    --input: 220 20% 16%;
     --ring: 172 70% 48%;
 
     --sidebar-background: 220 20% 7%;
@@ -150,7 +150,7 @@ All colors MUST be HSL.
   }
 
   .code-editor {
-    @apply bg-input border border-border rounded-md p-4 font-mono text-sm min-h-[200px] resize-y;
+    @apply bg-input border border-border rounded-md p-4 font-mono text-sm min-h-[200px] resize-y shadow-sm;
   }
 
   .btn-gradient {
