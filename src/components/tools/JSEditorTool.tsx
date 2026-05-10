@@ -1,59 +1,83 @@
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Play, Trash2, Code } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Play, Trash2, Code, Eye, EyeOff } from "lucide-react";
 import { JSEditorStateHandler } from "@/modules/state/JSEditorStateHandler";
 import { JSExecutionVisualizer } from "@/components/shared/JSExecutionVisualizer";
 import Editor from "@monaco-editor/react";
 
+const SectionLabel = ({ children, hint }: { children: React.ReactNode; hint?: string }) => (
+  <div className="flex items-center justify-between mb-2">
+    <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
+      {children}
+    </span>
+    {hint && <span className="text-[10px] font-mono text-muted-foreground/70">{hint}</span>}
+  </div>
+);
+
+const Kbd = ({ children }: { children: React.ReactNode }) => (
+  <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-muted border border-border rounded text-muted-foreground">
+    {children}
+  </kbd>
+);
+
 export const JSEditorTool = () => {
   const { state, setters, actions } = JSEditorStateHandler();
+  const hasOutput = state.output.length > 0 || state.error;
 
   return (
-    <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={actions.handleRun} className="btn-gradient">
-          <Play className="w-4 h-4 mr-2" />
-          Run Code
-        </Button>
-        <Button onClick={actions.handleFormat} variant="outline">
-          <Code className="w-4 h-4 mr-2" />
-          Format
-        </Button>
-        <Button onClick={actions.handleClear} variant="outline">
-          <Trash2 className="w-4 h-4 mr-2" />
-          Clear
-        </Button>
-        <div className="flex items-center gap-2 ml-auto">
-          <Checkbox
-            id="visualize"
-            checked={state.visualizeExecution}
-            onCheckedChange={setters.setVisualizeExecution}
-          />
-          <Label htmlFor="visualize" className="cursor-pointer text-sm">
-            Visualize Execution
-          </Label>
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
+        <div className="flex items-center gap-1.5">
+          <Button onClick={actions.handleRun} size="sm" className="h-8 gap-1.5">
+            <Play className="w-3.5 h-3.5" />
+            Run
+          </Button>
+          <Button onClick={actions.handleFormat} size="sm" variant="ghost" className="h-8 gap-1.5">
+            <Code className="w-3.5 h-3.5" />
+            Format
+          </Button>
+          <Button onClick={actions.handleClear} size="sm" variant="ghost" className="h-8 gap-1.5">
+            <Trash2 className="w-3.5 h-3.5" />
+            Clear
+          </Button>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setters.setVisualizeExecution(!state.visualizeExecution)}
+            className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {state.visualizeExecution ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            Visualize
+          </button>
+          {state.metrics.length > 0 && (
+            <div className="flex gap-3 text-[11px] font-mono text-muted-foreground">
+              {state.metrics.map((m, i) => (
+                <span key={i}>{m}</span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Editor */}
-      <div className="space-y-3">
-        <Label>JavaScript Code</Label>
-        <div className="border border-border rounded-lg overflow-hidden">
+      <div>
+        <SectionLabel hint="javascript">Source</SectionLabel>
+        <div className="rounded-md border border-border overflow-hidden bg-card">
           <Editor
-            height="400px"
+            height="420px"
             defaultLanguage="javascript"
             value={state.code}
             onChange={(value) => setters.setCode(value || "")}
             theme="vs-dark"
             options={{
               minimap: { enabled: false },
-              fontSize: 14,
+              fontSize: 13,
               lineNumbers: "on",
+              fontFamily: "'JetBrains Mono', monospace",
               roundedSelection: false,
               scrollBeyondLastLine: false,
               automaticLayout: true,
+              padding: { top: 12, bottom: 12 },
             }}
           />
         </div>
@@ -61,35 +85,28 @@ export const JSEditorTool = () => {
 
       {/* Visualization */}
       {state.visualizeExecution && (
-        <div className="space-y-3">
-          <Label>Execution Visualization</Label>
-          <div className="border border-border rounded-lg p-4 bg-muted/30">
+        <div>
+          <SectionLabel hint="call stack · heap · loop">Execution</SectionLabel>
+          <div className="rounded-md border border-border p-4 bg-card">
             <JSExecutionVisualizer currentStep={state.currentExecutionStep} />
           </div>
         </div>
       )}
 
       {/* Output */}
-      {(state.output.length > 0 || state.metrics.length > 0 || state.error) && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>Output</Label>
-            {state.metrics.length > 0 && (
-              <div className="flex gap-4 text-xs text-muted-foreground font-mono">
-                {state.metrics.map((metric, index) => (
-                  <span key={index}>{metric}</span>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="code-editor p-4 min-h-[200px] max-h-[300px] overflow-auto">
+      {hasOutput && (
+        <div>
+          <SectionLabel hint="console">Output</SectionLabel>
+          <div className="rounded-md border border-border bg-card font-mono text-xs p-3 min-h-[160px] max-h-[280px] overflow-auto">
             {state.error ? (
-              <div className="text-red-400 font-mono text-sm whitespace-pre-wrap">
-                Error: {state.error}
+              <div className="text-destructive whitespace-pre-wrap">
+                <span className="opacity-60">error → </span>
+                {state.error}
               </div>
             ) : (
-              state.output.map((line, index) => (
-                <div key={index} className="text-foreground font-mono text-sm whitespace-pre-wrap">
+              state.output.map((line, i) => (
+                <div key={i} className="text-foreground whitespace-pre-wrap">
+                  <span className="text-muted-foreground/40 select-none mr-2">{String(i + 1).padStart(2, "0")}</span>
                   {line}
                 </div>
               ))
@@ -98,12 +115,9 @@ export const JSEditorTool = () => {
         </div>
       )}
 
-      {/* Info */}
-      <div className="p-4 bg-card/50 rounded-lg text-sm text-muted-foreground">
-        <p>
-          Write JavaScript code and click "Run Code" to execute. Use console.log(), console.error(),
-          or console.warn() to see output.
-        </p>
+      {/* Footer */}
+      <div className="flex items-center gap-2 pt-2 text-[11px] text-muted-foreground">
+        <Kbd>Ctrl</Kbd>+<Kbd>Enter</Kbd> run · use <code className="font-mono text-foreground/70">console.log()</code> · sandboxed in your browser
       </div>
     </div>
   );
