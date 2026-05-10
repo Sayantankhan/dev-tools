@@ -152,6 +152,43 @@ export const PDFGeneratorTool = () => {
           </div>
         </div>
       )}
+
+      {/* Live Preview */}
+      {state.previewUrl && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>Preview</Label>
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={actions.handlePrevPage}
+                disabled={state.previewPage <= 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground tabular-nums">
+                Page {state.previewPage} / {state.previewPageCount}
+              </span>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={actions.handleNextPage}
+                disabled={state.previewPage >= state.previewPageCount}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={actions.handleClosePreview}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-muted overflow-hidden max-h-[70vh] overflow-y-auto">
+            <PDFCanvasViewer url={state.previewUrl} pageNumber={state.previewPage} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
