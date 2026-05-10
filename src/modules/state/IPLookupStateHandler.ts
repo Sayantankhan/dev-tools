@@ -59,15 +59,26 @@ export const IPLookupStateHandler = (): ToolHandler => {
           throw new Error(data.reason || "Invalid IP address");
         }
 
+        const lat = typeof data.latitude === "number" ? data.latitude : null;
+        const lng = typeof data.longitude === "number" ? data.longitude : null;
+        const version: IPInfo["version"] = data.version === "IPv6" || (data.ip || "").includes(":")
+          ? "IPv6"
+          : data.version === "IPv4" || /^(\d{1,3}\.){3}\d{1,3}$/.test(data.ip || "")
+            ? "IPv4"
+            : "Unknown";
+
         const info: IPInfo = {
           ip: data.ip,
           city: data.city || "N/A",
           region: data.region || "N/A",
           country: data.country_name || "N/A",
-          loc: data.latitude && data.longitude ? `${data.latitude}, ${data.longitude}` : "N/A",
+          loc: lat !== null && lng !== null ? `${lat}, ${lng}` : "N/A",
+          latitude: lat,
+          longitude: lng,
           org: data.org || "N/A",
           postal: data.postal || "N/A",
           timezone: data.timezone || "N/A",
+          version,
         };
 
         setIpInfo(info);
