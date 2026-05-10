@@ -30,19 +30,25 @@ export const IPLookupStateHandler = (): ToolHandler => {
     },
   };
 
-  const actions = {
-    handleLookup: async () => {
-      const ip = ipAddress.trim();
-      
-      if (!ip) {
-        toast.error("Please enter an IP address");
-        return;
-      }
+  const performLookup = async (ipOverride?: string) => {
+    const ip = (ipOverride ?? ipAddress).trim();
 
-      if (!helpers.isValidIP(ip)) {
-        toast.error("Invalid IP address format");
-        return;
-      }
+    if (!ip) {
+      toast.error("Please enter an IP address");
+      return;
+    }
+
+    if (!helpers.isValidIP(ip)) {
+      toast.error("Invalid IP address format");
+      return;
+    }
+    return ip;
+  };
+
+  const actions = {
+    handleLookup: async (ipOverride?: string) => {
+      const ip = await performLookup(ipOverride);
+      if (!ip) return;
 
       setLoading(true);
 
