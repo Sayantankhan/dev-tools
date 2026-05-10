@@ -119,6 +119,12 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
       });
     },
 
+    handleToggleSamePage: (index: number) => {
+      setItems((prev) =>
+        prev.map((it, i) => (i === index ? { ...it, samePageAsPrevious: !it.samePageAsPrevious } : it)),
+      );
+    },
+
     handleGeneratePDF: async () => {
       if (!textContent.trim() && items.length === 0) {
         toast.error("Please add text or files to generate PDF");
