@@ -592,13 +592,11 @@ export const DataVizTool = () => {
 
       {/* Chart Display */}
       {state.data.length > 0 && (
-        <div className="space-y-3">
+        <div className="flex-1 min-h-0 flex flex-col space-y-3">
           <Label>Visualization</Label>
-          <ChartWrapper>
-            <div className="p-6 bg-card/50 rounded-lg border border-border overflow-hidden">
-              {renderChart()}
-            </div>
-          </ChartWrapper>
+          <div className="flex-1 min-h-0 p-6 bg-card/50 rounded-lg border border-border overflow-auto">
+            {renderChart(Math.max(400, window.innerHeight - 320))}
+          </div>
         </div>
       )}
 
