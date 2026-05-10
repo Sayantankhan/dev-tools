@@ -4,8 +4,9 @@ import { toast } from "sonner";
 
 export const RandomGeneratorStateHandler = (): ToolHandler => {
   const [output, setOutput] = useState("");
-  const [format, setFormat] = useState<"json" | "xml" | "yaml" | "uuid">("json");
+  const [format, setFormat] = useState<"json" | "xml" | "yaml" | "uuid-v4" | "uuid-v7">("json");
   const [complexity, setComplexity] = useState(3);
+  const [count, setCount] = useState(1);
 
   const helpers = {
     generateRandomString: (length: number = 8): string => {
@@ -42,12 +43,33 @@ export const RandomGeneratorStateHandler = (): ToolHandler => {
       return obj;
     },
 
-    generateUUID: (): string => {
+    generateUUIDv4: (): string => {
+      if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
         const r = (Math.random() * 16) | 0;
         const v = c === "x" ? r : (r & 0x3) | 0x8;
         return v.toString(16);
       });
+    },
+
+    generateUUIDv7: (): string => {
+      // UUID v7: 48-bit unix ms timestamp + version + random
+      const ts = Date.now();
+      const tsHex = ts.toString(16).padStart(12, "0");
+      const rand = new Uint8Array(10);
+      if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+        crypto.getRandomValues(rand);
+      } else {
+        for (let i = 0; i < 10; i++) rand[i] = Math.floor(Math.random() * 256);
+      }
+      // Set version (7) in byte 6
+      rand[0] = (rand[0] & 0x0f) | 0x70;
+      // Set variant (10xx) in byte 8
+      rand[2] = (rand[2] & 0x3f) | 0x80;
+      const hex = Array.from(rand, (b) => b.toString(16).padStart(2, "0")).join("");
+      return `${tsHex.slice(0, 8)}-${tsHex.slice(8, 12)}-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 20)}`;
     },
 
     jsonToXML: (obj: any, rootName: string = "root"): string => {
@@ -94,8 +116,12 @@ export const RandomGeneratorStateHandler = (): ToolHandler => {
         let result = "";
 
         switch (format) {
-          case "uuid":
-            result = helpers.generateUUID();
+          case "uuid-v4":
+            result = Array.from({ length: Math.max(1, count) }, () => helpers.generateUUIDv4()).join("\n");
+            break;
+
+          case "uuid-v7":
+            result = Array.from({ length: Math.max(1, count) }, () => helpers.generateUUIDv7()).join("\n");
             break;
 
           case "json": {
@@ -149,11 +175,13 @@ export const RandomGeneratorStateHandler = (): ToolHandler => {
       output,
       format,
       complexity,
+      count,
     },
     setters: {
       setOutput,
       setFormat,
       setComplexity,
+      setCount,
     },
     helpers,
     actions,
