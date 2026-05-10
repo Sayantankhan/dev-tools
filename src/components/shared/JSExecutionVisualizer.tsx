@@ -103,7 +103,7 @@ export const JSExecutionVisualizer = ({ currentStep }: JSExecutionVisualizerProp
               ) : (
                 <div className="space-y-1">
                   {currentStep.eventQueue.map((task, idx) => (
-                    <Badge key={idx} variant="outline" className="w-full justify-start font-mono text-xs">
+                    <Badge key={idx} variant="outline" className="w-full justify-start font-mono text-xs bg-accent/20 border-accent text-accent-foreground">
                       {task}
                     </Badge>
                   ))}
