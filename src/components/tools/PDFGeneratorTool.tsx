@@ -103,6 +103,19 @@ export const PDFGeneratorTool = () => {
                   <Button
                     size="icon"
                     variant="ghost"
+                    onClick={() => actions.handleToggleSamePage(index)}
+                    disabled={index === 0}
+                    title={item.samePageAsPrevious ? "On same page as previous — click to move to a new page" : "Starts a new page — click to keep on same page as previous"}
+                  >
+                    {item.samePageAsPrevious ? (
+                      <Link2 className="w-4 h-4 text-primary" />
+                    ) : (
+                      <Link2Off className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     onClick={() => actions.handleMoveItem(index, -1)}
                     disabled={index === 0}
                   >
