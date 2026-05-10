@@ -13,7 +13,7 @@ interface Props {
 export function ToolShell({ tool, onHome, onOpenPalette, zen, children }: Props) {
   const Icon = tool.icon;
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/40">
       {!zen && (
         <header className="sticky top-0 z-20 h-12 border-b border-border/60 bg-background/90 backdrop-blur flex items-center px-4 gap-3">
           <button
@@ -51,8 +51,8 @@ export function ToolShell({ tool, onHome, onOpenPalette, zen, children }: Props)
         </header>
       )}
 
-      <main className="flex-1 w-full px-4 md:px-6 py-5">
-        {children}
+      <main className="flex-1 w-full px-4 md:px-6 py-5 overflow-auto">
+        <div className="w-full h-full">{children}</div>
       </main>
     </div>
   );
