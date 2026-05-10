@@ -51,8 +51,8 @@ export function ToolShell({ tool, onHome, onOpenPalette, zen, children }: Props)
         </header>
       )}
 
-      <main className="flex-1 px-4 md:px-8 py-6">
-        <div className="mx-auto max-w-7xl">{children}</div>
+      <main className="flex-1 w-full px-4 md:px-6 py-5">
+        {children}
       </main>
     </div>
   );
