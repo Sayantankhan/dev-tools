@@ -329,7 +329,7 @@ export const DataVizTool = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full space-y-6">
       {/* Controls */}
       <div className="flex flex-wrap gap-3 items-end">
         <div className="min-w-[120px]">
