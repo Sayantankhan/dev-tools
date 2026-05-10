@@ -4,21 +4,24 @@ import { ImageTool } from "@/components/tools/ImageTool";
 import { JWTTool } from "@/components/tools/JWTTool";
 import { APITool } from "@/components/tools/APITool";
 import { EncoderTool } from "@/components/tools/EncoderTool";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
-import { Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle, ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network, FileEdit, Clock, Info } from "lucide-react";
+import {
+  Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle,
+  ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network,
+  FileEdit, Clock, Info,
+} from "lucide-react";
+import { HomeDashboard } from "@/components/HomeDashboard";
+import { ToolShell } from "@/components/ToolShell";
+import { CommandPalette } from "@/components/CommandPalette";
+import { useRecentTools } from "@/hooks/useRecentTools";
 
-// Lazy load tools for better performance
 const TextCompareTool = lazy(() => import("@/components/tools/TextCompareTool").then(m => ({ default: m.TextCompareTool })));
 const LogParserTool = lazy(() => import("@/components/tools/LogParserTool").then(m => ({ default: m.LogParserTool })));
 const RandomGeneratorTool = lazy(() => import("@/components/tools/RandomGeneratorTool").then(m => ({ default: m.RandomGeneratorTool })));
 const DataConverterTool = lazy(() => import("@/components/tools/DataConverterTool").then(m => ({ default: m.DataConverterTool })));
 const IPLookupTool = lazy(() => import("@/components/tools/IPLookupTool").then(m => ({ default: m.IPLookupTool })));
 const JSEditorTool = lazy(() => import("@/components/tools/JSEditorTool").then(m => ({ default: m.JSEditorTool })));
-const ConverterTool = lazy(() => import("@/components/tools/ConverterTool").then(m => ({ default: m.ConverterTool })));
 const DataVizTool = lazy(() => import("@/components/tools/DataVizTool").then(m => ({ default: m.DataVizTool })));
-const ImageConverterTool = lazy(() => import("@/components/tools/ImageConverterTool").then(m => ({ default: m.ImageConverterTool })));
 const BackgroundRemoverTool = lazy(() => import("@/components/tools/BackgroundRemoverTool").then(m => ({ default: m.BackgroundRemoverTool })));
 const SearchTool = lazy(() => import("@/components/tools/SearchTool").then(m => ({ default: m.SearchTool })));
 const TopologyViewerTool = lazy(() => import("@/components/tools/TopologyViewerTool").then(m => ({ default: m.TopologyViewerTool })));
@@ -57,83 +60,75 @@ const tools: Tool[] = [
 ];
 
 const Index = () => {
-  const [activeTool, setActiveTool] = useState<ToolId>("json");
+  const [activeTool, setActiveTool] = useState<ToolId | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [zen, setZen] = useState(false);
+  const { push } = useRecentTools();
+
+  const handleToolChange = (id: ToolId) => {
+    setActiveTool(id);
+    push(id);
+    setZen(false);
+  };
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Keyboard shortcuts: 1-5 for tools
-      // if (e.key >= "1" && e.key <= "5") {
-      //   const toolIndex = parseInt(e.key) - 1;
-      //   if (tools[toolIndex]) {
-      //     setActiveTool(tools[toolIndex].id);
-      //   }
-      // }
-      
-      // Esc to clear (handled in individual tools)
-      if (e.key === "Escape") {
-        // Individual tools will handle this
+    const handler = (e: KeyboardEvent) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+        return;
+      }
+      if (e.key === "Escape" && activeTool) {
+        // Esc toggles chrome (zen). Second Esc could close — keep simple.
+        setZen((z) => !z);
       }
     };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [activeTool]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const ActiveComponent = tools.find((t) => t.id === activeTool)?.component;
-  const activeToolLabel = tools.find((t) => t.id === activeTool)?.label;
+  const active = tools.find((t) => t.id === activeTool);
+  const ActiveComponent = active?.component;
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar
+    <div className="min-h-screen bg-background text-foreground font-sans">
+      {!activeTool && (
+        <HomeDashboard
           tools={tools}
-          activeTool={activeTool}
-          onToolChange={setActiveTool}
+          onToolChange={handleToolChange}
+          onOpenPalette={() => setPaletteOpen(true)}
         />
+      )}
 
-        <SidebarInset className="flex-1">
-          {/* Header with Sidebar Toggle */}
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/20 bg-background/95 backdrop-blur-sm px-6">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold gradient-text">Developer Tools</h1>
-              <p className="text-sm md:text-base text-muted-foreground">
-                <span className="text-foreground font-medium">{activeToolLabel}</span> • All client-side, secure, and fast
-              </p>
-            </div>
-          </header>
-
-          {/* Active Tool Panel */}
-          <main className="flex-1 p-6">
-            <div className="animate-fade-in">
-              <div className="glass-card p-6">
-                {ActiveComponent && (
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                  }>
-                    <ActiveComponent />
-                  </Suspense>
-                )}
+      {active && ActiveComponent && (
+        <ToolShell
+          tool={active}
+          onHome={() => setActiveTool(null)}
+          onOpenPalette={() => setPaletteOpen(true)}
+          zen={zen}
+        >
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
               </div>
-            </div>
+            }
+          >
+            <ActiveComponent />
+          </Suspense>
+        </ToolShell>
+      )}
 
-            {/* Footer */}
-            <footer className="mt-12 text-center text-sm text-muted-foreground">
-              <p>
-                All operations run locally in your browser. Your data never leaves your device.
-              </p>
-              <p className="mt-4">
-                © {new Date().getFullYear()} Sayantan Khan.
-              </p>
-            </footer>
-          </main>
-        </SidebarInset>
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        tools={tools}
+        onToolChange={handleToolChange}
+      />
 
-        <Toaster />
-      </div>
-    </SidebarProvider>
+      <Toaster />
+    </div>
   );
 };
 
