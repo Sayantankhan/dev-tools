@@ -175,11 +175,13 @@ export const RandomGeneratorStateHandler = (): ToolHandler => {
       output,
       format,
       complexity,
+      count,
     },
     setters: {
       setOutput,
       setFormat,
       setComplexity,
+      setCount,
     },
     helpers,
     actions,
