@@ -21,7 +21,7 @@ export const IPLookupTool = () => {
   const lat = state.ipInfo?.latitude;
   const lng = state.ipInfo?.longitude;
   const hasCoords = typeof lat === "number" && typeof lng === "number";
-  const delta = 0.5;
+  const delta = 0.01;
   const bbox = hasCoords
     ? `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`
     : null;
