@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ToolHandler } from "@/modules/types/ToolHandler";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -49,7 +49,19 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
   const [items, setItems] = useState<PdfSourceItem[]>([]);
   const [fileName, setFileName] = useState("document.pdf");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewPage, setPreviewPage] = useState(1);
+  const [previewPageCount, setPreviewPageCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastBytesRef = useRef<Uint8Array | null>(null);
+
+  // Cleanup blob URL on unmount / change
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewUrl]);
 
   const helpers = {
     validateFileName: (name: string): string => {
@@ -88,6 +100,108 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
     return null;
   };
 
+  const clearPreview = () => {
+    setPreviewUrl((url) => {
+      if (url) URL.revokeObjectURL(url);
+      return null;
+    });
+    setPreviewPage(1);
+    setPreviewPageCount(0);
+    lastBytesRef.current = null;
+  };
+
+  const buildPdfBytes = async (): Promise<Uint8Array> => {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxW = pageW - margin * 2;
+    const maxH = pageH - margin * 2;
+    let y = margin;
+    let firstContent = true;
+
+    const ensureSpace = (needed: number) => {
+      if (y + needed > pageH - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
+
+    const writeText = (text: string) => {
+      if (!text) return;
+      const lines = doc.splitTextToSize(text, maxW) as string[];
+      for (const line of lines) {
+        ensureSpace(7);
+        doc.text(line, margin, y);
+        y += 7;
+      }
+    };
+
+    const addImage = async (dataUrl: string) => {
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Image load failed"));
+        img.src = dataUrl;
+      });
+      const ar = img.width / img.height;
+      let w = maxW;
+      let h = w / ar;
+      if (h > maxH) {
+        h = maxH;
+        w = h * ar;
+      }
+      ensureSpace(h);
+      doc.addImage(dataUrl, helpers.detectImageFormat(dataUrl), margin, y, w, h);
+      y += h + 8;
+    };
+
+    if (textContent.trim()) {
+      writeText(textContent);
+      firstContent = false;
+    }
+
+    const pdfBuffers: ArrayBuffer[] = [];
+
+    for (const item of items) {
+      if (item.kind === "pdf") {
+        pdfBuffers.push(item.data as ArrayBuffer);
+        continue;
+      }
+
+      if (!firstContent && !item.samePageAsPrevious) {
+        doc.addPage();
+        y = margin;
+      } else if (!firstContent) {
+        y += 4;
+      }
+
+      if (item.kind === "image") {
+        await addImage(item.data as string);
+      } else if (item.kind === "text") {
+        ensureSpace(8);
+        doc.setFont("helvetica", "bold");
+        doc.text(item.name, margin, y);
+        y += 8;
+        doc.setFont("helvetica", "normal");
+        writeText(item.data as string);
+      }
+      firstContent = false;
+    }
+
+    const baseBytes = doc.output("arraybuffer");
+    if (pdfBuffers.length > 0) {
+      const merged = await PDFDocument.load(baseBytes);
+      for (const buf of pdfBuffers) {
+        const src = await PDFDocument.load(buf);
+        const pages = await merged.copyPages(src, src.getPageIndices());
+        pages.forEach((p) => merged.addPage(p));
+      }
+      return await merged.save();
+    }
+    return new Uint8Array(baseBytes);
+  };
+
   const actions = {
     handleImageUpload: async (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files;
@@ -97,6 +211,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
         const valid = results.filter((r): r is PdfSourceItem => r !== null);
         if (valid.length > 0) {
           setItems((prev) => [...prev, ...valid]);
+          clearPreview();
           toast.success(`Added ${valid.length} file(s)`);
         }
       } catch (e) {
@@ -107,6 +222,7 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
 
     handleRemoveImage: (index: number) => {
       setItems((prev) => prev.filter((_, i) => i !== index));
+      clearPreview();
     },
 
     handleMoveItem: (index: number, dir: -1 | 1) => {
@@ -117,12 +233,46 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
         [next[index], next[target]] = [next[target], next[index]];
         return next;
       });
+      clearPreview();
     },
 
     handleToggleSamePage: (index: number) => {
       setItems((prev) =>
         prev.map((it, i) => (i === index ? { ...it, samePageAsPrevious: !it.samePageAsPrevious } : it)),
       );
+      clearPreview();
+    },
+
+    handleGeneratePreview: async () => {
+      if (!textContent.trim() && items.length === 0) {
+        toast.error("Please add text or files to preview");
+        return;
+      }
+      setIsGenerating(true);
+      try {
+        const bytes = await buildPdfBytes();
+        lastBytesRef.current = bytes;
+
+        // Get page count
+        const loaded = await PDFDocument.load(bytes);
+        const count = loaded.getPageCount();
+
+        const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        setPreviewUrl((old) => {
+          if (old) URL.revokeObjectURL(old);
+          return url;
+        });
+        setPreviewPageCount(count);
+        setPreviewPage(1);
+        toast.success("Preview ready");
+      } catch (e) {
+        console.error(e);
+        toast.error("Failed to build preview");
+      } finally {
+        setIsGenerating(false);
+      }
     },
 
     handleGeneratePDF: async () => {
@@ -133,106 +283,9 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
 
       setIsGenerating(true);
       try {
-        const doc = new jsPDF({ unit: "mm", format: "a4" });
-        const pageW = doc.internal.pageSize.getWidth();
-        const pageH = doc.internal.pageSize.getHeight();
-        const margin = 20;
-        const maxW = pageW - margin * 2;
-        const maxH = pageH - margin * 2;
-        let y = margin;
-        let firstContent = true;
-
-        const ensureSpace = (needed: number) => {
-          if (y + needed > pageH - margin) {
-            doc.addPage();
-            y = margin;
-          }
-        };
-
-        const writeText = (text: string) => {
-          if (!text) return;
-          const lines = doc.splitTextToSize(text, maxW) as string[];
-          for (const line of lines) {
-            ensureSpace(7);
-            doc.text(line, margin, y);
-            y += 7;
-          }
-        };
-
-        const addImage = async (dataUrl: string) => {
-          const img = new Image();
-          await new Promise<void>((resolve, reject) => {
-            img.onload = () => resolve();
-            img.onerror = () => reject(new Error("Image load failed"));
-            img.src = dataUrl;
-          });
-          const ar = img.width / img.height;
-          let w = maxW;
-          let h = w / ar;
-          if (h > maxH) {
-            h = maxH;
-            w = h * ar;
-          }
-          ensureSpace(h);
-          doc.addImage(dataUrl, helpers.detectImageFormat(dataUrl), margin, y, w, h);
-          y += h + 8;
-        };
-
-        // Free-form text first
-        if (textContent.trim()) {
-          writeText(textContent);
-          firstContent = false;
-        }
-
-        // Collect PDFs separately to merge at end via pdf-lib
-        const pdfBuffers: ArrayBuffer[] = [];
-
-        for (const item of items) {
-          if (item.kind === "pdf") {
-            pdfBuffers.push(item.data as ArrayBuffer);
-            continue;
-          }
-
-          // Decide whether to start a new page for this item
-          if (!firstContent && !item.samePageAsPrevious) {
-            doc.addPage();
-            y = margin;
-          } else if (!firstContent) {
-            // Same-page grouping: just add a small gap
-            y += 4;
-          }
-
-          if (item.kind === "image") {
-            await addImage(item.data as string);
-          } else if (item.kind === "text") {
-            ensureSpace(8);
-            doc.setFont("helvetica", "bold");
-            doc.text(item.name, margin, y);
-            y += 8;
-            doc.setFont("helvetica", "normal");
-            writeText(item.data as string);
-          }
-          firstContent = false;
-        }
-
-        // Get jsPDF output then merge any PDFs onto the end with pdf-lib
-        const baseBytes = doc.output("arraybuffer");
-        let finalBytes: Uint8Array;
-
-        if (pdfBuffers.length > 0) {
-          const merged = await PDFDocument.load(baseBytes);
-          for (const buf of pdfBuffers) {
-            const src = await PDFDocument.load(buf);
-            const pages = await merged.copyPages(src, src.getPageIndices());
-            pages.forEach((p) => merged.addPage(p));
-          }
-          finalBytes = await merged.save();
-        } else {
-          finalBytes = new Uint8Array(baseBytes);
-        }
-
+        const bytes = lastBytesRef.current ?? (await buildPdfBytes());
         const validFileName = helpers.validateFileName(fileName);
-        const blob = new Blob([finalBytes as BlobPart], { type: "application/pdf" });
+        const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -251,10 +304,16 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
       }
     },
 
+    handlePrevPage: () => setPreviewPage((p) => Math.max(1, p - 1)),
+    handleNextPage: () =>
+      setPreviewPage((p) => Math.min(previewPageCount || 1, p + 1)),
+    handleClosePreview: () => clearPreview(),
+
     handleClear: () => {
       setTextContent("");
       setItems([]);
       setFileName("document.pdf");
+      clearPreview();
       toast.success("Cleared!");
     },
   };
@@ -263,15 +322,20 @@ export const PDFGeneratorStateHandler = (): ToolHandler => {
     state: {
       textContent,
       items,
-      // Back-compat aliases (in case anything still reads these)
       images: items.filter((i) => i.kind === "image").map((i) => i.preview ?? ""),
       imageFileNames: items.map((i) => i.name),
       fileName,
       fileInputRef,
       isGenerating,
+      previewUrl,
+      previewPage,
+      previewPageCount,
     },
     setters: {
-      setTextContent,
+      setTextContent: (v: string) => {
+        setTextContent(v);
+        clearPreview();
+      },
       setItems,
       setFileName,
     },
