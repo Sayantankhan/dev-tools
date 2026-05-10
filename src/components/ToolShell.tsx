@@ -1,5 +1,6 @@
 import { Tool } from "@/pages/Index";
 import { ChevronRight, Shield, X, Command } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Props {
   tool: Tool;
