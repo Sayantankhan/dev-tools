@@ -43,13 +43,22 @@ export const PDFGeneratorTool = () => {
           Add Files
         </Button>
 
+        <Button onClick={actions.handleGeneratePreview} variant="outline" disabled={state.isGenerating}>
+          {state.isGenerating ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Eye className="w-4 h-4 mr-2" />
+          )}
+          Preview
+        </Button>
+
         <Button onClick={actions.handleGeneratePDF} className="btn-gradient" disabled={state.isGenerating}>
           {state.isGenerating ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           ) : (
             <FileDown className="w-4 h-4 mr-2" />
           )}
-          Generate PDF
+          Download PDF
         </Button>
 
         <Button onClick={actions.handleClear} variant="outline">
