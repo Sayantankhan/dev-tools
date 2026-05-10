@@ -82,76 +82,145 @@ export const JSEditorStateHandler = (): ToolHandler => {
 
       try {
         if (visualizeExecution) {
-          // Enhanced execution with visualization
-          const executionContext = {
-            stack: ["<global>"],
-            heap: {} as Record<string, any>,
-            eventQueue: [] as string[],
-            microtaskQueue: [] as string[],
+          // Record a timeline of events, then play it back so the user can see
+          // microtasks/tasks actually enter and leave their queues.
+          type Snapshot = {
+            stack: string[];
+            heap: Record<string, any>;
+            eventQueue: string[];
+            microtaskQueue: string[];
+            label: string;
           };
 
-          // Create instrumented console and environment
-          const instrumentedEnv = {
-            console: scopedConsole,
-            setTimeout: (fn: Function, delay: number) => {
-              executionContext.eventQueue.push(`setTimeout(${delay}ms)`);
-              setCurrentExecutionStep({ line: 0, ...executionContext });
-              return window.setTimeout(() => {
-                executionContext.stack.push("setTimeout callback");
-                setCurrentExecutionStep({ line: 0, ...executionContext });
-                fn();
-                executionContext.stack.pop();
-                const idx = executionContext.eventQueue.indexOf(`setTimeout(${delay}ms)`);
-                if (idx > -1) executionContext.eventQueue.splice(idx, 1);
-                setCurrentExecutionStep({ line: 0, ...executionContext });
-              }, delay);
-            },
-            Promise: class InstrumentedPromise<T> extends Promise<T> {
-              constructor(executor: (resolve: (value: T) => void, reject: (reason?: any) => void) => void) {
-                super((resolve, reject) => {
-                  executor(
-                    (value) => {
-                      executionContext.microtaskQueue.push("Promise.then");
-                      setCurrentExecutionStep({ line: 0, ...executionContext });
-                      queueMicrotask(() => {
-                        const idx = executionContext.microtaskQueue.indexOf("Promise.then");
-                        if (idx > -1) executionContext.microtaskQueue.splice(idx, 1);
-                        setCurrentExecutionStep({ line: 0, ...executionContext });
-                      });
-                      resolve(value);
-                    },
-                    reject
-                  );
-                });
-              }
-            },
+          const stack = ["<global>"];
+          const heap: Record<string, any> = {};
+          const eventQueue: string[] = [];
+          const microtaskQueue: string[] = [];
+          const timeline: Snapshot[] = [];
+          let promiseCounter = 0;
+          let timeoutCounter = 0;
+          let microCounter = 0;
+
+          const snap = (label: string) => {
+            timeline.push({
+              stack: [...stack],
+              heap: { ...heap },
+              eventQueue: [...eventQueue],
+              microtaskQueue: [...microtaskQueue],
+              label,
+            });
           };
 
-          // Parse code to track variable declarations
-          const varRegex = /(?:const|let|var)\s+(\w+)\s*=\s*(.+?)(?:;|$)/gm;
-          let match;
-          while ((match = varRegex.exec(code)) !== null) {
-            const [, varName] = match;
-            executionContext.heap[varName] = "undefined";
+          // Parse variable declarations for the heap panel
+          const varRegex = /(?:const|let|var)\s+(\w+)\s*=\s*([^;\n]+)/gm;
+          let m;
+          while ((m = varRegex.exec(code)) !== null) {
+            heap[m[1]] = m[2].trim().slice(0, 40);
           }
 
-          setCurrentExecutionStep({ line: 0, ...executionContext });
+          snap("start");
 
-          // Execute with instrumentation
+          // Instrumented setTimeout
+          const sandboxSetTimeout = (fn: Function, delay: number) => {
+            const id = ++timeoutCounter;
+            const tag = `setTimeout#${id} (${delay}ms)`;
+            eventQueue.push(tag);
+            snap(`schedule ${tag}`);
+            return window.setTimeout(() => {
+              const idx = eventQueue.indexOf(tag);
+              if (idx > -1) eventQueue.splice(idx, 1);
+              stack.push(`setTimeout#${id} cb`);
+              snap(`run ${tag}`);
+              try { fn(); } catch (e) { /* swallow inside playback */ }
+              stack.pop();
+              snap(`done ${tag}`);
+            }, delay);
+          };
+
+          // Instrumented queueMicrotask
+          const sandboxQueueMicrotask = (fn: Function) => {
+            const id = ++microCounter;
+            const tag = `queueMicrotask#${id}`;
+            microtaskQueue.push(tag);
+            snap(`schedule ${tag}`);
+            queueMicrotask(() => {
+              const idx = microtaskQueue.indexOf(tag);
+              if (idx > -1) microtaskQueue.splice(idx, 1);
+              stack.push(tag);
+              snap(`run ${tag}`);
+              try { fn(); } catch (e) {}
+              stack.pop();
+              snap(`done ${tag}`);
+            });
+          };
+
+          // Instrumented Promise: wraps .then/.catch/.finally to log microtasks
+          const NativePromise = Promise;
+          const wrapHandler = (label: string, handler?: any) => {
+            if (typeof handler !== "function") return handler;
+            return (val: any) => {
+              const idx = microtaskQueue.indexOf(label);
+              if (idx > -1) microtaskQueue.splice(idx, 1);
+              stack.push(label);
+              snap(`run ${label}`);
+              try {
+                const result = handler(val);
+                stack.pop();
+                snap(`done ${label}`);
+                return result;
+              } catch (e) {
+                stack.pop();
+                snap(`throw ${label}`);
+                throw e;
+              }
+            };
+          };
+
+          class TrackedPromise<T> extends NativePromise<T> {
+            then(onFulfilled?: any, onRejected?: any): any {
+              const id = ++promiseCounter;
+              const fulLabel = `Promise.then#${id}`;
+              const rejLabel = `Promise.catch#${id}`;
+              if (onFulfilled) microtaskQueue.push(fulLabel);
+              if (onRejected) microtaskQueue.push(rejLabel);
+              snap(`schedule Promise#${id}`);
+              return super.then(
+                wrapHandler(fulLabel, onFulfilled),
+                wrapHandler(rejLabel, onRejected)
+              );
+            }
+          }
+
           const func = new Function(
-            "console",
-            "setTimeout", 
-            "Promise",
-            `
-            ${code}
-            `
+            "console", "setTimeout", "Promise", "queueMicrotask",
+            code
           );
-          
-          func(instrumentedEnv.console, instrumentedEnv.setTimeout, instrumentedEnv.Promise);
+          func(scopedConsole, sandboxSetTimeout, TrackedPromise, sandboxQueueMicrotask);
 
-          // Update visualization after execution
-          executionContext.stack = [];
-          setCurrentExecutionStep({ line: code.split("\n").length, ...executionContext });
+          stack.pop();
+          snap("end of script");
+
+          // Wait long enough for any pending timers/microtasks to drain, then play back
+          const maxDelay = Math.max(
+            50,
+            ...Array.from(code.matchAll(/setTimeout\s*\([^,]+,\s*(\d+)/g)).map((mm) => parseInt(mm[1]))
+          );
+          window.setTimeout(() => {
+            if (currentRunIdRef.current !== runId) return;
+            const stepDuration = Math.max(120, Math.min(600, 2400 / Math.max(timeline.length, 1)));
+            timeline.forEach((s, i) => {
+              window.setTimeout(() => {
+                if (currentRunIdRef.current !== runId) return;
+                setCurrentExecutionStep({
+                  line: 0,
+                  stack: s.stack,
+                  heap: s.heap,
+                  eventQueue: s.eventQueue,
+                  microtaskQueue: s.microtaskQueue,
+                });
+              }, i * stepDuration);
+            });
+          }, maxDelay + 30);
         } else {
           // Normal execution without visualization
           const func = new Function("console", code);
