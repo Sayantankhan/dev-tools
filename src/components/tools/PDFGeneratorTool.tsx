@@ -75,12 +75,12 @@ export const PDFGeneratorTool = () => {
       {/* File list */}
       {items.length > 0 && (
         <div className="space-y-3">
-          <Label>Files ({items.length}) — drag order via the arrows</Label>
+          <Label>Files ({items.length}) — reorder, or link an item to the previous to share a page</Label>
           <div className="space-y-2">
             {items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50"
+                className={`flex items-center gap-3 p-3 rounded-lg border bg-card/50 ${item.samePageAsPrevious ? "border-primary/60" : "border-border"}`}
               >
                 {item.kind === "image" && item.preview ? (
                   <img
