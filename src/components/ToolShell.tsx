@@ -39,6 +39,7 @@ export function ToolShell({ tool, onHome, onOpenPalette, zen, children }: Props)
             >
               <Command className="w-3 h-3" /> K
             </button>
+            <ThemeToggle />
             <button
               onClick={onHome}
               className="text-muted-foreground hover:text-foreground transition"
