@@ -29,6 +29,7 @@ const PDFEditorTool = lazy(() => import("@/components/tools/PDFEditorTool").then
 const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool").then(m => ({ default: m.PDFGeneratorTool })));
 const CronGeneratorTool = lazy(() => import("@/components/tools/CronGeneratorTool").then(m => ({ default: m.CronGeneratorTool })));
 const RegexExplainerTool = lazy(() => import("@/components/tools/RegexExplainerTool").then(m => ({ default: m.RegexExplainerTool })));
+const TrafficSimulatorTool = lazy(() => import("@/components/tools/TrafficSimulatorTool").then(m => ({ default: m.TrafficSimulatorTool })));
 
 export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer";
 
