@@ -39,6 +39,8 @@ interface SimEdge {
 }
 
 type Pattern = "constant" | "spike" | "linear" | "flash" | "ddos";
+
+const PATTERN_LABEL: Record<Pattern, string> = {
   constant: "Constant", spike: "Spike", linear: "Linear Growth",
   flash: "Flash Sale", ddos: "DDoS Attack",
 };
