@@ -380,7 +380,7 @@ export function TrafficSimulatorTool() {
     const out: string[] = [];
     nodes.forEach(n => {
       const load = n.servedRps / n.capacityRps;
-      if (load > 0.95 && n.id !== "users") out.push(`${n.label} is saturated (${Math.round(load * 100)}%). Consider scaling horizontally or increasing capacity.`);
+      if (load > 0.95 && n.id !== arch.entryId) out.push(`${n.label} is saturated (${Math.round(load * 100)}%). Consider scaling horizontally or increasing capacity.`);
       else if (n.queue > 500) out.push(`${n.label} has a queue of ${Math.round(n.queue)}. Backpressure is building.`);
     });
     if (out.length === 0) out.push("System is healthy. All components operating below 80% capacity.");
