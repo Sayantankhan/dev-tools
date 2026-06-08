@@ -31,7 +31,7 @@ const CronGeneratorTool = lazy(() => import("@/components/tools/CronGeneratorToo
 const RegexExplainerTool = lazy(() => import("@/components/tools/RegexExplainerTool").then(m => ({ default: m.RegexExplainerTool })));
 const TrafficSimulatorTool = lazy(() => import("@/components/tools/TrafficSimulatorTool").then(m => ({ default: m.TrafficSimulatorTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer" | "traffic-simulator";
 
 export interface Tool {
   id: ToolId;
