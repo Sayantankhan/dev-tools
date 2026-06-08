@@ -266,8 +266,10 @@ function loadColor(load: number, failed: boolean): string {
 
 // ---------------- Component ----------------
 export function TrafficSimulatorTool() {
-  const [nodes, setNodes] = useState<SimNode[]>(() => initialNodes.map(n => ({ ...n })));
-  const [edges] = useState<SimEdge[]>(initialEdges);
+  const [archKey, setArchKey] = useState<ArchKey>("web3tier");
+  const arch = ARCHITECTURES[archKey];
+  const [nodes, setNodes] = useState<SimNode[]>(() => arch.nodes.map(n => ({ ...n })));
+  const [edges, setEdges] = useState<SimEdge[]>(arch.edges);
   const [running, setRunning] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [rps, setRps] = useState(5000);
