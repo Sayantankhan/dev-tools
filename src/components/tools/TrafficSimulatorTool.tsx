@@ -337,7 +337,7 @@ export function TrafficSimulatorTool() {
 
       return updated;
     });
-  }, [rps, pattern, edges]);
+  }, [rps, pattern, edges, arch]);
 
   useEffect(() => {
     if (!running) return;
@@ -346,13 +346,18 @@ export function TrafficSimulatorTool() {
     return () => { if (tickRef.current) window.clearInterval(tickRef.current); };
   }, [running, speed, step]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setRunning(false);
     elapsedRef.current = 0;
     setElapsed(0);
     setHistory([]);
-    setNodes(initialNodes.map(n => ({ ...n })));
-  };
+    setSelectedId(null);
+    setNodes(arch.nodes.map(n => ({ ...n })));
+    setEdges(arch.edges);
+  }, [arch]);
+
+  // Reset when architecture changes
+  useEffect(() => { reset(); }, [archKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateNode = (id: string, patch: Partial<SimNode>) => {
     setNodes(prev => prev.map(n => n.id === id ? { ...n, ...patch } : n));
