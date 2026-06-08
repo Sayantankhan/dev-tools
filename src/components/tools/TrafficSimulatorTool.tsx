@@ -367,12 +367,12 @@ export function TrafficSimulatorTool() {
   const selected = nodes.find(n => n.id === selectedId);
   const bottleneck = useMemo(() => {
     return [...nodes]
-      .filter(n => n.id !== "users")
+      .filter(n => n.id !== arch.entryId)
       .sort((a, b) => (b.servedRps / b.capacityRps) - (a.servedRps / a.capacityRps))[0];
-  }, [nodes]);
+  }, [nodes, arch.entryId]);
 
   const totalCost = nodes.reduce((s, n) => s + n.costPerHour, 0);
-  const totalServed = nodes.find(n => n.id === "users")?.incomingRps || 0;
+  const totalServed = nodes.find(n => n.id === arch.entryId)?.incomingRps || 0;
   const totalErrors = nodes.reduce((s, n) => s + n.errors, 0);
   const avgLatency = history.length ? history[history.length - 1].latency : 0;
 
