@@ -291,9 +291,9 @@ export function TrafficSimulatorTool() {
       const map = new Map(prev.map(n => [n.id, { ...n, incomingRps: 0, servedRps: 0 }]));
       const targetUserRps = computePatternRps(rps, pattern, tSec);
 
-      // BFS-ish propagation from users
-      const order = ["users", "cdn", "lb", "api", "auth", "cache", "db", "queue"];
-      const usersNode = map.get("users")!;
+      // BFS-ish propagation from entry
+      const order = arch.order;
+      const usersNode = map.get(arch.entryId)!;
       usersNode.incomingRps = targetUserRps;
 
       for (const id of order) {
