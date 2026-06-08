@@ -31,6 +31,7 @@ const descriptions: Record<string, string> = {
   "topology-viewer": "Visualize topologies",
   "cron-generator": "Build cron expressions",
   "regex-explainer": "Explain regex patterns",
+  "traffic-simulator": "Simulate distributed system traffic",
 };
 
 const categories: { name: string; ids: ToolId[] }[] = [
@@ -39,7 +40,7 @@ const categories: { name: string; ids: ToolId[] }[] = [
   { name: "Text & Code", ids: ["text-compare", "js-editor", "regex-explainer"] },
   { name: "Images & Media", ids: ["image", "bg-remover"] },
   { name: "Documents", ids: ["pdf-editor", "pdf-generator"] },
-  { name: "Utilities", ids: ["random-generator", "data-viz", "topology-viewer", "cron-generator"] },
+  { name: "Utilities", ids: ["random-generator", "data-viz", "topology-viewer", "cron-generator", "traffic-simulator"] },
 ];
 
 export function HomeDashboard({ tools, onToolChange, onOpenPalette }: Props) {
