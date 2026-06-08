@@ -63,25 +63,207 @@ const initialEdges: SimEdge[] = [
   { id: "e8", from: "api", to: "queue", weight: 0.2 },
 ];
 
+type Pattern = "constant" | "spike" | "linear" | "flash" | "ddos";
+
+type ArchKey = "web3tier" | "pubsub" | "streaming" | "videocall" | "gameserver" | "async" | "analytics";
+
+function mkNode(id: string, label: string, kind: NodeKind, x: number, y: number, cap: number, lat: number, cost: number): SimNode {
+  return { id, label, kind, x, y, capacityRps: cap, baseLatencyMs: lat, costPerHour: cost, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false };
+}
+
+interface Architecture {
+  label: string;
+  description: string;
+  nodes: SimNode[];
+  edges: SimEdge[];
+  entryId: string; // node that receives user traffic
+  order: string[]; // BFS-ish propagation order
+}
+
+const ARCHITECTURES: Record<ArchKey, Architecture> = {
+  web3tier: {
+    label: "Web 3-Tier",
+    description: "Classic CDN → LB → API → DB stack",
+    nodes: [
+      mkNode("users", "Users", "users", 60, 220, 1e9, 0, 0),
+      mkNode("cdn", "CDN", "cdn", 220, 220, 200000, 5, 0.40),
+      mkNode("lb", "Load Balancer", "lb", 400, 220, 50000, 2, 0.25),
+      mkNode("api", "API Service", "api", 600, 120, 8000, 20, 1.20),
+      mkNode("auth", "Auth Service", "auth", 600, 320, 6000, 15, 0.60),
+      mkNode("cache", "Redis Cache", "cache", 820, 60, 20000, 1, 0.30),
+      mkNode("db", "Postgres", "db", 820, 220, 3000, 8, 0.95),
+      mkNode("queue", "Kafka", "queue", 820, 380, 15000, 4, 0.55),
+    ],
+    edges: [
+      { id: "e1", from: "users", to: "cdn", weight: 1 },
+      { id: "e2", from: "cdn", to: "lb", weight: 0.4 },
+      { id: "e3", from: "lb", to: "api", weight: 0.7 },
+      { id: "e4", from: "lb", to: "auth", weight: 0.3 },
+      { id: "e5", from: "api", to: "cache", weight: 0.7 },
+      { id: "e6", from: "api", to: "db", weight: 0.3 },
+      { id: "e7", from: "auth", to: "db", weight: 0.5 },
+      { id: "e8", from: "api", to: "queue", weight: 0.2 },
+    ],
+    entryId: "users",
+    order: ["users", "cdn", "lb", "api", "auth", "cache", "db", "queue"],
+  },
+  pubsub: {
+    label: "Pub/Sub",
+    description: "Publishers → Broker → Subscribers (fan-out)",
+    nodes: [
+      mkNode("users", "Producers", "users", 60, 220, 1e9, 0, 0),
+      mkNode("pub", "Publisher API", "publisher", 220, 220, 30000, 5, 0.50),
+      mkNode("broker", "Message Broker", "broker", 420, 220, 50000, 3, 1.10),
+      mkNode("sub1", "Email Subscriber", "subscriber", 660, 80, 4000, 25, 0.40),
+      mkNode("sub2", "Analytics Subscriber", "subscriber", 660, 220, 8000, 15, 0.55),
+      mkNode("sub3", "Webhook Subscriber", "subscriber", 660, 360, 5000, 30, 0.45),
+      mkNode("dlq", "Dead Letter Queue", "queue", 420, 400, 10000, 2, 0.20),
+    ],
+    edges: [
+      { id: "e1", from: "users", to: "pub", weight: 1 },
+      { id: "e2", from: "pub", to: "broker", weight: 1 },
+      { id: "e3", from: "broker", to: "sub1", weight: 1 },
+      { id: "e4", from: "broker", to: "sub2", weight: 1 },
+      { id: "e5", from: "broker", to: "sub3", weight: 1 },
+      { id: "e6", from: "broker", to: "dlq", weight: 0.05 },
+    ],
+    entryId: "users",
+    order: ["users", "pub", "broker", "sub1", "sub2", "sub3", "dlq"],
+  },
+  streaming: {
+    label: "Streaming",
+    description: "Kafka-style ingest → stream processors → sinks",
+    nodes: [
+      mkNode("users", "Event Sources", "users", 60, 220, 1e9, 0, 0),
+      mkNode("ingest", "Ingest Gateway", "api", 220, 220, 80000, 4, 0.70),
+      mkNode("kafka", "Kafka Cluster", "stream", 420, 220, 200000, 2, 2.50),
+      mkNode("flink", "Flink Job", "worker", 640, 120, 30000, 10, 1.80),
+      mkNode("spark", "Spark Job", "worker", 640, 320, 20000, 20, 1.60),
+      mkNode("warehouse", "Warehouse", "warehouse", 860, 120, 15000, 30, 1.20),
+      mkNode("dash", "Realtime Dashboard", "analytics", 860, 320, 10000, 5, 0.40),
+    ],
+    edges: [
+      { id: "e1", from: "users", to: "ingest", weight: 1 },
+      { id: "e2", from: "ingest", to: "kafka", weight: 1 },
+      { id: "e3", from: "kafka", to: "flink", weight: 0.6 },
+      { id: "e4", from: "kafka", to: "spark", weight: 0.4 },
+      { id: "e5", from: "flink", to: "warehouse", weight: 1 },
+      { id: "e6", from: "spark", to: "dash", weight: 1 },
+    ],
+    entryId: "users",
+    order: ["users", "ingest", "kafka", "flink", "spark", "warehouse", "dash"],
+  },
+  videocall: {
+    label: "Video Call (WebRTC)",
+    description: "Signaling, STUN/TURN relays, SFU media",
+    nodes: [
+      mkNode("users", "Peers", "users", 60, 220, 1e9, 0, 0),
+      mkNode("signal", "Signaling Server", "api", 240, 220, 20000, 10, 0.50),
+      mkNode("stun", "STUN", "stun", 460, 80, 50000, 5, 0.20),
+      mkNode("turn", "TURN Relay", "turn", 460, 240, 8000, 25, 1.50),
+      mkNode("sfu", "SFU Media Server", "media", 460, 400, 5000, 15, 2.20),
+      mkNode("recorder", "Recording Service", "worker", 720, 320, 2000, 40, 1.00),
+      mkNode("storage", "Object Storage", "db", 720, 460, 10000, 30, 0.60),
+    ],
+    edges: [
+      { id: "e1", from: "users", to: "signal", weight: 1 },
+      { id: "e2", from: "signal", to: "stun", weight: 0.8 },
+      { id: "e3", from: "signal", to: "turn", weight: 0.3 },
+      { id: "e4", from: "signal", to: "sfu", weight: 0.6 },
+      { id: "e5", from: "sfu", to: "recorder", weight: 0.2 },
+      { id: "e6", from: "recorder", to: "storage", weight: 1 },
+    ],
+    entryId: "users",
+    order: ["users", "signal", "stun", "turn", "sfu", "recorder", "storage"],
+  },
+  gameserver: {
+    label: "Game Servers",
+    description: "Matchmaker → game instances → state store",
+    nodes: [
+      mkNode("users", "Players", "users", 60, 220, 1e9, 0, 0),
+      mkNode("lb", "Edge LB", "lb", 220, 220, 100000, 3, 0.40),
+      mkNode("matchmaker", "Matchmaker", "matchmaker", 400, 100, 10000, 50, 0.80),
+      mkNode("lobby", "Lobby Service", "api", 400, 340, 15000, 20, 0.60),
+      mkNode("game1", "Game Instance A", "gameserver", 620, 80, 3000, 30, 1.80),
+      mkNode("game2", "Game Instance B", "gameserver", 620, 220, 3000, 30, 1.80),
+      mkNode("game3", "Game Instance C", "gameserver", 620, 360, 3000, 30, 1.80),
+      mkNode("state", "State Store (Redis)", "cache", 840, 220, 40000, 1, 0.50),
+      mkNode("db", "Player DB", "db", 840, 360, 5000, 10, 0.95),
+    ],
+    edges: [
+      { id: "e1", from: "users", to: "lb", weight: 1 },
+      { id: "e2", from: "lb", to: "matchmaker", weight: 0.4 },
+      { id: "e3", from: "lb", to: "lobby", weight: 0.6 },
+      { id: "e4", from: "matchmaker", to: "game1", weight: 0.35 },
+      { id: "e5", from: "matchmaker", to: "game2", weight: 0.35 },
+      { id: "e6", from: "matchmaker", to: "game3", weight: 0.3 },
+      { id: "e7", from: "game1", to: "state", weight: 1 },
+      { id: "e8", from: "game2", to: "state", weight: 1 },
+      { id: "e9", from: "game3", to: "state", weight: 1 },
+      { id: "e10", from: "lobby", to: "db", weight: 0.7 },
+    ],
+    entryId: "users",
+    order: ["users", "lb", "matchmaker", "lobby", "game1", "game2", "game3", "state", "db"],
+  },
+  async: {
+    label: "Async Processing",
+    description: "API → queue → workers → DB",
+    nodes: [
+      mkNode("users", "Clients", "users", 60, 220, 1e9, 0, 0),
+      mkNode("api", "REST API", "api", 220, 220, 25000, 10, 0.80),
+      mkNode("queue", "Job Queue", "queue", 420, 220, 100000, 2, 0.40),
+      mkNode("w1", "Worker Pool A", "worker", 640, 100, 5000, 100, 1.20),
+      mkNode("w2", "Worker Pool B", "worker", 640, 240, 5000, 100, 1.20),
+      mkNode("w3", "Worker Pool C", "worker", 640, 380, 5000, 100, 1.20),
+      mkNode("db", "Result DB", "db", 860, 240, 8000, 8, 0.90),
+      mkNode("notify", "Notifier", "api", 860, 380, 12000, 15, 0.50),
+    ],
+    edges: [
+      { id: "e1", from: "users", to: "api", weight: 1 },
+      { id: "e2", from: "api", to: "queue", weight: 1 },
+      { id: "e3", from: "queue", to: "w1", weight: 0.34 },
+      { id: "e4", from: "queue", to: "w2", weight: 0.33 },
+      { id: "e5", from: "queue", to: "w3", weight: 0.33 },
+      { id: "e6", from: "w1", to: "db", weight: 1 },
+      { id: "e7", from: "w2", to: "db", weight: 1 },
+      { id: "e8", from: "w3", to: "notify", weight: 1 },
+    ],
+    entryId: "users",
+    order: ["users", "api", "queue", "w1", "w2", "w3", "db", "notify"],
+  },
+  analytics: {
+    label: "Data Analytics",
+    description: "Sources → ETL → warehouse → BI/ML",
+    nodes: [
+      mkNode("users", "Data Sources", "users", 60, 220, 1e9, 0, 0),
+      mkNode("ingest", "Ingestion", "api", 220, 220, 40000, 5, 0.60),
+      mkNode("etl", "ETL Pipeline", "etl", 420, 220, 15000, 60, 1.50),
+      mkNode("lake", "Data Lake (S3)", "db", 640, 100, 30000, 20, 0.50),
+      mkNode("wh", "Warehouse (Snowflake)", "warehouse", 640, 260, 8000, 40, 2.50),
+      mkNode("bi", "BI Dashboards", "analytics", 860, 180, 5000, 100, 0.80),
+      mkNode("ml", "ML Training", "ml", 860, 340, 2000, 200, 3.00),
+    ],
+    edges: [
+      { id: "e1", from: "users", to: "ingest", weight: 1 },
+      { id: "e2", from: "ingest", to: "etl", weight: 1 },
+      { id: "e3", from: "etl", to: "lake", weight: 0.7 },
+      { id: "e4", from: "etl", to: "wh", weight: 0.5 },
+      { id: "e5", from: "wh", to: "bi", weight: 0.8 },
+      { id: "e6", from: "lake", to: "ml", weight: 0.4 },
+    ],
+    entryId: "users",
+    order: ["users", "ingest", "etl", "lake", "wh", "bi", "ml"],
+  },
+};
+
 const NODE_ICONS: Record<NodeKind, string> = {
   users: "👥", cdn: "🌐", lb: "⚖️", api: "🔌", auth: "🔐",
   cache: "⚡", db: "🗄️", queue: "📨", worker: "⚙️",
+  broker: "📡", publisher: "📤", subscriber: "📥", stream: "🌊",
+  stun: "🧊", turn: "🔁", media: "🎥",
+  gameserver: "🎮", matchmaker: "🎯",
+  etl: "🔄", warehouse: "🏬", analytics: "📊", ml: "🧠",
 };
-
-const PATTERN_LABEL: Record<Pattern, string> = {
-  constant: "Constant", spike: "Spike", linear: "Linear Growth",
-  flash: "Flash Sale", ddos: "DDoS Attack",
-};
-
-function computePatternRps(base: number, pattern: Pattern, tSec: number): number {
-  switch (pattern) {
-    case "constant": return base;
-    case "linear":   return base * (1 + tSec / 30);
-    case "spike":    return base * (1 + 4 * Math.exp(-Math.pow((tSec % 30) - 10, 2) / 8));
-    case "flash":    return tSec < 5 ? base * 0.3 : base * (1.5 + 2 * Math.sin(tSec / 3));
-    case "ddos":     return base * (1 + 8 * Math.min(1, tSec / 10));
-  }
-}
 
 function loadColor(load: number, failed: boolean): string {
   if (failed) return "#6b7280";
