@@ -38,32 +38,21 @@ interface SimEdge {
   weight: number; // 0..1 of upstream traffic going through this edge
 }
 
-type Pattern = "constant" | "spike" | "linear" | "flash" | "ddos";
+const PATTERN_LABEL: Record<"constant" | "spike" | "linear" | "flash" | "ddos", string> = {
+  constant: "Constant", spike: "Spike", linear: "Linear Growth",
+  flash: "Flash Sale", ddos: "DDoS Attack",
+};
 
-// ---------------- Default architecture ----------------
-const initialNodes: SimNode[] = [
-  { id: "users", label: "Users", kind: "users", x: 60, y: 220, capacityRps: 1e9, baseLatencyMs: 0, costPerHour: 0, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-  { id: "cdn", label: "CDN", kind: "cdn", x: 220, y: 220, capacityRps: 200000, baseLatencyMs: 5, costPerHour: 0.40, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-  { id: "lb", label: "Load Balancer", kind: "lb", x: 400, y: 220, capacityRps: 50000, baseLatencyMs: 2, costPerHour: 0.25, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-  { id: "api", label: "API Service", kind: "api", x: 600, y: 120, capacityRps: 8000, baseLatencyMs: 20, costPerHour: 1.20, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-  { id: "auth", label: "Auth Service", kind: "auth", x: 600, y: 320, capacityRps: 6000, baseLatencyMs: 15, costPerHour: 0.60, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-  { id: "cache", label: "Redis Cache", kind: "cache", x: 820, y: 60, capacityRps: 20000, baseLatencyMs: 1, costPerHour: 0.30, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-  { id: "db", label: "Postgres", kind: "db", x: 820, y: 220, capacityRps: 3000, baseLatencyMs: 8, costPerHour: 0.95, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-  { id: "queue", label: "Kafka", kind: "queue", x: 820, y: 380, capacityRps: 15000, baseLatencyMs: 4, costPerHour: 0.55, incomingRps: 0, servedRps: 0, queue: 0, errors: 0, latencyMs: 0, failed: false },
-];
+function computePatternRps(base: number, pattern: Pattern, tSec: number): number {
+  switch (pattern) {
+    case "constant": return base;
+    case "linear":   return base * (1 + tSec / 30);
+    case "spike":    return base * (1 + 4 * Math.exp(-Math.pow((tSec % 30) - 10, 2) / 8));
+    case "flash":    return tSec < 5 ? base * 0.3 : base * (1.5 + 2 * Math.sin(tSec / 3));
+    case "ddos":     return base * (1 + 8 * Math.min(1, tSec / 10));
+  }
+}
 
-const initialEdges: SimEdge[] = [
-  { id: "e1", from: "users", to: "cdn", weight: 1 },
-  { id: "e2", from: "cdn", to: "lb", weight: 0.4 }, // 60% cached at CDN
-  { id: "e3", from: "lb", to: "api", weight: 0.7 },
-  { id: "e4", from: "lb", to: "auth", weight: 0.3 },
-  { id: "e5", from: "api", to: "cache", weight: 0.7 },
-  { id: "e6", from: "api", to: "db", weight: 0.3 },
-  { id: "e7", from: "auth", to: "db", weight: 0.5 },
-  { id: "e8", from: "api", to: "queue", weight: 0.2 },
-];
-
-type Pattern = "constant" | "spike" | "linear" | "flash" | "ddos";
 
 type ArchKey = "web3tier" | "pubsub" | "streaming" | "videocall" | "gameserver" | "async" | "analytics";
 
