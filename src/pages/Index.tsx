@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle,
   ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network,
-  FileEdit, Clock, Info, FilePlus,
+  FileEdit, Clock, Info, FilePlus, Activity,
 } from "lucide-react";
 import { HomeDashboard } from "@/components/HomeDashboard";
 import { ToolShell } from "@/components/ToolShell";
