@@ -327,8 +327,8 @@ export function TrafficSimulatorTool() {
       const updated = Array.from(map.values());
 
       // accumulate metrics
-      const apiNode = map.get("api")!;
-      const totalLatency = updated.reduce((s, n) => s + n.latencyMs * (n.servedRps / Math.max(1, apiNode.servedRps || 1)), 0);
+      const entryNode = map.get(arch.entryId)!;
+      const totalLatency = updated.reduce((s, n) => s + n.latencyMs * (n.servedRps / Math.max(1, entryNode.servedRps || entryNode.incomingRps || 1)), 0);
       const totalErrors = updated.reduce((s, n) => s + n.errors, 0);
       setHistory(h => {
         const next = [...h, { t: tSec, rps: targetUserRps, latency: totalLatency, errors: totalErrors }];
