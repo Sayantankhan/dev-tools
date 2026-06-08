@@ -392,6 +392,22 @@ export function TrafficSimulatorTool() {
     <div className="flex flex-col h-[calc(100vh-3rem)] bg-background">
       {/* Top control bar */}
       <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card/40 flex-wrap">
+        <Select value={archKey} onValueChange={v => setArchKey(v as ArchKey)}>
+          <SelectTrigger className="h-8 w-[200px] text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(ARCHITECTURES) as ArchKey[]).map(k => (
+              <SelectItem key={k} value={k} className="text-xs">
+                <div className="flex flex-col">
+                  <span>{ARCHITECTURES[k].label}</span>
+                  <span className="text-[10px] text-muted-foreground">{ARCHITECTURES[k].description}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Button size="sm" variant={running ? "secondary" : "default"} onClick={() => setRunning(r => !r)}>
           {running ? <Pause className="w-3.5 h-3.5 mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
           {running ? "Pause" : "Start"}
