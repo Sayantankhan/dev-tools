@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle,
   ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network,
-  FileEdit, Clock, Info, FilePlus,
+  FileEdit, Clock, Info, FilePlus, Activity,
 } from "lucide-react";
 import { HomeDashboard } from "@/components/HomeDashboard";
 import { ToolShell } from "@/components/ToolShell";
@@ -29,8 +29,9 @@ const PDFEditorTool = lazy(() => import("@/components/tools/PDFEditorTool").then
 const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool").then(m => ({ default: m.PDFGeneratorTool })));
 const CronGeneratorTool = lazy(() => import("@/components/tools/CronGeneratorTool").then(m => ({ default: m.CronGeneratorTool })));
 const RegexExplainerTool = lazy(() => import("@/components/tools/RegexExplainerTool").then(m => ({ default: m.RegexExplainerTool })));
+const TrafficSimulatorTool = lazy(() => import("@/components/tools/TrafficSimulatorTool").then(m => ({ default: m.TrafficSimulatorTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer" | "traffic-simulator";
 
 export interface Tool {
   id: ToolId;
@@ -59,6 +60,7 @@ const tools: Tool[] = [
   { id: "topology-viewer", label: "Topology", icon: Network, component: TopologyViewerTool },
   { id: "cron-generator", label: "Cron", icon: Clock, component: CronGeneratorTool },
   { id: "regex-explainer", label: "Regex", icon: Info, component: RegexExplainerTool },
+  { id: "traffic-simulator", label: "Traffic Sim", icon: Activity, component: TrafficSimulatorTool },
 ];
 
 const Index = () => {
