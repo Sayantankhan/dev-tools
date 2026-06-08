@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // ---------------- Types ----------------
 type NodeKind =
-  | "users" | "cdn" | "lb" | "api" | "auth" | "cache" | "db" | "queue" | "worker";
+  | "users" | "cdn" | "lb" | "api" | "auth" | "cache" | "db" | "queue" | "worker"
+  | "broker" | "publisher" | "subscriber" | "stream" | "stun" | "turn" | "media"
+  | "gameserver" | "matchmaker" | "etl" | "warehouse" | "analytics" | "ml";
 
 interface SimNode {
   id: string;
