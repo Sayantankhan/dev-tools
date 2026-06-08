@@ -60,6 +60,7 @@ const tools: Tool[] = [
   { id: "topology-viewer", label: "Topology", icon: Network, component: TopologyViewerTool },
   { id: "cron-generator", label: "Cron", icon: Clock, component: CronGeneratorTool },
   { id: "regex-explainer", label: "Regex", icon: Info, component: RegexExplainerTool },
+  { id: "traffic-simulator", label: "Traffic Sim", icon: Activity, component: TrafficSimulatorTool },
 ];
 
 const Index = () => {
