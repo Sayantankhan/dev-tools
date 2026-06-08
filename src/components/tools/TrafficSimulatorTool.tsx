@@ -38,7 +38,7 @@ interface SimEdge {
   weight: number; // 0..1 of upstream traffic going through this edge
 }
 
-const PATTERN_LABEL: Record<"constant" | "spike" | "linear" | "flash" | "ddos", string> = {
+type Pattern = "constant" | "spike" | "linear" | "flash" | "ddos";
   constant: "Constant", spike: "Spike", linear: "Linear Growth",
   flash: "Flash Sale", ddos: "DDoS Attack",
 };
