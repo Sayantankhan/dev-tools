@@ -30,8 +30,9 @@ const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool"
 const CronGeneratorTool = lazy(() => import("@/components/tools/CronGeneratorTool").then(m => ({ default: m.CronGeneratorTool })));
 const RegexExplainerTool = lazy(() => import("@/components/tools/RegexExplainerTool").then(m => ({ default: m.RegexExplainerTool })));
 const TrafficSimulatorTool = lazy(() => import("@/components/tools/TrafficSimulatorTool").then(m => ({ default: m.TrafficSimulatorTool })));
+const HexScopeTool = lazy(() => import("@/components/tools/HexScopeTool").then(m => ({ default: m.HexScopeTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer" | "traffic-simulator";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer" | "traffic-simulator" | "hexscope";
 
 export interface Tool {
   id: ToolId;
