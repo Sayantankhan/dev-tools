@@ -32,6 +32,7 @@ const descriptions: Record<string, string> = {
   "cron-generator": "Build cron expressions",
   "regex-explainer": "Explain regex patterns",
   "traffic-simulator": "Simulate distributed system traffic",
+  hexscope: "H3 hexagonal grid heatmap explorer",
 };
 
 const categories: { name: string; ids: ToolId[] }[] = [
