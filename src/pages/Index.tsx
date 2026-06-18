@@ -62,6 +62,7 @@ const tools: Tool[] = [
   { id: "cron-generator", label: "Cron", icon: Clock, component: CronGeneratorTool },
   { id: "regex-explainer", label: "Regex", icon: Info, component: RegexExplainerTool },
   { id: "traffic-simulator", label: "Traffic Sim", icon: Activity, component: TrafficSimulatorTool },
+  { id: "hexscope", label: "HexScope", icon: Hexagon, component: HexScopeTool },
 ];
 
 const Index = () => {
