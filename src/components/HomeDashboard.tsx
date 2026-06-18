@@ -32,6 +32,7 @@ const descriptions: Record<string, string> = {
   "cron-generator": "Build cron expressions",
   "regex-explainer": "Explain regex patterns",
   "traffic-simulator": "Simulate distributed system traffic",
+  hexscope: "H3 hexagonal grid heatmap explorer",
 };
 
 const categories: { name: string; ids: ToolId[] }[] = [
@@ -40,7 +41,7 @@ const categories: { name: string; ids: ToolId[] }[] = [
   { name: "Text & Code", ids: ["text-compare", "js-editor", "regex-explainer"] },
   { name: "Images & Media", ids: ["image", "bg-remover"] },
   { name: "Documents", ids: ["pdf-editor", "pdf-generator"] },
-  { name: "Utilities", ids: ["random-generator", "data-viz", "topology-viewer", "cron-generator", "traffic-simulator"] },
+  { name: "Utilities", ids: ["random-generator", "data-viz", "topology-viewer", "cron-generator", "traffic-simulator", "hexscope"] },
 ];
 
 export function HomeDashboard({ tools, onToolChange, onOpenPalette }: Props) {

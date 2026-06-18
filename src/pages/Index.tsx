@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   Code2, Image, Key, Globe, FileCode, FileSearch, ScrollText, Shuffle,
   ArrowRightLeft, MapPin, Terminal, BarChart3, Scissors, Search, Network,
-  FileEdit, Clock, Info, FilePlus, Activity,
+  FileEdit, Clock, Info, FilePlus, Activity, Hexagon,
 } from "lucide-react";
 import { HomeDashboard } from "@/components/HomeDashboard";
 import { ToolShell } from "@/components/ToolShell";
@@ -30,8 +30,9 @@ const PDFGeneratorTool = lazy(() => import("@/components/tools/PDFGeneratorTool"
 const CronGeneratorTool = lazy(() => import("@/components/tools/CronGeneratorTool").then(m => ({ default: m.CronGeneratorTool })));
 const RegexExplainerTool = lazy(() => import("@/components/tools/RegexExplainerTool").then(m => ({ default: m.RegexExplainerTool })));
 const TrafficSimulatorTool = lazy(() => import("@/components/tools/TrafficSimulatorTool").then(m => ({ default: m.TrafficSimulatorTool })));
+const HexScopeTool = lazy(() => import("@/components/tools/HexScopeTool").then(m => ({ default: m.HexScopeTool })));
 
-export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer" | "traffic-simulator";
+export type ToolId = "json" | "image" | "jwt" | "api" | "encoder" | "text-compare" | "log-parser" | "random-generator" | "data-converter" | "ip-lookup" | "js-editor" | "data-viz" | "bg-remover" | "search" | "topology-viewer" | "pdf-editor" | "pdf-generator" | "cron-generator" | "regex-explainer" | "traffic-simulator" | "hexscope";
 
 export interface Tool {
   id: ToolId;
@@ -61,6 +62,7 @@ const tools: Tool[] = [
   { id: "cron-generator", label: "Cron", icon: Clock, component: CronGeneratorTool },
   { id: "regex-explainer", label: "Regex", icon: Info, component: RegexExplainerTool },
   { id: "traffic-simulator", label: "Traffic Sim", icon: Activity, component: TrafficSimulatorTool },
+  { id: "hexscope", label: "HexScope", icon: Hexagon, component: HexScopeTool },
 ];
 
 const Index = () => {
