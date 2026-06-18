@@ -11,6 +11,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@deck.gl/core": "^9.3.4",
+    "@deck.gl/geo-layers": "^9.3.4",
+    "@deck.gl/layers": "^9.3.4",
+    "@deck.gl/mapbox": "^9.3.4",
     "@hookform/resolvers": "^3.10.0",
     "@huggingface/transformers": "^3.7.6",
     "@monaco-editor/react": "^4.7.0",
@@ -51,9 +55,11 @@
     "cmdk": "^1.1.1",
     "dagre": "^0.8.5",
     "date-fns": "^3.6.0",
+    "deck.gl": "^9.3.4",
     "diff": "^8.0.2",
     "embla-carousel-react": "^8.6.0",
     "fabric": "^6.7.1",
+    "h3-js": "^4.4.0",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
