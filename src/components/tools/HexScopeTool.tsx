@@ -948,7 +948,7 @@ export function HexScopeTool() {
         {/* MAP */}
         <div className="relative flex-1" style={{ background: C.map }}>
           <div ref={mapContainer} className="absolute inset-0" />
-          <canvas id="hex-deck-canvas" className="absolute inset-0 pointer-events-auto" />
+
 
           {!points.length && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
