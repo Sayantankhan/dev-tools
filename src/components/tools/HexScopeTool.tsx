@@ -898,6 +898,43 @@ export function HexScopeTool() {
                     <button className="hxs-btn-ghost" onClick={() => setKRing(Math.min(10, kRing + 1))}>+</button>
                   </div>
                 </div>
+                <div>
+                  <div className="hxs-label mb-1">Highlight color</div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={ringColor}
+                      onChange={(e) => setRingColor(e.target.value)}
+                      className="w-9 h-8 rounded cursor-pointer bg-transparent border"
+                      style={{ borderColor: C.border, padding: 0 }}
+                      title="Pick neighbor color"
+                    />
+                    <input
+                      className="hxs-input hxs-mono flex-1"
+                      style={{ fontSize: 11 }}
+                      value={ringColor}
+                      onChange={(e) => setRingColor(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-1 mt-1">
+                    {["#22d3ee","#f43f5e","#facc15","#a3e635","#a78bfa","#fb923c","#ffffff"].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setRingColor(c)}
+                        className="w-4 h-4 rounded-sm border"
+                        style={{ background: c, borderColor: ringColor.toLowerCase() === c ? C.text : C.border }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="hxs-label mb-1">Highlight opacity: {ringOpacity}%</div>
+                  <input type="range" className="hxs-slider w-full" min={10} max={100} step={5} value={ringOpacity} onChange={(e) => setRingOpacity(parseInt(e.target.value))} />
+                </div>
+                <div className="text-[10px] flex items-center gap-1" style={{ color: C.textDim }}>
+                  <MousePointer2 className="w-3 h-3" /> Click anywhere on the map to recenter
+                </div>
                 <button onClick={runKRing} className="hxs-btn w-full">Find Neighbors</button>
                 {ringCells.length > 0 && (
                   <div className="text-[12px] space-y-0.5 hxs-mono p-2 rounded" style={{ background: C.input }}>
