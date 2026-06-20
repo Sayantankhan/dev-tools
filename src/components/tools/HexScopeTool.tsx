@@ -62,6 +62,11 @@ function rampColor(ramp: Ramp, t: number): [number, number, number] {
 function rampCss(ramp: Ramp) {
   return `linear-gradient(90deg, ${ramp.stops.map((c,i)=>`rgb(${c.join(",")}) ${i/(ramp.stops.length-1)*100}%`).join(", ")})`;
 }
+function hexToRgb(hex: string): [number, number, number] {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+  if (!m) return [34, 211, 238];
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+}
 
 /* --------------------------- Types --------------------------- */
 type Point = { lat: number; lng: number; value?: number; [k: string]: any };
