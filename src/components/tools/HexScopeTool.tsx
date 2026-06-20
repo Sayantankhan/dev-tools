@@ -947,7 +947,7 @@ export function HexScopeTool() {
 
         {/* MAP */}
         <div className="relative flex-1" style={{ background: C.map }}>
-          <div ref={mapContainer} className="absolute inset-0" />
+          <div ref={mapContainer} className="w-full h-full" />
 
 
           {!points.length && (
