@@ -261,48 +261,44 @@ export function HexScopeTool() {
     });
     mapRef.current = map;
 
-    const deck = new Deck({
-      canvas: "hex-deck-canvas",
-      width: "100%",
-      height: "100%",
-      initialViewState: {
-        longitude: 77.59, latitude: 12.97, zoom: 10, pitch: 40, bearing: 0,
-      },
-      controller: true,
-      onViewStateChange: ({ viewState }) => {
-        const vs = viewState as any;
-        map.jumpTo({ center: [vs.longitude, vs.latitude], zoom: vs.zoom, bearing: vs.bearing, pitch: vs.pitch });
-      },
-      onClick: (info) => {
-        if (pickModeRef.current && info.coordinate) {
-          setOriginLat(info.coordinate[1].toFixed(6));
-          setOriginLng(info.coordinate[0].toFixed(6));
-          setPickMode(false);
-          return;
-        }
-        if (info.object && (info.object as any).hex) {
-          const h = (info.object as any).hex as string;
-          setSelectedHex(h);
-          setCenterHex(h);
-        } else {
-          setSelectedHex(null);
-        }
-      },
-      onHover: (info) => {
-        if (info.object && (info.object as any).hex) {
-          setHoverInfo({ x: info.x, y: info.y, bin: info.object as HexBin });
-        } else setHoverInfo(null);
-      },
+    const overlay = new MapboxOverlay({
+      interleaved: false,
+      layers: [],
     });
-    deckRef.current = deck;
+    map.addControl(overlay as any);
+    deckRef.current = overlay;
+
+    map.on("click", (e) => {
+      const pick = (overlay as any).pickObject?.({ x: e.point.x, y: e.point.y, radius: 4 });
+      if (pickModeRef.current) {
+        setOriginLat(e.lngLat.lat.toFixed(6));
+        setOriginLng(e.lngLat.lng.toFixed(6));
+        setPickMode(false);
+        return;
+      }
+      if (pick && pick.object && pick.object.hex) {
+        setSelectedHex(pick.object.hex);
+        setCenterHex(pick.object.hex);
+      } else {
+        setSelectedHex(null);
+      }
+    });
+
+    map.on("mousemove", (e) => {
+      const pick = (overlay as any).pickObject?.({ x: e.point.x, y: e.point.y, radius: 1 });
+      if (pick && pick.object && pick.object.hex) {
+        setHoverInfo({ x: e.point.x, y: e.point.y, bin: pick.object });
+      } else setHoverInfo(null);
+    });
 
     return () => {
-      deck.finalize();
+      try { map.removeControl(overlay as any); } catch {}
       map.remove();
       mapRef.current = null;
       deckRef.current = null;
     };
   }, []);
+
 
   const pickModeRef = useRef(pickMode);
   useEffect(() => { pickModeRef.current = pickMode; }, [pickMode]);
