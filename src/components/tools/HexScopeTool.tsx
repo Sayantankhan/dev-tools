@@ -475,7 +475,7 @@ export function HexScopeTool() {
       : null;
 
     deckRef.current.setProps({
-      layers: [hexLayer, ringLayer, hullLayer, nnLines, nnPts, originLayer, selLayer].filter(Boolean) as any,
+      layers: [hexLayer, hullLayer, nnLines, nnPts, originLayer, ringLayer, selLayer].filter(Boolean) as any,
     });
   }, [stats, rampKey, opacity, extrude, extMult, is3D, agg, selectedHex, ringCells, ringColor, ringOpacity, nnResults, originLat, originLng]);
 
