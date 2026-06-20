@@ -62,6 +62,11 @@ function rampColor(ramp: Ramp, t: number): [number, number, number] {
 function rampCss(ramp: Ramp) {
   return `linear-gradient(90deg, ${ramp.stops.map((c,i)=>`rgb(${c.join(",")}) ${i/(ramp.stops.length-1)*100}%`).join(", ")})`;
 }
+function hexToRgb(hex: string): [number, number, number] {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+  if (!m) return [34, 211, 238];
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+}
 
 /* --------------------------- Types --------------------------- */
 type Point = { lat: number; lng: number; value?: number; [k: string]: any };
@@ -188,6 +193,8 @@ export function HexScopeTool() {
   const [centerHex, setCenterHex] = useState<string>("");
   const [kRing, setKRing] = useState(2);
   const [ringCells, setRingCells] = useState<{ hex: string; ring: number }[]>([]);
+  const [ringColor, setRingColor] = useState<string>("#22d3ee");
+  const [ringOpacity, setRingOpacity] = useState<number>(70);
 
   // K-NN
   const [originLat, setOriginLat] = useState<string>("");
@@ -276,9 +283,29 @@ export function HexScopeTool() {
         setPickMode(false);
         return;
       }
-      if (pick && pick.object && pick.object.hex) {
-        setSelectedHex(pick.object.hex);
-        setCenterHex(pick.object.hex);
+      // Resolve which hex was clicked: prefer picked feature, else compute from lat/lng at current res
+      let hex: string | null = null;
+      if (pick && pick.object && pick.object.hex) hex = pick.object.hex;
+      else {
+        try { hex = latLngToCell(e.lngLat.lat, e.lngLat.lng, resolutionRef.current); } catch { hex = null; }
+      }
+      if (hex) {
+        setSelectedHex(hex);
+        setCenterHex(hex);
+        // In K-Ring tab, auto-compute neighbors so the user sees them immediately
+        if (searchTabRef.current === "kring") {
+          const cells: { hex: string; ring: number }[] = [{ hex, ring: 0 }];
+          for (let r = 1; r <= kRingRef.current; r++) {
+            try {
+              const ring = gridRingUnsafe(hex, r);
+              ring.forEach((h) => cells.push({ hex: h, ring: r }));
+            } catch {
+              const disk = gridDisk(hex, r);
+              disk.forEach((h) => { if (!cells.find((c) => c.hex === h)) cells.push({ hex: h, ring: r }); });
+            }
+          }
+          setRingCells(cells);
+        }
       } else {
         setSelectedHex(null);
       }
@@ -302,6 +329,12 @@ export function HexScopeTool() {
 
   const pickModeRef = useRef(pickMode);
   useEffect(() => { pickModeRef.current = pickMode; }, [pickMode]);
+  const resolutionRef = useRef(resolution);
+  useEffect(() => { resolutionRef.current = resolution; }, [resolution]);
+  const searchTabRef = useRef(searchTab);
+  useEffect(() => { searchTabRef.current = searchTab; }, [searchTab]);
+  const kRingRef = useRef(kRing);
+  useEffect(() => { kRingRef.current = kRing; }, [kRing]);
 
   /* ---------- update layers ---------- */
   useEffect(() => {
@@ -348,20 +381,28 @@ export function HexScopeTool() {
         })
       : null;
 
+    const ringRGB = hexToRgb(ringColor);
+    const maxRing = Math.max(1, ...ringCells.map((c) => c.ring));
+    const ringAlpha = Math.round((ringOpacity / 100) * 255);
     const ringLayer = ringCells.length
       ? new H3HexagonLayer({
           id: "rings",
           data: ringCells,
           getHexagon: (d: any) => d.hex,
           getFillColor: (d: any) => {
-            if (d.ring === 0) return [255, 255, 255, 200];
-            if (d.ring === 1) return [0, 212, 255, 180];
-            if (d.ring === 2) return [59, 130, 246, 160];
-            return [40 + 20 * d.ring, 80, 180 - 10 * d.ring, 140];
+            if (d.ring === 0) return [255, 255, 255, Math.min(255, ringAlpha + 40)];
+            // fade alpha by ring distance for clear "spreading" look
+            const t = 1 - (d.ring - 1) / Math.max(1, maxRing);
+            const a = Math.round(ringAlpha * (0.45 + 0.55 * t));
+            return [ringRGB[0], ringRGB[1], ringRGB[2], a];
           },
-          getLineColor: [0, 212, 255, 220],
-          lineWidthMinPixels: 1,
+          getLineColor: [ringRGB[0], ringRGB[1], ringRGB[2], 230],
+          lineWidthMinPixels: 1.5,
           extruded: false,
+          updateTriggers: {
+            getFillColor: [ringColor, ringOpacity, ringCells.length, maxRing],
+            getLineColor: [ringColor],
+          },
         })
       : null;
 
@@ -428,7 +469,7 @@ export function HexScopeTool() {
     deckRef.current.setProps({
       layers: [hexLayer, ringLayer, hullLayer, nnLines, nnPts, originLayer, selLayer].filter(Boolean) as any,
     });
-  }, [stats, rampKey, opacity, extrude, extMult, is3D, agg, selectedHex, ringCells, nnResults, originLat, originLng]);
+  }, [stats, rampKey, opacity, extrude, extMult, is3D, agg, selectedHex, ringCells, ringColor, ringOpacity, nnResults, originLat, originLng]);
 
   /* ---------- toggle labels ---------- */
   useEffect(() => {
@@ -856,6 +897,43 @@ export function HexScopeTool() {
                     <input type="number" className="hxs-input hxs-mono text-center" value={kRing} min={1} max={10} onChange={(e) => setKRing(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))} />
                     <button className="hxs-btn-ghost" onClick={() => setKRing(Math.min(10, kRing + 1))}>+</button>
                   </div>
+                </div>
+                <div>
+                  <div className="hxs-label mb-1">Highlight color</div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={ringColor}
+                      onChange={(e) => setRingColor(e.target.value)}
+                      className="w-9 h-8 rounded cursor-pointer bg-transparent border"
+                      style={{ borderColor: C.border, padding: 0 }}
+                      title="Pick neighbor color"
+                    />
+                    <input
+                      className="hxs-input hxs-mono flex-1"
+                      style={{ fontSize: 11 }}
+                      value={ringColor}
+                      onChange={(e) => setRingColor(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-1 mt-1">
+                    {["#22d3ee","#f43f5e","#facc15","#a3e635","#a78bfa","#fb923c","#ffffff"].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setRingColor(c)}
+                        className="w-4 h-4 rounded-sm border"
+                        style={{ background: c, borderColor: ringColor.toLowerCase() === c ? C.text : C.border }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="hxs-label mb-1">Highlight opacity: {ringOpacity}%</div>
+                  <input type="range" className="hxs-slider w-full" min={10} max={100} step={5} value={ringOpacity} onChange={(e) => setRingOpacity(parseInt(e.target.value))} />
+                </div>
+                <div className="text-[10px] flex items-center gap-1" style={{ color: C.textDim }}>
+                  <MousePointer2 className="w-3 h-3" /> Click anywhere on the map to recenter
                 </div>
                 <button onClick={runKRing} className="hxs-btn w-full">Find Neighbors</button>
                 {ringCells.length > 0 && (
