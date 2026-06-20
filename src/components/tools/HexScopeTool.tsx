@@ -378,12 +378,16 @@ export function HexScopeTool() {
           stroked: true,
           filled: true,
           extruded: false,
+          parameters: { depthTest: false },
         })
       : null;
 
     const ringRGB = hexToRgb(ringColor);
     const maxRing = Math.max(1, ...ringCells.map((c) => c.ring));
     const ringAlpha = Math.round((ringOpacity / 100) * 255);
+    // When data hexes are extruded in 3D, a flat ring layer at z=0 gets occluded by tall bars.
+    // Lift the ring above the tallest data bar AND disable depth-test so it always paints on top.
+    const ringElevation = extrude && is3D ? 1000 * extMult + 50 : 0;
     const ringLayer = ringCells.length
       ? new H3HexagonLayer({
           id: "rings",
@@ -391,17 +395,21 @@ export function HexScopeTool() {
           getHexagon: (d: any) => d.hex,
           getFillColor: (d: any) => {
             if (d.ring === 0) return [255, 255, 255, Math.min(255, ringAlpha + 40)];
-            // fade alpha by ring distance for clear "spreading" look
             const t = 1 - (d.ring - 1) / Math.max(1, maxRing);
             const a = Math.round(ringAlpha * (0.45 + 0.55 * t));
             return [ringRGB[0], ringRGB[1], ringRGB[2], a];
           },
-          getLineColor: [ringRGB[0], ringRGB[1], ringRGB[2], 230],
-          lineWidthMinPixels: 1.5,
+          getLineColor: [ringRGB[0], ringRGB[1], ringRGB[2], 240],
+          lineWidthMinPixels: 2,
+          stroked: true,
+          filled: true,
           extruded: false,
+          getElevation: ringElevation,
+          parameters: { depthTest: false },
           updateTriggers: {
             getFillColor: [ringColor, ringOpacity, ringCells.length, maxRing],
             getLineColor: [ringColor],
+            getElevation: [ringElevation],
           },
         })
       : null;
