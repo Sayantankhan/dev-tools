@@ -324,6 +324,12 @@ export function HexScopeTool() {
 
   const pickModeRef = useRef(pickMode);
   useEffect(() => { pickModeRef.current = pickMode; }, [pickMode]);
+  const resolutionRef = useRef(resolution);
+  useEffect(() => { resolutionRef.current = resolution; }, [resolution]);
+  const searchTabRef = useRef(searchTab);
+  useEffect(() => { searchTabRef.current = searchTab; }, [searchTab]);
+  const kRingRef = useRef(kRing);
+  useEffect(() => { kRingRef.current = kRing; }, [kRing]);
 
   /* ---------- update layers ---------- */
   useEffect(() => {
