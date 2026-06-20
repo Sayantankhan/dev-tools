@@ -278,9 +278,29 @@ export function HexScopeTool() {
         setPickMode(false);
         return;
       }
-      if (pick && pick.object && pick.object.hex) {
-        setSelectedHex(pick.object.hex);
-        setCenterHex(pick.object.hex);
+      // Resolve which hex was clicked: prefer picked feature, else compute from lat/lng at current res
+      let hex: string | null = null;
+      if (pick && pick.object && pick.object.hex) hex = pick.object.hex;
+      else {
+        try { hex = latLngToCell(e.lngLat.lat, e.lngLat.lng, resolutionRef.current); } catch { hex = null; }
+      }
+      if (hex) {
+        setSelectedHex(hex);
+        setCenterHex(hex);
+        // In K-Ring tab, auto-compute neighbors so the user sees them immediately
+        if (searchTabRef.current === "kring") {
+          const cells: { hex: string; ring: number }[] = [{ hex, ring: 0 }];
+          for (let r = 1; r <= kRingRef.current; r++) {
+            try {
+              const ring = gridRingUnsafe(hex, r);
+              ring.forEach((h) => cells.push({ hex: h, ring: r }));
+            } catch {
+              const disk = gridDisk(hex, r);
+              disk.forEach((h) => { if (!cells.find((c) => c.hex === h)) cells.push({ hex: h, ring: r }); });
+            }
+          }
+          setRingCells(cells);
+        }
       } else {
         setSelectedHex(null);
       }
