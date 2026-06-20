@@ -516,9 +516,7 @@ export function HexScopeTool() {
     const cLat = (minLat + maxLat) / 2; const cLng = (minLng + maxLng) / 2;
     const span = Math.max(maxLat - minLat, maxLng - minLng) || 0.1;
     const zoom = Math.max(3, Math.min(14, 9 - Math.log2(span * 10)));
-    const vs = { longitude: cLng, latitude: cLat, zoom, pitch: is3D ? 40 : 0, bearing: 0, transitionDuration: 800 };
-    deckRef.current.setProps({ initialViewState: vs as any });
-    mapRef.current?.flyTo({ center: [cLng, cLat], zoom });
+    mapRef.current?.flyTo({ center: [cLng, cLat], zoom, pitch: is3D ? 40 : 0 });
   }, [points, is3D]);
 
   useEffect(() => { if (points.length) flyToData(); /* eslint-disable-next-line */ }, [points.length > 0]);
