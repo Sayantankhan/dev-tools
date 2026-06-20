@@ -376,20 +376,28 @@ export function HexScopeTool() {
         })
       : null;
 
+    const ringRGB = hexToRgb(ringColor);
+    const maxRing = Math.max(1, ...ringCells.map((c) => c.ring));
+    const ringAlpha = Math.round((ringOpacity / 100) * 255);
     const ringLayer = ringCells.length
       ? new H3HexagonLayer({
           id: "rings",
           data: ringCells,
           getHexagon: (d: any) => d.hex,
           getFillColor: (d: any) => {
-            if (d.ring === 0) return [255, 255, 255, 200];
-            if (d.ring === 1) return [0, 212, 255, 180];
-            if (d.ring === 2) return [59, 130, 246, 160];
-            return [40 + 20 * d.ring, 80, 180 - 10 * d.ring, 140];
+            if (d.ring === 0) return [255, 255, 255, Math.min(255, ringAlpha + 40)];
+            // fade alpha by ring distance for clear "spreading" look
+            const t = 1 - (d.ring - 1) / Math.max(1, maxRing);
+            const a = Math.round(ringAlpha * (0.45 + 0.55 * t));
+            return [ringRGB[0], ringRGB[1], ringRGB[2], a];
           },
-          getLineColor: [0, 212, 255, 220],
-          lineWidthMinPixels: 1,
+          getLineColor: [ringRGB[0], ringRGB[1], ringRGB[2], 230],
+          lineWidthMinPixels: 1.5,
           extruded: false,
+          updateTriggers: {
+            getFillColor: [ringColor, ringOpacity, ringCells.length, maxRing],
+            getLineColor: [ringColor],
+          },
         })
       : null;
 
