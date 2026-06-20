@@ -188,6 +188,8 @@ export function HexScopeTool() {
   const [centerHex, setCenterHex] = useState<string>("");
   const [kRing, setKRing] = useState(2);
   const [ringCells, setRingCells] = useState<{ hex: string; ring: number }[]>([]);
+  const [ringColor, setRingColor] = useState<string>("#22d3ee");
+  const [ringOpacity, setRingOpacity] = useState<number>(70);
 
   // K-NN
   const [originLat, setOriginLat] = useState<string>("");
