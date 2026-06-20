@@ -158,7 +158,7 @@ const fmt = (n: number, d = 2) =>
 export function HexScopeTool() {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const deckRef = useRef<Deck | null>(null);
+  const deckRef = useRef<MapboxOverlay | null>(null);
 
   const [points, setPoints] = useState<Point[]>([]);
   const [fileName, setFileName] = useState<string>("");
