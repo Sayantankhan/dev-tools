@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Deck } from "@deck.gl/core";
+import { MapboxOverlay } from "@deck.gl/mapbox";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import { ScatterplotLayer, LineLayer, PolygonLayer } from "@deck.gl/layers";
 import {
@@ -158,7 +158,7 @@ const fmt = (n: number, d = 2) =>
 export function HexScopeTool() {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const deckRef = useRef<Deck | null>(null);
+  const deckRef = useRef<MapboxOverlay | null>(null);
 
   const [points, setPoints] = useState<Point[]>([]);
   const [fileName, setFileName] = useState<string>("");
@@ -261,48 +261,44 @@ export function HexScopeTool() {
     });
     mapRef.current = map;
 
-    const deck = new Deck({
-      canvas: "hex-deck-canvas",
-      width: "100%",
-      height: "100%",
-      initialViewState: {
-        longitude: 77.59, latitude: 12.97, zoom: 10, pitch: 40, bearing: 0,
-      },
-      controller: true,
-      onViewStateChange: ({ viewState }) => {
-        const vs = viewState as any;
-        map.jumpTo({ center: [vs.longitude, vs.latitude], zoom: vs.zoom, bearing: vs.bearing, pitch: vs.pitch });
-      },
-      onClick: (info) => {
-        if (pickModeRef.current && info.coordinate) {
-          setOriginLat(info.coordinate[1].toFixed(6));
-          setOriginLng(info.coordinate[0].toFixed(6));
-          setPickMode(false);
-          return;
-        }
-        if (info.object && (info.object as any).hex) {
-          const h = (info.object as any).hex as string;
-          setSelectedHex(h);
-          setCenterHex(h);
-        } else {
-          setSelectedHex(null);
-        }
-      },
-      onHover: (info) => {
-        if (info.object && (info.object as any).hex) {
-          setHoverInfo({ x: info.x, y: info.y, bin: info.object as HexBin });
-        } else setHoverInfo(null);
-      },
+    const overlay = new MapboxOverlay({
+      interleaved: false,
+      layers: [],
     });
-    deckRef.current = deck;
+    map.addControl(overlay as any);
+    deckRef.current = overlay;
+
+    map.on("click", (e) => {
+      const pick = (overlay as any).pickObject?.({ x: e.point.x, y: e.point.y, radius: 4 });
+      if (pickModeRef.current) {
+        setOriginLat(e.lngLat.lat.toFixed(6));
+        setOriginLng(e.lngLat.lng.toFixed(6));
+        setPickMode(false);
+        return;
+      }
+      if (pick && pick.object && pick.object.hex) {
+        setSelectedHex(pick.object.hex);
+        setCenterHex(pick.object.hex);
+      } else {
+        setSelectedHex(null);
+      }
+    });
+
+    map.on("mousemove", (e) => {
+      const pick = (overlay as any).pickObject?.({ x: e.point.x, y: e.point.y, radius: 1 });
+      if (pick && pick.object && pick.object.hex) {
+        setHoverInfo({ x: e.point.x, y: e.point.y, bin: pick.object });
+      } else setHoverInfo(null);
+    });
 
     return () => {
-      deck.finalize();
+      try { map.removeControl(overlay as any); } catch {}
       map.remove();
       mapRef.current = null;
       deckRef.current = null;
     };
   }, []);
+
 
   const pickModeRef = useRef(pickMode);
   useEffect(() => { pickModeRef.current = pickMode; }, [pickMode]);
@@ -516,9 +512,7 @@ export function HexScopeTool() {
     const cLat = (minLat + maxLat) / 2; const cLng = (minLng + maxLng) / 2;
     const span = Math.max(maxLat - minLat, maxLng - minLng) || 0.1;
     const zoom = Math.max(3, Math.min(14, 9 - Math.log2(span * 10)));
-    const vs = { longitude: cLng, latitude: cLat, zoom, pitch: is3D ? 40 : 0, bearing: 0, transitionDuration: 800 };
-    deckRef.current.setProps({ initialViewState: vs as any });
-    mapRef.current?.flyTo({ center: [cLng, cLat], zoom });
+    mapRef.current?.flyTo({ center: [cLng, cLat], zoom, pitch: is3D ? 40 : 0 });
   }, [points, is3D]);
 
   useEffect(() => { if (points.length) flyToData(); /* eslint-disable-next-line */ }, [points.length > 0]);
@@ -954,7 +948,7 @@ export function HexScopeTool() {
         {/* MAP */}
         <div className="relative flex-1" style={{ background: C.map }}>
           <div ref={mapContainer} className="absolute inset-0" />
-          <canvas id="hex-deck-canvas" className="absolute inset-0 pointer-events-auto" />
+
 
           {!points.length && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
