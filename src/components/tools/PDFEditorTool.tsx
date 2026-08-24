@@ -354,6 +354,20 @@ export const PDFEditorTool = () => {
     setIsPageLoading(false);
   };
 
+  const handleReplaceFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset editor state tied to the old document before loading the new one
+    clearAll();
+    setSelectedObject(null);
+    setCurrentPage(0);
+    setViewSize({ width: 0, height: 0 });
+    setPageViewSizes({});
+    await actions.handlePDFUpload(e);
+    if (e.target) e.target.value = "";
+  };
+
+
   const pageAnnotations = getPageAnnotations(currentPage);
 
   const formatBytes = (bytes: number) => {
