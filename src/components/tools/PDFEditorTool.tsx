@@ -14,7 +14,9 @@ import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { 
   Upload, FileText, Trash2, Save, Type, PenTool, 
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
-  Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal
+  Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal,
+  Bold, Italic
+
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
