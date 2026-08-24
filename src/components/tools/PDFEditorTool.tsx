@@ -503,11 +503,11 @@ export const PDFEditorTool = () => {
             {/* Resize handle */}
             <div
               onMouseDown={startSidebarResize}
-              className="absolute right-0 top-0 z-10 h-full w-3 -translate-x-1/2 cursor-col-resize"
+              className="group absolute right-0 top-0 z-10 h-full w-4 cursor-col-resize"
               aria-label="Resize sidebar"
               title="Drag to resize"
             >
-              <div className="absolute right-[3px] top-1/2 h-10 w-1 -translate-y-1/2 rounded-full bg-border transition-colors group-hover:bg-primary/60" />
+              <div className="absolute right-[5px] top-1/2 h-10 w-1 -translate-y-1/2 rounded-full bg-border transition-colors group-hover:bg-primary/60" />
             </div>
             {/* File chip + Save */}
             <div className="space-y-3 border-b border-border p-3">
