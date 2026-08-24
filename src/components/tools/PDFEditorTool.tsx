@@ -102,6 +102,32 @@ export const PDFEditorTool = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedObject, currentPage, removeAnnotation, undo, redo]);
 
+  // Sidebar resize
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      if (!isResizingSidebar.current) return;
+      const newWidth = Math.min(Math.max(e.clientX, 260), 520);
+      setSidebarWidth(newWidth);
+    };
+    const handleUp = () => {
+      isResizingSidebar.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, []);
+
+  const startSidebarResize = () => {
+    isResizingSidebar.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
+
   const handleAddText = () => {
     if (!textValue.trim()) return;
     
