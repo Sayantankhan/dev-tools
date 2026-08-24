@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +14,9 @@ import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { 
   Upload, FileText, Trash2, Save, Type, PenTool, 
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
-  Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal
+  Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal,
+  Bold, Italic
+
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
@@ -34,6 +36,7 @@ export const PDFEditorTool = () => {
   const [showTextInput, setShowTextInput] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
   const signatureInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
   const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
   const [showOverlays, setShowOverlays] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
@@ -291,12 +294,21 @@ export const PDFEditorTool = () => {
   };
 
   const handleBringToFront = () => {
+    const canvas = (selectedObject as any)?.canvas;
+    if (!canvas || !selectedObject) return;
+    canvas.bringObjectToFront?.(selectedObject);
+    canvas.requestRenderAll();
     toast.success("Brought to front");
   };
 
   const handleSendToBack = () => {
+    const canvas = (selectedObject as any)?.canvas;
+    if (!canvas || !selectedObject) return;
+    canvas.sendObjectToBack?.(selectedObject);
+    canvas.requestRenderAll();
     toast.success("Sent to back");
   };
+
 
   const toggleOverlays = () => {
     const newState = !showOverlays;
@@ -344,6 +356,20 @@ export const PDFEditorTool = () => {
     setPageViewSizes({});
     setIsPageLoading(false);
   };
+
+  const handleReplaceFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset editor state tied to the old document before loading the new one
+    clearAll();
+    setSelectedObject(null);
+    setCurrentPage(0);
+    setViewSize({ width: 0, height: 0 });
+    setPageViewSizes({});
+    await actions.handlePDFUpload(e);
+    if (e.target) e.target.value = "";
+  };
+
 
   const pageAnnotations = getPageAnnotations(currentPage);
 
@@ -409,7 +435,19 @@ export const PDFEditorTool = () => {
               {state.totalPages ? ` · ${state.totalPages} page${state.totalPages > 1 ? "s" : ""}` : ""}
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => state.fileInputRef.current?.click()}>
+          <input
+            ref={replaceInputRef}
+            type="file"
+            accept="application/pdf"
+            onChange={handleReplaceFileChange}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg transition-colors duration-150"
+            onClick={() => replaceInputRef.current?.click()}
+          >
             <Upload className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
             Replace
           </Button>
@@ -430,7 +468,7 @@ export const PDFEditorTool = () => {
         <div className="rounded-2xl border border-border/70 bg-card shadow-sm">
           {/* Sticky toolbar */}
           <div className="sticky top-0 z-30 rounded-t-2xl border-b border-border/60 bg-card/95 px-3 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
               {/* Group 1 — Insert */}
               <ToolBtn active={showTextInput} onClick={() => setShowTextInput(!showTextInput)} icon={Type} label="Text" />
               <ToolBtn active={showSignaturePad} onClick={() => setShowSignaturePad(!showSignaturePad)} icon={PenTool} label="Draw" />
@@ -450,7 +488,7 @@ export const PDFEditorTool = () => {
               {/* Overflow on small screens */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 rounded-xl sm:hidden" aria-label="More tools">
+                  <Button variant="ghost" size="sm" className="h-9 rounded-lg transition-colors duration-150 sm:hidden" aria-label="More tools">
                     <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -492,29 +530,33 @@ export const PDFEditorTool = () => {
                   <IconBtn onClick={handleSendToBack} icon={ArrowDownToLine} label="Send to back" />
                   <IconBtn onClick={handleDeleteSelected} icon={Trash2} label="Delete selected" danger />
                   {(selectedObject as any).checkboxState && (
-                    <Select
-                      value={(selectedObject as any).checkboxState || "x"}
-                      onValueChange={(value: "x" | "tick") => handleCheckboxChange(value)}
-                    >
-                      <SelectTrigger className="h-9 w-[120px] rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="z-[100] rounded-xl">
-                        <SelectItem value="x">✗ X Mark</SelectItem>
-                        <SelectItem value="tick">✓ Tick Mark</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <>
+                      <Divider />
+                      <Select
+                        value={(selectedObject as any).checkboxState || "x"}
+                        onValueChange={(value: "x" | "tick") => handleCheckboxChange(value)}
+                      >
+                        <SelectTrigger className="h-9 w-[124px] rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-[100] rounded-lg">
+                          <SelectItem value="x">✗ X Mark</SelectItem>
+                          <SelectItem value="tick">✓ Tick Mark</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </>
                   )}
                 </>
               )}
 
               {/* Group 4 — Primary */}
-              <div className="ml-auto flex items-center gap-1.5">
+              <div className="ml-auto flex items-center gap-2">
+                <Divider className="hidden sm:inline-block" />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClearCanvas}
-                  className="hidden h-9 rounded-xl text-muted-foreground hover:text-foreground sm:inline-flex"
+                  className="hidden h-9 rounded-lg text-muted-foreground transition-colors duration-150 hover:text-foreground sm:inline-flex"
                 >
                   <Trash2 className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
                   Clear page
@@ -522,90 +564,92 @@ export const PDFEditorTool = () => {
                 <Button
                   size="sm"
                   onClick={handleSaveEdited}
-                  className="h-9 rounded-xl bg-primary px-4 text-primary-foreground shadow-sm transition-transform hover:bg-primary/90 active:scale-[0.97]"
+                  className="h-9 rounded-lg bg-primary px-4 text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
                 >
                   <Save className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
                   Save PDF
                 </Button>
               </div>
+
             </div>
           </div>
 
           <div className="space-y-4 p-4">
             {/* Text Input Panel */}
             {showTextInput && (
-              <div className="rounded-xl border border-border/60 bg-muted/40 p-4">
+              <div className="rounded-xl border border-border/60 bg-muted/40 p-4 shadow-sm">
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Font Size</Label>
-                      <Select value={fontSize} onValueChange={setFontSize}>
-                        <SelectTrigger className="mt-1 h-9 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map((size) => (
-                            <SelectItem key={size} value={size.toString()}>{size}px</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Font</Label>
-                      <Select value={fontFamily} onValueChange={setFontFamily}>
-                        <SelectTrigger className="mt-1 h-9 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Arial">Arial</SelectItem>
-                          <SelectItem value="Times New Roman">Times</SelectItem>
-                          <SelectItem value="Courier New">Courier</SelectItem>
-                          <SelectItem value="Georgia">Georgia</SelectItem>
-                          <SelectItem value="Verdana">Verdana</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Color</Label>
-                      <Input
+                  {/* Unified formatting row */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Select value={fontSize} onValueChange={setFontSize}>
+                      <SelectTrigger className="h-9 w-[92px] rounded-lg" aria-label="Font size">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg">
+                        {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map((size) => (
+                          <SelectItem key={size} value={size.toString()}>{size}px</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={fontFamily} onValueChange={setFontFamily}>
+                      <SelectTrigger className="h-9 w-[150px] rounded-lg" aria-label="Font family">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg">
+                        <SelectItem value="Arial">Arial</SelectItem>
+                        <SelectItem value="Times New Roman">Times</SelectItem>
+                        <SelectItem value="Courier New">Courier</SelectItem>
+                        <SelectItem value="Georgia">Georgia</SelectItem>
+                        <SelectItem value="Verdana">Verdana</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Divider />
+
+                    <label
+                      className="relative inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border/70 shadow-sm transition-all duration-150 hover:scale-105 focus-within:ring-2 focus-within:ring-ring"
+                      title="Text colour"
+                    >
+                      <span
+                        className="h-6 w-6 rounded-full ring-1 ring-black/10"
+                        style={{ backgroundColor: textColor }}
+                        aria-hidden
+                      />
+                      <input
                         type="color"
                         value={textColor}
                         onChange={(e) => setTextColor(e.target.value)}
-                        className="mt-1 h-9 rounded-xl p-1"
+                        aria-label="Text colour"
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
-                    </div>
-                    <div className="flex items-end gap-1.5">
-                      <Button
-                        variant={isBold ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsBold(!isBold)}
-                        className="h-9 flex-1 rounded-xl font-bold"
-                      >
-                        B
-                      </Button>
-                      <Button
-                        variant={isItalic ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsItalic(!isItalic)}
-                        className="h-9 flex-1 rounded-xl italic"
-                      >
-                        I
-                      </Button>
-                    </div>
+                    </label>
+
+                    <ToggleBtn active={isBold} onClick={() => setIsBold(!isBold)} icon={Bold} label="Bold" />
+                    <ToggleBtn active={isItalic} onClick={() => setIsItalic(!isItalic)} icon={Italic} label="Italic" />
                   </div>
-                  <div className="flex gap-2">
+
+                  {/* Input row */}
+                  <div className="flex flex-wrap items-center gap-2">
                     <Input
                       value={textValue}
                       onChange={(e) => setTextValue(e.target.value)}
                       placeholder="Type your text…"
                       onKeyDown={(e) => e.key === "Enter" && handleAddText()}
-                      className="h-9 flex-1 rounded-xl"
+                      className="h-9 min-w-[180px] flex-1 rounded-lg border-border/70 transition-colors duration-150"
                     />
-                    <Button onClick={handleAddText} className="h-9 rounded-xl">Add Text</Button>
+                    <Button
+                      onClick={handleAddText}
+                      className="h-9 shrink-0 rounded-lg bg-primary px-4 text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
+                    >
+                      <Type className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
+                      Add Text
+                    </Button>
                   </div>
                 </div>
               </div>
             )}
+
 
             {/* Signature Pad */}
             {showSignaturePad && (
@@ -706,7 +750,9 @@ export const PDFEditorTool = () => {
   );
 };
 
-const Divider = () => <span className="mx-1 h-6 w-px shrink-0 bg-border/70" aria-hidden />;
+const Divider = ({ className = "" }: { className?: string }) => (
+  <span className={`h-6 w-px shrink-0 bg-border/70 ${className}`} aria-hidden />
+);
 
 type BtnIcon = LucideIcon;
 
@@ -720,14 +766,37 @@ const ToolBtn = ({
     type="button"
     onClick={onClick}
     aria-pressed={!!active}
-    className={`inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-all duration-150 active:scale-[0.97]
+    className={`relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium transition-all duration-150 active:scale-[0.97]
+      after:pointer-events-none after:absolute after:inset-x-2.5 after:-bottom-[3px] after:h-[2px] after:rounded-full after:transition-all after:duration-150
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
       ${active
-        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+        ? "bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_2px_10px_-4px_hsl(var(--primary)/0.5)] after:bg-primary"
+        : "text-muted-foreground after:bg-transparent hover:bg-muted hover:text-foreground"}`}
   >
     <Icon className="h-4 w-4" strokeWidth={1.75} />
     {label}
+  </button>
+);
+
+const ToggleBtn = ({
+  icon: Icon,
+  label,
+  onClick,
+  active,
+}: { icon: BtnIcon; label: string; onClick: () => void; active?: boolean }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={label}
+    aria-label={label}
+    aria-pressed={!!active}
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-150 active:scale-[0.95]
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
+      ${active
+        ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]"
+        : "border-border/70 bg-background text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+  >
+    <Icon className="h-4 w-4" strokeWidth={1.75} />
   </button>
 );
 
@@ -746,11 +815,11 @@ const IconBtn = ({
     title={label}
     aria-label={label}
     aria-pressed={active === undefined ? undefined : active}
-    className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 active:scale-[0.95]
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 active:scale-[0.95]
       disabled:pointer-events-none disabled:opacity-40
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
       ${active
-        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+        ? "bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]"
         : danger
           ? "text-destructive hover:bg-destructive/10"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
@@ -758,4 +827,5 @@ const IconBtn = ({
     <Icon className="h-4 w-4" strokeWidth={1.75} />
   </button>
 );
+
 
