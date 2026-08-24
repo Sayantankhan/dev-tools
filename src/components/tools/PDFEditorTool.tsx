@@ -750,7 +750,9 @@ export const PDFEditorTool = () => {
   );
 };
 
-const Divider = () => <span className="mx-1 h-6 w-px shrink-0 bg-border/70" aria-hidden />;
+const Divider = ({ className = "" }: { className?: string }) => (
+  <span className={`h-6 w-px shrink-0 bg-border/70 ${className}`} aria-hidden />
+);
 
 type BtnIcon = LucideIcon;
 
@@ -764,14 +766,37 @@ const ToolBtn = ({
     type="button"
     onClick={onClick}
     aria-pressed={!!active}
-    className={`inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-all duration-150 active:scale-[0.97]
+    className={`relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium transition-all duration-150 active:scale-[0.97]
+      after:pointer-events-none after:absolute after:inset-x-2.5 after:-bottom-[3px] after:h-[2px] after:rounded-full after:transition-all after:duration-150
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
       ${active
-        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+        ? "bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_2px_10px_-4px_hsl(var(--primary)/0.5)] after:bg-primary"
+        : "text-muted-foreground after:bg-transparent hover:bg-muted hover:text-foreground"}`}
   >
     <Icon className="h-4 w-4" strokeWidth={1.75} />
     {label}
+  </button>
+);
+
+const ToggleBtn = ({
+  icon: Icon,
+  label,
+  onClick,
+  active,
+}: { icon: BtnIcon; label: string; onClick: () => void; active?: boolean }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={label}
+    aria-label={label}
+    aria-pressed={!!active}
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-150 active:scale-[0.95]
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
+      ${active
+        ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]"
+        : "border-border/70 bg-background text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+  >
+    <Icon className="h-4 w-4" strokeWidth={1.75} />
   </button>
 );
 
@@ -790,11 +815,11 @@ const IconBtn = ({
     title={label}
     aria-label={label}
     aria-pressed={active === undefined ? undefined : active}
-    className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 active:scale-[0.95]
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 active:scale-[0.95]
       disabled:pointer-events-none disabled:opacity-40
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
       ${active
-        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+        ? "bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]"
         : danger
           ? "text-destructive hover:bg-destructive/10"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
@@ -802,4 +827,5 @@ const IconBtn = ({
     <Icon className="h-4 w-4" strokeWidth={1.75} />
   </button>
 );
+
 
