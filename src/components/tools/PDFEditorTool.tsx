@@ -34,6 +34,7 @@ export const PDFEditorTool = () => {
   const [showTextInput, setShowTextInput] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
   const signatureInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
   const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
   const [showOverlays, setShowOverlays] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
