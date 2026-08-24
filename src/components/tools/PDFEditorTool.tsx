@@ -15,7 +15,7 @@ import {
   Upload, FileText, Trash2, Save, Type, PenTool, 
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
   Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal,
-  Bold, Italic
+  Bold, Italic, Lock, ShieldCheck, Zap
 
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -388,8 +388,10 @@ export const PDFEditorTool = () => {
     }
   };
 
+  const hasDoc = state.pdfUrl && state.pdfDimensions && !state.isLoading;
+
   return (
-    <div className="space-y-5">
+    <div className="flex h-full min-h-0 flex-col">
       <input
         ref={state.fileInputRef}
         type="file"
@@ -398,145 +400,217 @@ export const PDFEditorTool = () => {
         className="hidden"
       />
 
-      {/* Upload / File chip */}
-      {!state.pdfFile || state.isLoading ? (
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => state.fileInputRef.current?.click()}
-          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && state.fileInputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          className={`group cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200 outline-none
-            focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-            ${dragOver ? "border-primary bg-primary/10" : "border-border/70 bg-card/40 hover:border-primary/60 hover:bg-card/70"}`}
-        >
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-105">
-            <Upload className="h-6 w-6" strokeWidth={1.75} />
-          </div>
-          <p className="text-base font-medium text-foreground">
-            {state.isLoading ? "Loading your PDF…" : "Drag & drop your PDF here"}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {state.isLoading ? "Parsing pages, one moment" : "or click to browse — files never leave your device"}
-          </p>
-          {state.isLoading && <Progress value={75} className="mx-auto mt-5 w-56" />}
-        </div>
-      ) : (
-        <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3 pl-4 shadow-sm">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <FileText className="h-5 w-5" strokeWidth={1.75} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium">{state.pdfFile.name}</div>
-            <div className="text-xs text-muted-foreground">
-              {formatBytes(state.pdfFile.size)}
-              {state.totalPages ? ` · ${state.totalPages} page${state.totalPages > 1 ? "s" : ""}` : ""}
+      {!hasDoc ? (
+        /* ---------------- Empty state ---------------- */
+        <div className="flex flex-1 items-start justify-center overflow-auto py-10">
+          <div className="w-full max-w-3xl px-4">
+            {/* Hero */}
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/25">
+                <FileText className="h-7 w-7" strokeWidth={1.75} />
+              </div>
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">PDF Editor</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Edit, sign, and annotate PDFs — entirely in your browser.
+              </p>
+            </div>
+
+            {/* Dropzone card */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => state.fileInputRef.current?.click()}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && state.fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              className={`group mx-auto mt-8 max-w-[660px] cursor-pointer rounded-2xl border p-8 text-center outline-none transition-all duration-200
+                focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                ${dragOver
+                  ? "border-primary bg-primary/10 shadow-lg"
+                  : "border-border bg-card/70 shadow-sm hover:border-primary/60 hover:bg-card"}`}
+            >
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-105">
+                <Upload className="h-5 w-5" strokeWidth={1.75} />
+              </div>
+              <p className="mt-4 text-base font-medium text-foreground">
+                {state.isLoading ? "Loading your PDF…" : "Drag & drop your PDF here"}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {state.isLoading ? "Parsing pages, one moment" : "or click to browse from your device"}
+              </p>
+              {state.isLoading && <Progress value={75} className="mx-auto mt-5 w-56" />}
+              {!state.isLoading && (
+                <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground">
+                  <Lock className="h-3 w-3 text-primary" strokeWidth={2} />
+                  Files never leave your device
+                </span>
+              )}
+            </div>
+
+            {/* Feature highlights */}
+            <div className="mx-auto mt-8 grid max-w-[660px] gap-3 sm:grid-cols-3">
+              {[
+                { icon: ShieldCheck, title: "Private & client-side", body: "Everything runs locally in your browser." },
+                { icon: PenTool, title: "Text & signatures", body: "Type, draw, mask and check boxes." },
+                { icon: Zap, title: "No upload required", body: "Instant edits, no server round-trip." },
+              ].map((f) => (
+                <div key={f.title} className="rounded-xl border border-border bg-card/50 p-4 text-left">
+                  <f.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
+                  <div className="mt-2.5 text-sm font-medium text-foreground">{f.title}</div>
+                  <div className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.body}</div>
+                </div>
+              ))}
             </div>
           </div>
-          <input
-            ref={replaceInputRef}
-            type="file"
-            accept="application/pdf"
-            onChange={handleReplaceFileChange}
-            className="hidden"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-lg transition-colors duration-150"
-            onClick={() => replaceInputRef.current?.click()}
-          >
-            <Upload className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
-            Replace
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-xl text-muted-foreground hover:text-destructive"
-            onClick={handleClearPDF}
-            title="Remove PDF"
-            aria-label="Remove PDF"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          </Button>
         </div>
-      )}
+      ) : (
+        /* ---------------- Editor: sidebar + canvas ---------------- */
+        <div className="flex h-full min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-[hsl(var(--background))]">
+          {/* Sidebar */}
+          <aside className="hidden w-[280px] shrink-0 flex-col border-r border-border bg-card md:flex">
+            {/* File chip + Save */}
+            <div className="space-y-3 border-b border-border p-3">
+              <div className="flex items-center gap-2.5 rounded-xl border border-border bg-background/60 p-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                  <FileText className="h-4 w-4" strokeWidth={1.75} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-medium text-foreground">{state.pdfFile?.name}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {state.pdfFile ? formatBytes(state.pdfFile.size) : ""}
+                    {state.totalPages ? ` · ${state.totalPages}p` : ""}
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={handleSaveEdited}
+                className="h-9 w-full rounded-lg bg-primary font-medium text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
+              >
+                <Save className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
+                Save PDF
+              </Button>
+            </div>
 
-      {state.pdfUrl && state.pdfDimensions && !state.isLoading && (
-        <div className="rounded-2xl border border-border/70 bg-card shadow-sm">
-          {/* Sticky toolbar */}
-          <div className="sticky top-0 z-30 rounded-t-2xl border-b border-border/60 bg-card/95 px-3 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-              {/* Group 1 — Insert */}
-              <ToolBtn active={showTextInput} onClick={() => setShowTextInput(!showTextInput)} icon={Type} label="Text" />
-              <ToolBtn active={showSignaturePad} onClick={() => setShowSignaturePad(!showSignaturePad)} icon={PenTool} label="Draw" />
-              <input
-                ref={signatureInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/svg+xml"
-                onChange={handleSignatureFileChange}
-                className="hidden"
-              />
-              <ToolBtn onClick={handleSignatureUploadClick} icon={Upload} label="Upload" />
-              <span className="hidden sm:contents">
-                <ToolBtn onClick={handleAddCheckbox} icon={Square} label="Checkbox" />
-                <ToolBtn onClick={handleAddMask} icon={Eraser} label="Mask" />
-              </span>
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-3">
+              {/* Insert */}
+              <section className="space-y-1">
+                <SectionLabel>Insert</SectionLabel>
+                <SideRow icon={Type} label="Text" active={showTextInput} onClick={() => setShowTextInput(!showTextInput)} />
+                {showTextInput && (
+                  <Accordion>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select value={fontSize} onValueChange={setFontSize}>
+                        <SelectTrigger className="h-8 rounded-lg text-xs" aria-label="Font size">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg">
+                          {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map((size) => (
+                            <SelectItem key={size} value={size.toString()}>{size}px</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={fontFamily} onValueChange={setFontFamily}>
+                        <SelectTrigger className="h-8 rounded-lg text-xs" aria-label="Font family">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg">
+                          <SelectItem value="Arial">Arial</SelectItem>
+                          <SelectItem value="Times New Roman">Times</SelectItem>
+                          <SelectItem value="Courier New">Courier</SelectItem>
+                          <SelectItem value="Georgia">Georgia</SelectItem>
+                          <SelectItem value="Verdana">Verdana</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              {/* Overflow on small screens */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 rounded-lg transition-colors duration-150 sm:hidden" aria-label="More tools">
-                    <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="rounded-xl">
-                  <DropdownMenuItem onClick={handleAddCheckbox}>
-                    <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Checkbox
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleAddMask}>
-                    <Eraser className="mr-2 h-4 w-4" strokeWidth={1.75} /> Mask
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleClearCanvas}>
-                    <Trash2 className="mr-2 h-4 w-4" strokeWidth={1.75} /> Clear page
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <div className="flex items-center gap-2">
+                      <ColorSwatch value={textColor} onChange={setTextColor} />
+                      <ToggleBtn active={isBold} onClick={() => setIsBold(!isBold)} icon={Bold} label="Bold" />
+                      <ToggleBtn active={isItalic} onClick={() => setIsItalic(!isItalic)} icon={Italic} label="Italic" />
+                    </div>
 
-              <Divider />
+                    <Input
+                      value={textValue}
+                      onChange={(e) => setTextValue(e.target.value)}
+                      placeholder="Type your text…"
+                      onKeyDown={(e) => e.key === "Enter" && handleAddText()}
+                      className="h-9 rounded-lg border-border text-sm transition-colors duration-150"
+                    />
+                    <Button
+                      onClick={handleAddText}
+                      className="h-9 w-full rounded-lg bg-primary text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
+                    >
+                      <Type className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
+                      Add Text
+                    </Button>
+                  </Accordion>
+                )}
 
-              {/* Group 2 — View */}
-              <IconBtn onClick={handleZoomOut} disabled={zoom <= 0.5} icon={ZoomOut} label="Zoom out" />
-              <span className="min-w-[3.25rem] text-center text-xs font-medium tabular-nums text-muted-foreground">
-                {Math.round(zoom * 100)}%
-              </span>
-              <IconBtn onClick={handleZoomIn} disabled={zoom >= 3} icon={ZoomIn} label="Zoom in" />
-              <IconBtn onClick={() => setSnapToGrid(!snapToGrid)} active={snapToGrid} icon={Grid3x3} label="Snap to grid" />
-              <IconBtn onClick={toggleOverlays} active={showOverlays} icon={showOverlays ? Eye : EyeOff} label="Toggle overlays" />
+                <SideRow icon={PenTool} label="Draw" active={showSignaturePad} onClick={() => setShowSignaturePad(!showSignaturePad)} />
+                {showSignaturePad && (
+                  <Accordion>
+                    <SignaturePad
+                      compact
+                      height={170}
+                      onSave={handleSignaturePadSave}
+                      onCancel={() => setShowSignaturePad(false)}
+                    />
+                  </Accordion>
+                )}
 
-              <Divider />
+                <input
+                  ref={signatureInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml"
+                  onChange={handleSignatureFileChange}
+                  className="hidden"
+                />
+                <SideRow icon={Upload} label="Upload image" onClick={handleSignatureUploadClick} />
+                <SideRow icon={Square} label="Checkbox" onClick={handleAddCheckbox} />
+                <SideRow icon={Eraser} label="Mask" onClick={handleAddMask} />
+              </section>
 
-              {/* Group 3 — History */}
-              <IconBtn onClick={undo} disabled={!canUndo} icon={Undo2} label="Undo (Ctrl+Z)" />
-              <IconBtn onClick={redo} disabled={!canRedo} icon={Redo2} label="Redo (Ctrl+Y)" />
+              {/* View */}
+              <section className="space-y-1">
+                <SectionLabel>View</SectionLabel>
+                <div className="flex items-center gap-1.5 px-1 py-1">
+                  <IconBtn onClick={handleZoomOut} disabled={zoom <= 0.5} icon={ZoomOut} label="Zoom out" />
+                  <span className="flex-1 text-center text-xs font-medium tabular-nums text-foreground">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <IconBtn onClick={handleZoomIn} disabled={zoom >= 3} icon={ZoomIn} label="Zoom in" />
+                </div>
+                <SideRow icon={Grid3x3} label="Snap to grid" active={snapToGrid} onClick={() => setSnapToGrid(!snapToGrid)} />
+                <SideRow
+                  icon={showOverlays ? Eye : EyeOff}
+                  label={showOverlays ? "Overlays visible" : "Overlays hidden"}
+                  active={showOverlays}
+                  onClick={toggleOverlays}
+                />
+              </section>
 
-              {/* Selection-contextual */}
+              {/* History */}
+              <section className="space-y-1">
+                <SectionLabel>History</SectionLabel>
+                <SideRow icon={Undo2} label="Undo" hint="⌘Z" disabled={!canUndo} onClick={undo} />
+                <SideRow icon={Redo2} label="Redo" hint="⌘Y" disabled={!canRedo} onClick={redo} />
+              </section>
+
+              {/* Selection */}
               {selectedObject && (
-                <>
-                  <Divider />
-                  <IconBtn onClick={handleBringToFront} icon={ArrowUpToLine} label="Bring to front" />
-                  <IconBtn onClick={handleSendToBack} icon={ArrowDownToLine} label="Send to back" />
-                  <IconBtn onClick={handleDeleteSelected} icon={Trash2} label="Delete selected" danger />
+                <section className="space-y-1">
+                  <SectionLabel>Selection</SectionLabel>
+                  <SideRow icon={ArrowUpToLine} label="Bring to front" onClick={handleBringToFront} />
+                  <SideRow icon={ArrowDownToLine} label="Send to back" onClick={handleSendToBack} />
+                  <SideRow icon={Trash2} label="Delete selected" onClick={handleDeleteSelected} danger />
                   {(selectedObject as any).checkboxState && (
-                    <>
-                      <Divider />
+                    <div className="px-1 pt-1">
                       <Select
                         value={(selectedObject as any).checkboxState || "x"}
                         onValueChange={(value: "x" | "tick") => handleCheckboxChange(value)}
                       >
-                        <SelectTrigger className="h-9 w-[124px] rounded-lg">
+                        <SelectTrigger className="h-9 w-full rounded-lg text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="z-[100] rounded-lg">
@@ -544,127 +618,96 @@ export const PDFEditorTool = () => {
                           <SelectItem value="tick">✓ Tick Mark</SelectItem>
                         </SelectContent>
                       </Select>
-                    </>
+                    </div>
                   )}
-                </>
+                </section>
               )}
+            </div>
 
-              {/* Group 4 — Primary */}
-              <div className="ml-auto flex items-center gap-2">
-                <Divider className="hidden sm:inline-block" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearCanvas}
-                  className="hidden h-9 rounded-lg text-muted-foreground transition-colors duration-150 hover:text-foreground sm:inline-flex"
-                >
-                  <Trash2 className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
-                  Clear page
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSaveEdited}
-                  className="h-9 rounded-lg bg-primary px-4 text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
-                >
-                  <Save className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
-                  Save PDF
+            {/* File actions */}
+            <div className="space-y-1 border-t border-border p-3">
+              <SectionLabel>Document</SectionLabel>
+              <input
+                ref={replaceInputRef}
+                type="file"
+                accept="application/pdf"
+                onChange={handleReplaceFileChange}
+                className="hidden"
+              />
+              <SideRow icon={Upload} label="Replace PDF" onClick={() => replaceInputRef.current?.click()} />
+              <SideRow icon={Save} label="Download original" onClick={actions.handleDownload} />
+              <SideRow icon={Eraser} label="Clear page edits" onClick={handleClearCanvas} />
+              <SideRow icon={Trash2} label="Remove PDF" onClick={handleClearPDF} danger />
+            </div>
+          </aside>
+
+          {/* Main area */}
+          <div className="flex min-w-0 flex-1 flex-col bg-muted/30">
+            {/* Slim top bar (mobile save + tools fallback) */}
+            <div className="flex items-center gap-2 border-b border-border bg-card/60 px-3 py-2 md:hidden">
+              <span className="truncate text-xs font-medium text-foreground">{state.pdfFile?.name}</span>
+              <div className="ml-auto flex items-center gap-1.5">
+                <IconBtn onClick={() => setShowTextInput(!showTextInput)} active={showTextInput} icon={Type} label="Text" />
+                <IconBtn onClick={() => setShowSignaturePad(!showSignaturePad)} active={showSignaturePad} icon={PenTool} label="Draw" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-9 rounded-lg" aria-label="More tools">
+                      <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="rounded-xl">
+                    <DropdownMenuItem onClick={handleSignatureUploadClick}>
+                      <Upload className="mr-2 h-4 w-4" strokeWidth={1.75} /> Upload image
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleAddCheckbox}>
+                      <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Checkbox
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleAddMask}>
+                      <Eraser className="mr-2 h-4 w-4" strokeWidth={1.75} /> Mask
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleClearCanvas}>
+                      <Trash2 className="mr-2 h-4 w-4" strokeWidth={1.75} /> Clear page
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button size="sm" onClick={handleSaveEdited} className="h-9 rounded-lg bg-primary px-3 text-primary-foreground">
+                  <Save className="h-4 w-4" strokeWidth={1.75} />
                 </Button>
               </div>
-
             </div>
-          </div>
 
-          <div className="space-y-4 p-4">
-            {/* Text Input Panel */}
-            {showTextInput && (
-              <div className="rounded-xl border border-border/60 bg-muted/40 p-4 shadow-sm">
-                <div className="space-y-3">
-                  {/* Unified formatting row */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Select value={fontSize} onValueChange={setFontSize}>
-                      <SelectTrigger className="h-9 w-[92px] rounded-lg" aria-label="Font size">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-lg">
-                        {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map((size) => (
-                          <SelectItem key={size} value={size.toString()}>{size}px</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={fontFamily} onValueChange={setFontFamily}>
-                      <SelectTrigger className="h-9 w-[150px] rounded-lg" aria-label="Font family">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-lg">
-                        <SelectItem value="Arial">Arial</SelectItem>
-                        <SelectItem value="Times New Roman">Times</SelectItem>
-                        <SelectItem value="Courier New">Courier</SelectItem>
-                        <SelectItem value="Georgia">Georgia</SelectItem>
-                        <SelectItem value="Verdana">Verdana</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Divider />
-
-                    <label
-                      className="relative inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border/70 shadow-sm transition-all duration-150 hover:scale-105 focus-within:ring-2 focus-within:ring-ring"
-                      title="Text colour"
-                    >
-                      <span
-                        className="h-6 w-6 rounded-full ring-1 ring-black/10"
-                        style={{ backgroundColor: textColor }}
-                        aria-hidden
-                      />
-                      <input
-                        type="color"
-                        value={textColor}
-                        onChange={(e) => setTextColor(e.target.value)}
-                        aria-label="Text colour"
-                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                      />
-                    </label>
-
+            {/* Mobile inline panels */}
+            <div className="space-y-3 px-3 md:hidden">
+              {showTextInput && (
+                <div className="mt-3 space-y-2 rounded-xl border border-border bg-card p-3">
+                  <div className="flex items-center gap-2">
+                    <ColorSwatch value={textColor} onChange={setTextColor} />
                     <ToggleBtn active={isBold} onClick={() => setIsBold(!isBold)} icon={Bold} label="Bold" />
                     <ToggleBtn active={isItalic} onClick={() => setIsItalic(!isItalic)} icon={Italic} label="Italic" />
                   </div>
-
-                  {/* Input row */}
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex gap-2">
                     <Input
                       value={textValue}
                       onChange={(e) => setTextValue(e.target.value)}
                       placeholder="Type your text…"
                       onKeyDown={(e) => e.key === "Enter" && handleAddText()}
-                      className="h-9 min-w-[180px] flex-1 rounded-lg border-border/70 transition-colors duration-150"
+                      className="h-9 flex-1 rounded-lg text-sm"
                     />
-                    <Button
-                      onClick={handleAddText}
-                      className="h-9 shrink-0 rounded-lg bg-primary px-4 text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
-                    >
-                      <Type className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
-                      Add Text
+                    <Button onClick={handleAddText} className="h-9 rounded-lg bg-primary px-3 text-primary-foreground">
+                      Add
                     </Button>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+              {showSignaturePad && (
+                <div className="mt-3">
+                  <SignaturePad onSave={handleSignaturePadSave} onCancel={() => setShowSignaturePad(false)} />
+                </div>
+              )}
+            </div>
 
-
-            {/* Signature Pad */}
-            {showSignaturePad && (
-              <SignaturePad
-                onSave={handleSignaturePadSave}
-                onCancel={() => setShowSignaturePad(false)}
-              />
-            )}
-
-            {/* Document canvas */}
-            <div
-              ref={viewerWrapperRef}
-              className="relative overflow-auto rounded-xl border border-border/60 bg-muted/60"
-              style={{ minHeight: "600px", maxHeight: "800px" }}
-            >
+            {/* Canvas */}
+            <div ref={viewerWrapperRef} className="relative min-h-0 flex-1 overflow-auto">
               {isPageLoading && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
                   <div className="flex flex-col items-center gap-4">
@@ -712,11 +755,11 @@ export const PDFEditorTool = () => {
               </div>
             </div>
 
-            {/* Floating footer: page nav + zoom slider */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 px-3 py-2">
+            {/* Docked footer: page nav + zoom */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-card px-3 py-2">
               <div className="flex items-center gap-1.5">
                 <IconBtn onClick={handlePrevPage} disabled={currentPage === 0} icon={ChevronLeft} label="Previous page" />
-                <span className="px-1 text-xs font-medium tabular-nums text-muted-foreground">
+                <span className="px-1 text-xs font-medium tabular-nums text-foreground">
                   Page {currentPage + 1} of {state.totalPages || 1}
                 </span>
                 <IconBtn
@@ -734,11 +777,11 @@ export const PDFEditorTool = () => {
                   max={300}
                   step={5}
                   onValueChange={([v]) => setZoom(v / 100)}
-                  className="w-40"
+                  className="w-32 sm:w-40"
                   aria-label="Zoom level"
                 />
                 <ZoomIn className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
-                <span className="min-w-[3rem] text-right text-xs font-medium tabular-nums text-muted-foreground">
+                <span className="min-w-[3rem] text-right text-xs font-medium tabular-nums text-foreground">
                   {Math.round(zoom * 100)}%
                 </span>
               </div>
@@ -750,32 +793,73 @@ export const PDFEditorTool = () => {
   );
 };
 
-const Divider = ({ className = "" }: { className?: string }) => (
-  <span className={`h-6 w-px shrink-0 bg-border/70 ${className}`} aria-hidden />
-);
-
 type BtnIcon = LucideIcon;
 
-const ToolBtn = ({
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    {children}
+  </div>
+);
+
+const Accordion = ({ children }: { children: React.ReactNode }) => (
+  <div className="ml-2 space-y-2 rounded-xl border border-border bg-background/60 p-3">{children}</div>
+);
+
+const SideRow = ({
   icon: Icon,
   label,
   onClick,
   active,
-}: { icon: BtnIcon; label: string; onClick: () => void; active?: boolean }) => (
+  disabled,
+  danger,
+  hint,
+}: {
+  icon: BtnIcon;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+  danger?: boolean;
+  hint?: string;
+}) => (
   <button
     type="button"
     onClick={onClick}
-    aria-pressed={!!active}
-    className={`relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-medium transition-all duration-150 active:scale-[0.97]
-      after:pointer-events-none after:absolute after:inset-x-2.5 after:-bottom-[3px] after:h-[2px] after:rounded-full after:transition-all after:duration-150
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
+    disabled={disabled}
+    aria-pressed={active === undefined ? undefined : active}
+    className={`group relative flex w-full items-center gap-2.5 rounded-lg py-2 pl-3 pr-2.5 text-left text-sm font-medium transition-all duration-150
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card
+      disabled:pointer-events-none disabled:opacity-35
       ${active
-        ? "bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18),0_2px_10px_-4px_hsl(var(--primary)/0.5)] after:bg-primary"
-        : "text-muted-foreground after:bg-transparent hover:bg-muted hover:text-foreground"}`}
+        ? "bg-primary/12 text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-r-full before:bg-primary"
+        : danger
+          ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
   >
-    <Icon className="h-4 w-4" strokeWidth={1.75} />
-    {label}
+    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+    <span className="truncate">{label}</span>
+    {hint && <span className="ml-auto text-[10px] tabular-nums text-muted-foreground/70">{hint}</span>}
   </button>
+);
+
+const ColorSwatch = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+  <label
+    className="relative inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-background shadow-sm transition-all duration-150 hover:border-primary/60 focus-within:ring-2 focus-within:ring-ring"
+    title="Text colour"
+  >
+    <span
+      className="h-5 w-5 rounded-full ring-1 ring-inset ring-foreground/25 outline outline-1 outline-offset-1 outline-border"
+      style={{ backgroundColor: value }}
+      aria-hidden
+    />
+    <input
+      type="color"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label="Text colour"
+      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+    />
+  </label>
 );
 
 const ToggleBtn = ({
@@ -793,8 +877,8 @@ const ToggleBtn = ({
     className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-150 active:scale-[0.95]
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
       ${active
-        ? "border-primary/40 bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]"
-        : "border-border/70 bg-background text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+        ? "border-primary/50 bg-primary/15 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.25)]"
+        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"}`}
   >
     <Icon className="h-4 w-4" strokeWidth={1.75} />
   </button>
@@ -815,17 +899,18 @@ const IconBtn = ({
     title={label}
     aria-label={label}
     aria-pressed={active === undefined ? undefined : active}
-    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 active:scale-[0.95]
-      disabled:pointer-events-none disabled:opacity-40
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-150 active:scale-[0.95]
+      disabled:pointer-events-none disabled:opacity-30
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
       ${active
-        ? "bg-primary/10 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]"
+        ? "border-primary/50 bg-primary/15 text-primary"
         : danger
-          ? "text-destructive hover:bg-destructive/10"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+          ? "border-transparent text-destructive hover:bg-destructive/10"
+          : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"}`}
   >
     <Icon className="h-4 w-4" strokeWidth={1.75} />
   </button>
 );
+
 
 

@@ -6,9 +6,13 @@ import { Eraser, Check, X } from "lucide-react";
 interface SignaturePadProps {
   onSave: (dataUrl: string) => void;
   onCancel: () => void;
+  /** Drawing surface height in px */
+  height?: number;
+  /** Compact layout for narrow containers such as the sidebar */
+  compact?: boolean;
 }
 
-export const SignaturePad = ({ onSave, onCancel }: SignaturePadProps) => {
+export const SignaturePad = ({ onSave, onCancel, height = 300, compact = false }: SignaturePadProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [signaturePad, setSignaturePad] = useState<SignaturePadLib | null>(null);
   const [hasStroke, setHasStroke] = useState(false);
@@ -23,7 +27,7 @@ export const SignaturePad = ({ onSave, onCancel }: SignaturePadProps) => {
     // Set canvas size
     const ratio = Math.max(window.devicePixelRatio || 1, 1);
     canvas.width = container.offsetWidth * ratio;
-    canvas.height = 300 * ratio;
+    canvas.height = height * ratio;
     canvas.getContext("2d")?.scale(ratio, ratio);
 
     const pad = new SignaturePadLib(canvas, {
@@ -44,7 +48,7 @@ export const SignaturePad = ({ onSave, onCancel }: SignaturePadProps) => {
       pad.removeEventListener("beginStroke", onBegin);
       pad.off();
     };
-  }, []);
+  }, [height]);
 
   const handleClear = () => {
     signaturePad?.clear();
@@ -60,13 +64,13 @@ export const SignaturePad = ({ onSave, onCancel }: SignaturePadProps) => {
   };
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+    <div className={compact ? "rounded-xl border border-border bg-card p-3 shadow-sm" : "rounded-xl border border-border/60 bg-card p-4 shadow-sm"}>
       <div className="space-y-3">
         <div className="text-sm font-medium">Draw your signature</div>
 
         <div
           className="relative overflow-hidden rounded-xl border-2 border-dashed border-border/70 bg-white transition-colors duration-150 focus-within:border-primary/60"
-          style={{ height: "300px" }}
+          style={{ height: `${height}px` }}
         >
           {!hasStroke && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -78,16 +82,16 @@ export const SignaturePad = ({ onSave, onCancel }: SignaturePadProps) => {
           <canvas
             ref={canvasRef}
             className="relative h-full w-full touch-none"
-            style={{ width: "100%", height: "300px" }}
+            style={{ width: "100%", height: `${height}px` }}
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className={compact ? "flex flex-wrap items-center gap-2" : "flex items-center gap-2"}>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleClear}
-            className="h-9 flex-1 rounded-lg border border-transparent text-muted-foreground transition-all duration-150 hover:border-border/70 hover:text-foreground"
+            className={`h-9 rounded-lg border border-transparent text-muted-foreground transition-all duration-150 hover:border-border/70 hover:text-foreground ${compact ? "min-w-[46%] flex-1" : "flex-1"}`}
           >
             <Eraser className="mr-2 h-4 w-4" strokeWidth={1.75} />
             Clear
@@ -96,7 +100,7 @@ export const SignaturePad = ({ onSave, onCancel }: SignaturePadProps) => {
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-9 flex-1 rounded-lg border-border/70 transition-all duration-150"
+            className={`h-9 rounded-lg border-border/70 transition-all duration-150 ${compact ? "min-w-[46%] flex-1" : "flex-1"}`}
           >
             <X className="mr-2 h-4 w-4" strokeWidth={1.75} />
             Cancel
@@ -104,7 +108,7 @@ export const SignaturePad = ({ onSave, onCancel }: SignaturePadProps) => {
           <Button
             size="sm"
             onClick={handleSave}
-            className="h-9 flex-1 rounded-lg bg-primary text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
+            className={`h-9 rounded-lg bg-primary text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97] ${compact ? "w-full" : "flex-1"}`}
           >
             <Check className="mr-2 h-4 w-4" strokeWidth={1.75} />
             Add Signature
