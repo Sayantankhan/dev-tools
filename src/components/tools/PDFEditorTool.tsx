@@ -40,6 +40,7 @@ export const PDFEditorTool = () => {
   const [zoom, setZoom] = useState(1);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [pageViewSizes, setPageViewSizes] = useState<Record<number, { width: number; height: number }>>({});
+  const [dragOver, setDragOver] = useState(false);
   
   // Text formatting
   const [fontSize, setFontSize] = useState("20");
