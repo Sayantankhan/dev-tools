@@ -486,7 +486,7 @@ export const PDFEditorTool = () => {
               {/* Overflow on small screens */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 rounded-xl sm:hidden" aria-label="More tools">
+                  <Button variant="ghost" size="sm" className="h-9 rounded-lg transition-colors duration-150 sm:hidden" aria-label="More tools">
                     <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                   </Button>
                 </DropdownMenuTrigger>
