@@ -617,7 +617,27 @@ export const PDFEditorTool = () => {
                   className="hidden"
                 />
                 <SideRow icon={Upload} label="Upload image" onClick={handleSignatureUploadClick} />
-                <SideRow icon={Square} label="Checkbox" onClick={handleAddCheckbox} />
+                <SideRow icon={Square} label="Tick / Cross" active={showCheckboxPanel} onClick={() => setShowCheckboxPanel(!showCheckboxPanel)} />
+                {showCheckboxPanel && (
+                  <Accordion>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAddCheckbox('tick')}
+                        className="flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all duration-150 hover:border-primary/60 hover:bg-primary/10 active:scale-[0.98]"
+                      >
+                        <span aria-hidden>✓</span> Tick
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAddCheckbox('x')}
+                        className="flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all duration-150 hover:border-primary/60 hover:bg-primary/10 active:scale-[0.98]"
+                      >
+                        <span aria-hidden>✗</span> Cross
+                      </button>
+                    </div>
+                  </Accordion>
+                )}
                 <SideRow icon={Eraser} label="Mask" onClick={handleAddMask} />
               </section>
 
