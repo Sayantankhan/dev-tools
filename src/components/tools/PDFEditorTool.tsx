@@ -528,29 +528,33 @@ export const PDFEditorTool = () => {
                   <IconBtn onClick={handleSendToBack} icon={ArrowDownToLine} label="Send to back" />
                   <IconBtn onClick={handleDeleteSelected} icon={Trash2} label="Delete selected" danger />
                   {(selectedObject as any).checkboxState && (
-                    <Select
-                      value={(selectedObject as any).checkboxState || "x"}
-                      onValueChange={(value: "x" | "tick") => handleCheckboxChange(value)}
-                    >
-                      <SelectTrigger className="h-9 w-[120px] rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="z-[100] rounded-xl">
-                        <SelectItem value="x">✗ X Mark</SelectItem>
-                        <SelectItem value="tick">✓ Tick Mark</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <>
+                      <Divider />
+                      <Select
+                        value={(selectedObject as any).checkboxState || "x"}
+                        onValueChange={(value: "x" | "tick") => handleCheckboxChange(value)}
+                      >
+                        <SelectTrigger className="h-9 w-[124px] rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-[100] rounded-lg">
+                          <SelectItem value="x">✗ X Mark</SelectItem>
+                          <SelectItem value="tick">✓ Tick Mark</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </>
                   )}
                 </>
               )}
 
               {/* Group 4 — Primary */}
-              <div className="ml-auto flex items-center gap-1.5">
+              <div className="ml-auto flex items-center gap-2">
+                <Divider className="hidden sm:inline-block" />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClearCanvas}
-                  className="hidden h-9 rounded-xl text-muted-foreground hover:text-foreground sm:inline-flex"
+                  className="hidden h-9 rounded-lg text-muted-foreground transition-colors duration-150 hover:text-foreground sm:inline-flex"
                 >
                   <Trash2 className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
                   Clear page
@@ -558,12 +562,13 @@ export const PDFEditorTool = () => {
                 <Button
                   size="sm"
                   onClick={handleSaveEdited}
-                  className="h-9 rounded-xl bg-primary px-4 text-primary-foreground shadow-sm transition-transform hover:bg-primary/90 active:scale-[0.97]"
+                  className="h-9 rounded-lg bg-primary px-4 text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
                 >
                   <Save className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
                   Save PDF
                 </Button>
               </div>
+
             </div>
           </div>
 
