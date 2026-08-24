@@ -1,14 +1,20 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PDFEditorStateHandler } from "@/modules/state/PDFEditorStateHandler";
 import { 
   Upload, FileText, Trash2, Save, Type, PenTool, 
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
-  Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser
+  Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal
 } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
