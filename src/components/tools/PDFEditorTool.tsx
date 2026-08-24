@@ -210,8 +210,7 @@ export const PDFEditorTool = () => {
     imgEl.src = dataUrl;
   };
 
-  const handleAddCheckbox = () => {
-    // Create checkbox with X mark by default (no box)
+  const handleAddCheckbox = (mark: 'x' | 'tick' = 'x') => {
     const canvas = document.createElement('canvas');
     canvas.width = 40;
     canvas.height = 40;
@@ -219,15 +218,25 @@ export const PDFEditorTool = () => {
     if (ctx) {
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 3;
-      // Draw X (no box)
-      ctx.beginPath();
-      ctx.moveTo(8, 8);
-      ctx.lineTo(32, 32);
-      ctx.moveTo(32, 8);
-      ctx.lineTo(8, 32);
-      ctx.stroke();
+
+      if (mark === 'tick') {
+        // Draw checkmark
+        ctx.beginPath();
+        ctx.moveTo(8, 20);
+        ctx.lineTo(16, 28);
+        ctx.lineTo(32, 12);
+        ctx.stroke();
+      } else {
+        // Draw X
+        ctx.beginPath();
+        ctx.moveTo(8, 8);
+        ctx.lineTo(32, 32);
+        ctx.moveTo(32, 8);
+        ctx.lineTo(8, 32);
+        ctx.stroke();
+      }
     }
-    
+
     const annotation: PDFAnnotation = {
       id: `checkbox-${Date.now()}`,
       type: 'checkbox',
@@ -237,11 +246,11 @@ export const PDFEditorTool = () => {
       width: 40,
       height: 40,
       imageData: canvas.toDataURL(),
-      checkboxState: 'x',
+      checkboxState: mark,
     };
-    
+
     addAnnotation(currentPage, annotation);
-    toast.success("Checkbox added");
+    toast.success(`${mark === 'tick' ? 'Tick' : 'Cross'} mark added`);
   };
 
   const handleCheckboxChange = (newState: 'x' | 'tick') => {
