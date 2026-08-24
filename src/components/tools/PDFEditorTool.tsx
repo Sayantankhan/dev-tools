@@ -339,303 +339,213 @@ export const PDFEditorTool = () => {
 
   const pageAnnotations = getPageAnnotations(currentPage);
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Upload PDF
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <input
-            ref={state.fileInputRef}
-            type="file"
-            accept="application/pdf"
-            onChange={actions.handlePDFUpload}
-            className="hidden"
-          />
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => state.fileInputRef.current?.click()}
-              className="flex items-center gap-2"
-              disabled={state.isLoading}
-            >
-              <Upload className="w-4 h-4" />
-              {state.isLoading ? "Loading..." : "Upload PDF"}
-            </Button>
-            {state.pdfFile && !state.isLoading && (
-              <>
-                <span className="flex items-center text-sm text-muted-foreground">
-                  {state.pdfFile.name}
-                </span>
-                <Button
-                  onClick={handleClearPDF}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Clear
-                </Button>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  };
 
-      {state.isLoading && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Loading PDF...</p>
-              <Progress value={75} className="w-full" />
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const files = e.dataTransfer?.files;
+    if (files && files.length) {
+      actions.handlePDFUpload({ target: { files } } as unknown as React.ChangeEvent<HTMLInputElement>);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <input
+        ref={state.fileInputRef}
+        type="file"
+        accept="application/pdf"
+        onChange={actions.handlePDFUpload}
+        className="hidden"
+      />
+
+      {/* Upload / File chip */}
+      {!state.pdfFile || state.isLoading ? (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => state.fileInputRef.current?.click()}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && state.fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          className={`group cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200 outline-none
+            focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
+            ${dragOver ? "border-primary bg-primary/10" : "border-border/70 bg-card/40 hover:border-primary/60 hover:bg-card/70"}`}
+        >
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-105">
+            <Upload className="h-6 w-6" strokeWidth={1.75} />
+          </div>
+          <p className="text-base font-medium text-foreground">
+            {state.isLoading ? "Loading your PDF…" : "Drag & drop your PDF here"}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {state.isLoading ? "Parsing pages, one moment" : "or click to browse — files never leave your device"}
+          </p>
+          {state.isLoading && <Progress value={75} className="mx-auto mt-5 w-56" />}
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3 pl-4 shadow-sm">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <FileText className="h-5 w-5" strokeWidth={1.75} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-medium">{state.pdfFile.name}</div>
+            <div className="text-xs text-muted-foreground">
+              {formatBytes(state.pdfFile.size)}
+              {state.totalPages ? ` · ${state.totalPages} page${state.totalPages > 1 ? "s" : ""}` : ""}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => state.fileInputRef.current?.click()}>
+            <Upload className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
+            Replace
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-xl text-muted-foreground hover:text-destructive"
+            onClick={handleClearPDF}
+            title="Remove PDF"
+            aria-label="Remove PDF"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+          </Button>
+        </div>
       )}
 
       {state.pdfUrl && state.pdfDimensions && !state.isLoading && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span>Edit PDF</span>
-                {state.totalPages && state.totalPages > 1 && (
-                  <div className="flex items-center gap-1 text-sm">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePrevPage}
-                      disabled={currentPage === 0}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span className="px-2">
-                      Page {currentPage + 1} / {state.totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNextPage}
-                      disabled={currentPage >= (state.totalPages - 1)}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Text Tools */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowTextInput(!showTextInput)}
-                >
-                  <Type className="w-4 h-4 mr-1" />
-                  Text
-                </Button>
-                
-                {/* Signature Tools */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSignaturePad(!showSignaturePad)}
-                >
-                  <PenTool className="w-4 h-4 mr-1" />
-                  Draw
-                </Button>
-                <input
-                  ref={signatureInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/svg+xml"
-                  onChange={handleSignatureFileChange}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSignatureUploadClick}
-                >
-                  <Upload className="w-4 h-4 mr-1" />
-                  Upload
-                </Button>
+        <div className="rounded-2xl border border-border/70 bg-card shadow-sm">
+          {/* Sticky toolbar */}
+          <div className="sticky top-0 z-30 rounded-t-2xl border-b border-border/60 bg-card/95 px-3 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* Group 1 — Insert */}
+              <ToolBtn active={showTextInput} onClick={() => setShowTextInput(!showTextInput)} icon={Type} label="Text" />
+              <ToolBtn active={showSignaturePad} onClick={() => setShowSignaturePad(!showSignaturePad)} icon={PenTool} label="Draw" />
+              <input
+                ref={signatureInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/svg+xml"
+                onChange={handleSignatureFileChange}
+                className="hidden"
+              />
+              <ToolBtn onClick={handleSignatureUploadClick} icon={Upload} label="Upload" />
+              <span className="hidden sm:contents">
+                <ToolBtn onClick={handleAddCheckbox} icon={Square} label="Checkbox" />
+                <ToolBtn onClick={handleAddMask} icon={Eraser} label="Mask" />
+              </span>
 
-                {/* Checkbox Tool */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddCheckbox}
-                  title="Add Checkbox"
-                >
-                  <Square className="w-4 h-4 mr-1" />
-                  Checkbox
-                </Button>
+              {/* Overflow on small screens */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-9 rounded-xl sm:hidden" aria-label="More tools">
+                    <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="rounded-xl">
+                  <DropdownMenuItem onClick={handleAddCheckbox}>
+                    <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Checkbox
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleAddMask}>
+                    <Eraser className="mr-2 h-4 w-4" strokeWidth={1.75} /> Mask
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleClearCanvas}>
+                    <Trash2 className="mr-2 h-4 w-4" strokeWidth={1.75} /> Clear page
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                {/* Mask/Erase Tool */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddMask}
-                  title="Add mask to hide text"
-                >
-                  <Eraser className="w-4 h-4 mr-1" />
-                  Mask
-                </Button>
+              <Divider />
 
-                {/* Checkbox Dropdown */}
-                {selectedObject && (selectedObject as any).checkboxState && (
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm">Symbol:</Label>
+              {/* Group 2 — View */}
+              <IconBtn onClick={handleZoomOut} disabled={zoom <= 0.5} icon={ZoomOut} label="Zoom out" />
+              <span className="min-w-[3.25rem] text-center text-xs font-medium tabular-nums text-muted-foreground">
+                {Math.round(zoom * 100)}%
+              </span>
+              <IconBtn onClick={handleZoomIn} disabled={zoom >= 3} icon={ZoomIn} label="Zoom in" />
+              <IconBtn onClick={() => setSnapToGrid(!snapToGrid)} active={snapToGrid} icon={Grid3x3} label="Snap to grid" />
+              <IconBtn onClick={toggleOverlays} active={showOverlays} icon={showOverlays ? Eye : EyeOff} label="Toggle overlays" />
+
+              <Divider />
+
+              {/* Group 3 — History */}
+              <IconBtn onClick={undo} disabled={!canUndo} icon={Undo2} label="Undo (Ctrl+Z)" />
+              <IconBtn onClick={redo} disabled={!canRedo} icon={Redo2} label="Redo (Ctrl+Y)" />
+
+              {/* Selection-contextual */}
+              {selectedObject && (
+                <>
+                  <Divider />
+                  <IconBtn onClick={handleBringToFront} icon={ArrowUpToLine} label="Bring to front" />
+                  <IconBtn onClick={handleSendToBack} icon={ArrowDownToLine} label="Send to back" />
+                  <IconBtn onClick={handleDeleteSelected} icon={Trash2} label="Delete selected" danger />
+                  {(selectedObject as any).checkboxState && (
                     <Select
-                      value={(selectedObject as any).checkboxState || 'x'}
-                      onValueChange={(value: 'x' | 'tick') => handleCheckboxChange(value)}
+                      value={(selectedObject as any).checkboxState || "x"}
+                      onValueChange={(value: "x" | "tick") => handleCheckboxChange(value)}
                     >
-                      <SelectTrigger className="w-[120px] h-9 bg-popover text-popover-foreground border-input">
+                      <SelectTrigger className="h-9 w-[120px] rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover text-popover-foreground border-input z-[100]">
-                        <SelectItem value="x" className="cursor-pointer">✗ X Mark</SelectItem>
-                        <SelectItem value="tick" className="cursor-pointer">✓ Tick Mark</SelectItem>
+                      <SelectContent className="z-[100] rounded-xl">
+                        <SelectItem value="x">✗ X Mark</SelectItem>
+                        <SelectItem value="tick">✓ Tick Mark</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                )}
-                
-                {/* Zoom Controls */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleZoomOut}
-                  disabled={zoom <= 0.5}
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <span className="text-sm px-2">{Math.round(zoom * 100)}%</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleZoomIn}
-                  disabled={zoom >= 3}
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
+                  )}
+                </>
+              )}
 
-                {/* Object Controls */}
-                {selectedObject && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleBringToFront}
-                      title="Bring to front"
-                    >
-                      <ArrowUpToLine className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSendToBack}
-                      title="Send to back"
-                    >
-                      <ArrowDownToLine className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleDeleteSelected}
-                      title="Delete selected"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </>
-                )}
-
-                {/* History Controls */}
+              {/* Group 4 — Primary */}
+              <div className="ml-auto flex items-center gap-1.5">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={undo}
-                  disabled={!canUndo}
-                  title="Undo (Ctrl+Z)"
-                >
-                  <Undo2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={redo}
-                  disabled={!canRedo}
-                  title="Redo (Ctrl+Y)"
-                >
-                  <Redo2 className="w-4 h-4" />
-                </Button>
-
-                {/* View Controls */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleOverlays}
-                  title="Toggle overlays"
-                >
-                  {showOverlays ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSnapToGrid(!snapToGrid)}
-                  className={snapToGrid ? "bg-primary text-primary-foreground" : ""}
-                  title="Snap to grid"
-                >
-                  <Grid3x3 className="w-4 h-4" />
-                </Button>
-
-                {/* Actions */}
-                <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={handleClearCanvas}
+                  className="hidden h-9 rounded-xl text-muted-foreground hover:text-foreground sm:inline-flex"
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Clear Page
+                  <Trash2 className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
+                  Clear page
                 </Button>
                 <Button
                   size="sm"
                   onClick={handleSaveEdited}
-                  className="flex items-center gap-2"
+                  className="h-9 rounded-xl bg-primary px-4 text-primary-foreground shadow-sm transition-transform hover:bg-primary/90 active:scale-[0.97]"
                 >
-                  <Save className="w-4 h-4" />
+                  <Save className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
                   Save PDF
                 </Button>
               </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </div>
+          </div>
+
+          <div className="space-y-4 p-4">
             {/* Text Input Panel */}
             {showTextInput && (
-              <Card className="p-4 bg-muted/50">
+              <div className="rounded-xl border border-border/60 bg-muted/40 p-4">
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                     <div>
-                      <Label className="text-xs">Font Size</Label>
+                      <Label className="text-xs text-muted-foreground">Font Size</Label>
                       <Select value={fontSize} onValueChange={setFontSize}>
-                        <SelectTrigger className="h-8">
+                        <SelectTrigger className="mt-1 h-9 rounded-xl">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map(size => (
+                          {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map((size) => (
                             <SelectItem key={size} value={size.toString()}>{size}px</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs">Font</Label>
+                      <Label className="text-xs text-muted-foreground">Font</Label>
                       <Select value={fontFamily} onValueChange={setFontFamily}>
-                        <SelectTrigger className="h-8">
+                        <SelectTrigger className="mt-1 h-9 rounded-xl">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -648,20 +558,20 @@ export const PDFEditorTool = () => {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs">Color</Label>
+                      <Label className="text-xs text-muted-foreground">Color</Label>
                       <Input
                         type="color"
                         value={textColor}
                         onChange={(e) => setTextColor(e.target.value)}
-                        className="h-8"
+                        className="mt-1 h-9 rounded-xl p-1"
                       />
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex items-end gap-1.5">
                       <Button
                         variant={isBold ? "default" : "outline"}
                         size="sm"
                         onClick={() => setIsBold(!isBold)}
-                        className="flex-1 font-bold"
+                        className="h-9 flex-1 rounded-xl font-bold"
                       >
                         B
                       </Button>
@@ -669,7 +579,7 @@ export const PDFEditorTool = () => {
                         variant={isItalic ? "default" : "outline"}
                         size="sm"
                         onClick={() => setIsItalic(!isItalic)}
-                        className="flex-1 italic"
+                        className="h-9 flex-1 rounded-xl italic"
                       >
                         I
                       </Button>
@@ -679,14 +589,14 @@ export const PDFEditorTool = () => {
                     <Input
                       value={textValue}
                       onChange={(e) => setTextValue(e.target.value)}
-                      placeholder="Type your text..."
+                      placeholder="Type your text…"
                       onKeyDown={(e) => e.key === "Enter" && handleAddText()}
-                      className="flex-1"
+                      className="h-9 flex-1 rounded-xl"
                     />
-                    <Button onClick={handleAddText}>Add Text</Button>
+                    <Button onClick={handleAddText} className="h-9 rounded-xl">Add Text</Button>
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
 
             {/* Signature Pad */}
@@ -697,62 +607,147 @@ export const PDFEditorTool = () => {
               />
             )}
 
-            {/* PDF Canvas with Overlays */}
-            <div 
-              ref={viewerWrapperRef} 
-              className="relative border rounded-lg overflow-auto bg-muted" 
-              style={{ minHeight: '600px', maxHeight: '800px' }}
+            {/* Document canvas */}
+            <div
+              ref={viewerWrapperRef}
+              className="relative overflow-auto rounded-xl border border-border/60 bg-muted/60"
+              style={{ minHeight: "600px", maxHeight: "800px" }}
             >
               {isPageLoading && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm text-muted-foreground">Loading page {currentPage + 1}...</p>
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    <p className="text-sm text-muted-foreground">Loading page {currentPage + 1}…</p>
                   </div>
                 </div>
               )}
-              <div className="relative" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: 'fit-content' }}>
-                <PDFCanvasViewer 
-                  url={state.pdfUrl} 
-                  pageNumber={currentPage + 1}
-                  onRendered={({ width, height, pageNumber }) => {
-                    // Only update viewSize if this render is for the currently visible page
-                    if (pageNumber === currentPage + 1) {
-                      setViewSize(prev => (prev.width === width && prev.height === height ? prev : { width, height }));
-                      setIsPageLoading(false);
-                    }
-                    // Store view size keyed by pageIndex (pageNumber is 1-based, so pageNumber - 1)
-                    setPageViewSizes(prev => ({ ...prev, [pageNumber - 1]: { width, height } }));
-                  }}
-                />
-                {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
-                  <div 
-                    className="absolute top-0 left-0 z-20" 
-                    style={{ 
-                      width: `${viewSize.width}px`, 
-                      height: `${viewSize.height}px`,
-                      pointerEvents: 'auto'
+
+              <div className="flex min-h-full w-full justify-center p-6 md:p-10">
+                <div
+                  className="relative shrink-0 rounded-sm bg-white shadow-[0_24px_60px_-16px_rgba(0,0,0,0.65)] ring-1 ring-black/10 transition-transform duration-200"
+                  style={{ transform: `scale(${zoom})`, transformOrigin: "top center", width: "fit-content" }}
+                >
+                  <PDFCanvasViewer
+                    url={state.pdfUrl}
+                    pageNumber={currentPage + 1}
+                    onRendered={({ width, height, pageNumber }) => {
+                      if (pageNumber === currentPage + 1) {
+                        setViewSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+                        setIsPageLoading(false);
+                      }
+                      setPageViewSizes((prev) => ({ ...prev, [pageNumber - 1]: { width, height } }));
                     }}
-                  >
-                    <PDFEditorCanvas
-                      width={viewSize.width}
-                      height={viewSize.height}
-                      annotations={pageAnnotations}
-                      onAnnotationAdd={(ann) => addAnnotation(currentPage, ann)}
-                      onAnnotationUpdate={(id, updates) => updateAnnotation(currentPage, id, updates)}
-                      onAnnotationRemove={(id) => removeAnnotation(currentPage, id)}
-                      onObjectSelect={setSelectedObject}
-                      snapToGrid={snapToGrid}
-                      zoom={1}
-                    />
-                  </div>
-                )}
+                  />
+                  {viewSize.width > 0 && viewSize.height > 0 && showOverlays && (
+                    <div
+                      className="absolute left-0 top-0 z-20"
+                      style={{ width: `${viewSize.width}px`, height: `${viewSize.height}px`, pointerEvents: "auto" }}
+                    >
+                      <PDFEditorCanvas
+                        width={viewSize.width}
+                        height={viewSize.height}
+                        annotations={pageAnnotations}
+                        onAnnotationAdd={(ann) => addAnnotation(currentPage, ann)}
+                        onAnnotationUpdate={(id, updates) => updateAnnotation(currentPage, id, updates)}
+                        onAnnotationRemove={(id) => removeAnnotation(currentPage, id)}
+                        onObjectSelect={setSelectedObject}
+                        snapToGrid={snapToGrid}
+                        zoom={1}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
 
+            {/* Floating footer: page nav + zoom slider */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-card/60 px-3 py-2">
+              <div className="flex items-center gap-1.5">
+                <IconBtn onClick={handlePrevPage} disabled={currentPage === 0} icon={ChevronLeft} label="Previous page" />
+                <span className="px-1 text-xs font-medium tabular-nums text-muted-foreground">
+                  Page {currentPage + 1} of {state.totalPages || 1}
+                </span>
+                <IconBtn
+                  onClick={handleNextPage}
+                  disabled={!state.totalPages || currentPage >= state.totalPages - 1}
+                  icon={ChevronRight}
+                  label="Next page"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <ZoomOut className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
+                <Slider
+                  value={[zoom * 100]}
+                  min={50}
+                  max={300}
+                  step={5}
+                  onValueChange={([v]) => setZoom(v / 100)}
+                  className="w-40"
+                  aria-label="Zoom level"
+                />
+                <ZoomIn className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.75} />
+                <span className="min-w-[3rem] text-right text-xs font-medium tabular-nums text-muted-foreground">
+                  {Math.round(zoom * 100)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+const Divider = () => <span className="mx-1 h-6 w-px shrink-0 bg-border/70" aria-hidden />;
+
+type BtnIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
+
+const ToolBtn = ({
+  icon: Icon,
+  label,
+  onClick,
+  active,
+}: { icon: BtnIcon; label: string; onClick: () => void; active?: boolean }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={!!active}
+    className={`inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-all duration-150 active:scale-[0.97]
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
+      ${active
+        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+        : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+  >
+    <Icon className="h-4 w-4" strokeWidth={1.75} />
+    {label}
+  </button>
+);
+
+const IconBtn = ({
+  icon: Icon,
+  label,
+  onClick,
+  disabled,
+  active,
+  danger,
+}: { icon: BtnIcon; label: string; onClick: () => void; disabled?: boolean; active?: boolean; danger?: boolean }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    title={label}
+    aria-label={label}
+    aria-pressed={active === undefined ? undefined : active}
+    className={`inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150 active:scale-[0.95]
+      disabled:pointer-events-none disabled:opacity-40
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card
+      ${active
+        ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+        : danger
+          ? "text-destructive hover:bg-destructive/10"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+  >
+    <Icon className="h-4 w-4" strokeWidth={1.75} />
+  </button>
+);
+
