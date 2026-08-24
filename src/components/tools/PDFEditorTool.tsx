@@ -15,7 +15,7 @@ import {
   Upload, FileText, Trash2, Save, Type, PenTool, 
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
   Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal,
-  Bold, Italic
+  Bold, Italic, Lock, ShieldCheck, Zap
 
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
