@@ -91,7 +91,7 @@ export const SignaturePad = ({ onSave, onCancel, height = 300, compact = false }
             variant="ghost"
             size="sm"
             onClick={handleClear}
-            className="h-9 flex-1 rounded-lg border border-transparent text-muted-foreground transition-all duration-150 hover:border-border/70 hover:text-foreground"
+            className={`h-9 rounded-lg border border-transparent text-muted-foreground transition-all duration-150 hover:border-border/70 hover:text-foreground ${compact ? "min-w-[46%] flex-1" : "flex-1"}`}
           >
             <Eraser className="mr-2 h-4 w-4" strokeWidth={1.75} />
             Clear
@@ -100,7 +100,7 @@ export const SignaturePad = ({ onSave, onCancel, height = 300, compact = false }
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-9 flex-1 rounded-lg border-border/70 transition-all duration-150"
+            className={`h-9 rounded-lg border-border/70 transition-all duration-150 ${compact ? "min-w-[46%] flex-1" : "flex-1"}`}
           >
             <X className="mr-2 h-4 w-4" strokeWidth={1.75} />
             Cancel
@@ -108,7 +108,7 @@ export const SignaturePad = ({ onSave, onCancel, height = 300, compact = false }
           <Button
             size="sm"
             onClick={handleSave}
-            className="h-9 flex-1 rounded-lg bg-primary text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
+            className={`h-9 rounded-lg bg-primary text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97] ${compact ? "w-full" : "flex-1"}`}
           >
             <Check className="mr-2 h-4 w-4" strokeWidth={1.75} />
             Add Signature

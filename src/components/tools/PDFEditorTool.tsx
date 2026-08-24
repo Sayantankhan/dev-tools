@@ -551,6 +551,8 @@ export const PDFEditorTool = () => {
                 {showSignaturePad && (
                   <Accordion>
                     <SignaturePad
+                      compact
+                      height={170}
                       onSave={handleSignaturePadSave}
                       onCancel={() => setShowSignaturePad(false)}
                     />
