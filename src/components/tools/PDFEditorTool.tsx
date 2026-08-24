@@ -466,7 +466,7 @@ export const PDFEditorTool = () => {
         <div className="rounded-2xl border border-border/70 bg-card shadow-sm">
           {/* Sticky toolbar */}
           <div className="sticky top-0 z-30 rounded-t-2xl border-b border-border/60 bg-card/95 px-3 py-2.5 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
               {/* Group 1 — Insert */}
               <ToolBtn active={showTextInput} onClick={() => setShowTextInput(!showTextInput)} icon={Type} label="Text" />
               <ToolBtn active={showSignaturePad} onClick={() => setShowSignaturePad(!showSignaturePad)} icon={PenTool} label="Draw" />
