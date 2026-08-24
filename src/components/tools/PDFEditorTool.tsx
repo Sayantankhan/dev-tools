@@ -575,78 +575,79 @@ export const PDFEditorTool = () => {
           <div className="space-y-4 p-4">
             {/* Text Input Panel */}
             {showTextInput && (
-              <div className="rounded-xl border border-border/60 bg-muted/40 p-4">
+              <div className="rounded-xl border border-border/60 bg-muted/40 p-4 shadow-sm">
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Font Size</Label>
-                      <Select value={fontSize} onValueChange={setFontSize}>
-                        <SelectTrigger className="mt-1 h-9 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map((size) => (
-                            <SelectItem key={size} value={size.toString()}>{size}px</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Font</Label>
-                      <Select value={fontFamily} onValueChange={setFontFamily}>
-                        <SelectTrigger className="mt-1 h-9 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Arial">Arial</SelectItem>
-                          <SelectItem value="Times New Roman">Times</SelectItem>
-                          <SelectItem value="Courier New">Courier</SelectItem>
-                          <SelectItem value="Georgia">Georgia</SelectItem>
-                          <SelectItem value="Verdana">Verdana</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Color</Label>
-                      <Input
+                  {/* Unified formatting row */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Select value={fontSize} onValueChange={setFontSize}>
+                      <SelectTrigger className="h-9 w-[92px] rounded-lg" aria-label="Font size">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg">
+                        {[12, 14, 16, 18, 20, 24, 28, 32, 40, 48].map((size) => (
+                          <SelectItem key={size} value={size.toString()}>{size}px</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={fontFamily} onValueChange={setFontFamily}>
+                      <SelectTrigger className="h-9 w-[150px] rounded-lg" aria-label="Font family">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg">
+                        <SelectItem value="Arial">Arial</SelectItem>
+                        <SelectItem value="Times New Roman">Times</SelectItem>
+                        <SelectItem value="Courier New">Courier</SelectItem>
+                        <SelectItem value="Georgia">Georgia</SelectItem>
+                        <SelectItem value="Verdana">Verdana</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Divider />
+
+                    <label
+                      className="relative inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border/70 shadow-sm transition-all duration-150 hover:scale-105 focus-within:ring-2 focus-within:ring-ring"
+                      title="Text colour"
+                    >
+                      <span
+                        className="h-6 w-6 rounded-full ring-1 ring-black/10"
+                        style={{ backgroundColor: textColor }}
+                        aria-hidden
+                      />
+                      <input
                         type="color"
                         value={textColor}
                         onChange={(e) => setTextColor(e.target.value)}
-                        className="mt-1 h-9 rounded-xl p-1"
+                        aria-label="Text colour"
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
-                    </div>
-                    <div className="flex items-end gap-1.5">
-                      <Button
-                        variant={isBold ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsBold(!isBold)}
-                        className="h-9 flex-1 rounded-xl font-bold"
-                      >
-                        B
-                      </Button>
-                      <Button
-                        variant={isItalic ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsItalic(!isItalic)}
-                        className="h-9 flex-1 rounded-xl italic"
-                      >
-                        I
-                      </Button>
-                    </div>
+                    </label>
+
+                    <ToggleBtn active={isBold} onClick={() => setIsBold(!isBold)} icon={Bold} label="Bold" />
+                    <ToggleBtn active={isItalic} onClick={() => setIsItalic(!isItalic)} icon={Italic} label="Italic" />
                   </div>
-                  <div className="flex gap-2">
+
+                  {/* Input row */}
+                  <div className="flex flex-wrap items-center gap-2">
                     <Input
                       value={textValue}
                       onChange={(e) => setTextValue(e.target.value)}
                       placeholder="Type your text…"
                       onKeyDown={(e) => e.key === "Enter" && handleAddText()}
-                      className="h-9 flex-1 rounded-xl"
+                      className="h-9 min-w-[180px] flex-1 rounded-lg border-border/70 transition-colors duration-150"
                     />
-                    <Button onClick={handleAddText} className="h-9 rounded-xl">Add Text</Button>
+                    <Button
+                      onClick={handleAddText}
+                      className="h-9 shrink-0 rounded-lg bg-primary px-4 text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-[0.97]"
+                    >
+                      <Type className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
+                      Add Text
+                    </Button>
                   </div>
                 </div>
               </div>
             )}
+
 
             {/* Signature Pad */}
             {showSignaturePad && (
