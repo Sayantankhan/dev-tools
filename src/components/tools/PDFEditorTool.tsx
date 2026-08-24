@@ -433,7 +433,19 @@ export const PDFEditorTool = () => {
               {state.totalPages ? ` · ${state.totalPages} page${state.totalPages > 1 ? "s" : ""}` : ""}
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => state.fileInputRef.current?.click()}>
+          <input
+            ref={replaceInputRef}
+            type="file"
+            accept="application/pdf"
+            onChange={handleReplaceFileChange}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg transition-colors duration-150"
+            onClick={() => replaceInputRef.current?.click()}
+          >
             <Upload className="mr-1.5 h-4 w-4" strokeWidth={1.75} />
             Replace
           </Button>
