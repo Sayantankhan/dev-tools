@@ -16,6 +16,7 @@ import {
   ArrowUpToLine, ArrowDownToLine, Undo2, Redo2, Eye, EyeOff,
   Grid3x3, Square, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Eraser, MoreHorizontal
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { PDFCanvasViewer } from "@/components/shared/PDFCanvasViewer";
 import { PDFEditorCanvas } from "@/components/shared/PDFEditorCanvas";
 import { SignaturePad } from "@/components/shared/SignaturePad";
@@ -707,7 +708,7 @@ export const PDFEditorTool = () => {
 
 const Divider = () => <span className="mx-1 h-6 w-px shrink-0 bg-border/70" aria-hidden />;
 
-type BtnIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
+type BtnIcon = LucideIcon;
 
 const ToolBtn = ({
   icon: Icon,
