@@ -729,8 +729,11 @@ export const PDFEditorTool = () => {
                     <DropdownMenuItem onClick={handleSignatureUploadClick}>
                       <Upload className="mr-2 h-4 w-4" strokeWidth={1.75} /> Upload image
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleAddCheckbox}>
-                      <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Checkbox
+                    <DropdownMenuItem onClick={() => handleAddCheckbox('tick')}>
+                      <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Add Tick
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleAddCheckbox('x')}>
+                      <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Add Cross
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleAddMask}>
                       <Eraser className="mr-2 h-4 w-4" strokeWidth={1.75} /> Mask
