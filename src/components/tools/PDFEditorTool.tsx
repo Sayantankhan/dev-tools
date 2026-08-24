@@ -35,6 +35,7 @@ export const PDFEditorTool = () => {
   const [textValue, setTextValue] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [showCheckboxPanel, setShowCheckboxPanel] = useState(false);
   const signatureInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const isResizingSidebar = useRef(false);
