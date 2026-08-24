@@ -35,6 +35,7 @@ export const PDFEditorTool = () => {
   const [textValue, setTextValue] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [showCheckboxPanel, setShowCheckboxPanel] = useState(false);
   const signatureInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const isResizingSidebar = useRef(false);
@@ -209,8 +210,7 @@ export const PDFEditorTool = () => {
     imgEl.src = dataUrl;
   };
 
-  const handleAddCheckbox = () => {
-    // Create checkbox with X mark by default (no box)
+  const handleAddCheckbox = (mark: 'x' | 'tick' = 'x') => {
     const canvas = document.createElement('canvas');
     canvas.width = 40;
     canvas.height = 40;
@@ -218,15 +218,25 @@ export const PDFEditorTool = () => {
     if (ctx) {
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 3;
-      // Draw X (no box)
-      ctx.beginPath();
-      ctx.moveTo(8, 8);
-      ctx.lineTo(32, 32);
-      ctx.moveTo(32, 8);
-      ctx.lineTo(8, 32);
-      ctx.stroke();
+
+      if (mark === 'tick') {
+        // Draw checkmark
+        ctx.beginPath();
+        ctx.moveTo(8, 20);
+        ctx.lineTo(16, 28);
+        ctx.lineTo(32, 12);
+        ctx.stroke();
+      } else {
+        // Draw X
+        ctx.beginPath();
+        ctx.moveTo(8, 8);
+        ctx.lineTo(32, 32);
+        ctx.moveTo(32, 8);
+        ctx.lineTo(8, 32);
+        ctx.stroke();
+      }
     }
-    
+
     const annotation: PDFAnnotation = {
       id: `checkbox-${Date.now()}`,
       type: 'checkbox',
@@ -236,11 +246,11 @@ export const PDFEditorTool = () => {
       width: 40,
       height: 40,
       imageData: canvas.toDataURL(),
-      checkboxState: 'x',
+      checkboxState: mark,
     };
-    
+
     addAnnotation(currentPage, annotation);
-    toast.success("Checkbox added");
+    toast.success(`${mark === 'tick' ? 'Tick' : 'Cross'} mark added`);
   };
 
   const handleCheckboxChange = (newState: 'x' | 'tick') => {
@@ -607,7 +617,27 @@ export const PDFEditorTool = () => {
                   className="hidden"
                 />
                 <SideRow icon={Upload} label="Upload image" onClick={handleSignatureUploadClick} />
-                <SideRow icon={Square} label="Checkbox" onClick={handleAddCheckbox} />
+                <SideRow icon={Square} label="Tick / Cross" active={showCheckboxPanel} onClick={() => setShowCheckboxPanel(!showCheckboxPanel)} />
+                {showCheckboxPanel && (
+                  <Accordion>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAddCheckbox('tick')}
+                        className="flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all duration-150 hover:border-primary/60 hover:bg-primary/10 active:scale-[0.98]"
+                      >
+                        <span aria-hidden>✓</span> Tick
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAddCheckbox('x')}
+                        className="flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all duration-150 hover:border-primary/60 hover:bg-primary/10 active:scale-[0.98]"
+                      >
+                        <span aria-hidden>✗</span> Cross
+                      </button>
+                    </div>
+                  </Accordion>
+                )}
                 <SideRow icon={Eraser} label="Mask" onClick={handleAddMask} />
               </section>
 
@@ -699,8 +729,11 @@ export const PDFEditorTool = () => {
                     <DropdownMenuItem onClick={handleSignatureUploadClick}>
                       <Upload className="mr-2 h-4 w-4" strokeWidth={1.75} /> Upload image
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleAddCheckbox}>
-                      <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Checkbox
+                    <DropdownMenuItem onClick={() => handleAddCheckbox('tick')}>
+                      <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Add Tick
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleAddCheckbox('x')}>
+                      <Square className="mr-2 h-4 w-4" strokeWidth={1.75} /> Add Cross
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleAddMask}>
                       <Eraser className="mr-2 h-4 w-4" strokeWidth={1.75} /> Mask
