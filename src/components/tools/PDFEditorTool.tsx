@@ -291,12 +291,21 @@ export const PDFEditorTool = () => {
   };
 
   const handleBringToFront = () => {
+    const canvas = (selectedObject as any)?.canvas;
+    if (!canvas || !selectedObject) return;
+    canvas.bringObjectToFront?.(selectedObject);
+    canvas.requestRenderAll();
     toast.success("Brought to front");
   };
 
   const handleSendToBack = () => {
+    const canvas = (selectedObject as any)?.canvas;
+    if (!canvas || !selectedObject) return;
+    canvas.sendObjectToBack?.(selectedObject);
+    canvas.requestRenderAll();
     toast.success("Sent to back");
   };
+
 
   const toggleOverlays = () => {
     const newState = !showOverlays;
