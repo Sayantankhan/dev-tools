@@ -37,6 +37,8 @@ export const PDFEditorTool = () => {
   const [showSignaturePad, setShowSignaturePad] = useState(false);
   const signatureInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
+  const isResizingSidebar = useRef(false);
+  const [sidebarWidth, setSidebarWidth] = useState(340);
   const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
   const [showOverlays, setShowOverlays] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
@@ -99,6 +101,32 @@ export const PDFEditorTool = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedObject, currentPage, removeAnnotation, undo, redo]);
+
+  // Sidebar resize
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      if (!isResizingSidebar.current) return;
+      const newWidth = Math.min(Math.max(e.clientX, 260), 520);
+      setSidebarWidth(newWidth);
+    };
+    const handleUp = () => {
+      isResizingSidebar.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, []);
+
+  const startSidebarResize = () => {
+    isResizingSidebar.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
 
   const handleAddText = () => {
     if (!textValue.trim()) return;
@@ -468,7 +496,19 @@ export const PDFEditorTool = () => {
         /* ---------------- Editor: sidebar + canvas ---------------- */
         <div className="flex h-full min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-[hsl(var(--background))]">
           {/* Sidebar */}
-          <aside className="hidden w-[340px] shrink-0 flex-col border-r border-border bg-card md:flex">
+          <aside
+            className="relative hidden shrink-0 flex-col border-r border-border bg-card md:flex"
+            style={{ width: sidebarWidth }}
+          >
+            {/* Resize handle */}
+            <div
+              onMouseDown={startSidebarResize}
+              className="group absolute right-0 top-0 z-10 h-full w-4 cursor-col-resize"
+              aria-label="Resize sidebar"
+              title="Drag to resize"
+            >
+              <div className="absolute right-[5px] top-1/2 h-10 w-1 -translate-y-1/2 rounded-full bg-border transition-colors group-hover:bg-primary/60" />
+            </div>
             {/* File chip + Save */}
             <div className="space-y-3 border-b border-border p-3">
               <div className="flex items-center gap-2.5 rounded-xl border border-border bg-background/60 p-2.5">
