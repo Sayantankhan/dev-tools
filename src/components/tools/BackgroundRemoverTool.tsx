@@ -32,18 +32,13 @@ interface Telemetry {
 /* ---------------- small primitives (scoped to this instrument panel) --------------- */
 
 const Panel = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div
-    className={cn(
-      "rounded-[10px] border border-[#262b2d] bg-[#14181a]",
-      className
-    )}
-  >
-    {children}
-  </div>
+  <div className={cn("rounded-xl border border-border bg-card shadow-sm", className)}>{children}</div>
 );
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#525b58]">{children}</div>
+  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+    {children}
+  </div>
 );
 
 const Toggle = ({
@@ -62,15 +57,15 @@ const Toggle = ({
     aria-checked={checked}
     onClick={() => onChange(!checked)}
     className={cn(
-      "relative h-[18px] w-[32px] shrink-0 rounded-full border transition-colors duration-150",
-      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5eff9e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14181a]",
-      checked ? "border-[#245c3f] bg-[#245c3f]/60" : "border-[#262b2d] bg-[#0c0f0e]"
+      "relative h-5 w-9 shrink-0 rounded-full border transition-colors duration-150",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+      checked ? "border-primary bg-primary" : "border-border bg-muted"
     )}
   >
     <span
       className={cn(
-        "absolute top-1/2 h-[12px] w-[12px] -translate-y-1/2 rounded-full transition-all duration-150",
-        checked ? "left-[16px] bg-[#5eff9e]" : "left-[2px] bg-[#525b58]"
+        "absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full transition-all duration-150",
+        checked ? "left-[18px] bg-primary-foreground" : "left-[3px] bg-muted-foreground"
       )}
     />
   </button>
@@ -92,15 +87,15 @@ const Select = <T extends string>({
       aria-label={ariaLabel}
       value={value}
       onChange={(e) => onChange(e.target.value as T)}
-      className="w-full appearance-none rounded-[8px] border border-[#262b2d] bg-[#0c0f0e] px-2.5 py-1.5 pr-7 font-mono text-[11px] text-[#dfe4e0] outline-none transition focus-visible:border-[#245c3f] focus-visible:ring-2 focus-visible:ring-[#5eff9e]"
+      className="w-full appearance-none rounded-md border border-border bg-input px-3 py-2 pr-8 text-xs text-foreground shadow-sm outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
     >
       {options.map((o) => (
-        <option key={o.value} value={o.value} className="bg-[#14181a]">
+        <option key={o.value} value={o.value} className="bg-popover text-popover-foreground">
           {o.label}
         </option>
       ))}
     </select>
-    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#525b58]" />
+    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
   </div>
 );
 
@@ -113,14 +108,14 @@ const Btn = ({
   <button
     {...props}
     className={cn(
-      "inline-flex items-center justify-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[12px] font-medium transition-colors duration-150",
-      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5eff9e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14181a]",
+      "inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors duration-150",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
       "disabled:cursor-not-allowed disabled:opacity-40",
-      variant === "primary" && "bg-[#5eff9e] text-[#0c0f0e] hover:bg-[#4de88c]",
+      variant === "primary" && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
       variant === "ghost" &&
-        "border border-[#262b2d] bg-[#191e20] text-[#dfe4e0] hover:border-[#245c3f] hover:text-[#5eff9e]",
+        "border border-border bg-secondary text-secondary-foreground hover:border-primary/50 hover:text-primary",
       variant === "danger" &&
-        "border border-[#262b2d] bg-[#191e20] text-[#7c8783] hover:border-[#ff6b6b]/50 hover:bg-[#ff6b6b]/10 hover:text-[#ff6b6b]",
+        "border border-border bg-secondary text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive",
       className
     )}
   >
@@ -144,7 +139,7 @@ const ScopeGraph = ({ p, matte = 0.4 }: { p: number; matte?: number }) => {
   const a = alphaAt(p);
 
   return (
-    <div className="rounded-[8px] border border-[#262b2d] bg-[#0c0f0e] p-2">
+    <div className="rounded-lg border border-border bg-muted/40 p-2">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Alpha response curve">
         {[0, 0.25, 0.5, 0.75, 1].map((g) => (
           <line
@@ -153,34 +148,34 @@ const ScopeGraph = ({ p, matte = 0.4 }: { p: number; matte?: number }) => {
             x2={W - pad}
             y1={y(g)}
             y2={y(g)}
-            stroke="#262b2d"
+            stroke="hsl(var(--border))"
             strokeWidth={g === 0 || g === 1 ? 1 : 0.5}
           />
         ))}
-        <line x1={pad} x2={pad} y1={pad} y2={H - pad} stroke="#262b2d" strokeWidth={1} />
-        <path d={path} fill="none" stroke="#5eff9e" strokeWidth={1.5} />
+        <line x1={pad} x2={pad} y1={pad} y2={H - pad} stroke="hsl(var(--border))" strokeWidth={1} />
+        <path d={path} fill="none" stroke="hsl(var(--primary))" strokeWidth={1.5} />
         <line
           x1={x(p)}
           x2={x(p)}
           y1={pad}
           y2={H - pad}
-          stroke="#5eff9e"
+          stroke="hsl(var(--primary))"
           strokeOpacity={0.4}
           strokeWidth={1}
           strokeDasharray="3 3"
         />
-        <circle cx={x(p)} cy={y(a)} r={3.5} fill="#5eff9e" />
-        <circle cx={x(p)} cy={y(a)} r={7} fill="#5eff9e" fillOpacity={0.15} />
-        <text x={pad} y={H - 3} fill="#525b58" fontSize="7" fontFamily="monospace">p=0</text>
-        <text x={W - pad - 14} y={H - 3} fill="#525b58" fontSize="7" fontFamily="monospace">p=1</text>
+        <circle cx={x(p)} cy={y(a)} r={3.5} fill="hsl(var(--primary))" />
+        <circle cx={x(p)} cy={y(a)} r={7} fill="hsl(var(--primary))" fillOpacity={0.15} />
+        <text x={pad} y={H - 3} fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">p=0</text>
+        <text x={W - pad - 14} y={H - 3} fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">p=1</text>
       </svg>
-      <div className="mt-1 text-center font-mono text-[10px] text-[#7c8783]">
-        α at matte={matte.toFixed(1)} →{" "}
-        <span className="text-[#5eff9e]">{a.toFixed(3)}</span>
+      <div className="mt-1 text-center font-mono text-[10px] text-muted-foreground">
+        α at matte={matte.toFixed(1)} → <span className="text-primary">{a.toFixed(3)}</span>
       </div>
     </div>
   );
 };
+
 
 /* -------------------------------- tool -------------------------------- */
 
@@ -470,302 +465,256 @@ export const BackgroundRemoverTool = () => {
   const dims = originalCanvas ? `${originalCanvas.width}×${originalCanvas.height}` : "—";
 
   return (
-    <div className="min-h-full bg-[#0c0f0e] text-[#dfe4e0]">
-      <div
-        className="min-h-full w-full px-4 py-5 md:px-6"
-        style={{
-          backgroundImage:
-            "radial-gradient(60rem 32rem at 0% 0%, rgba(94,255,158,0.06), transparent 60%)",
-        }}
-      >
-        {/* Title */}
-        <div className="mb-4">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#525b58]">
+    <div className="flex h-full min-h-full flex-col gap-4 bg-background text-foreground">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             image &amp; media / segmentation
           </div>
-          <h1 className="mt-1 text-lg font-semibold tracking-tight text-[#dfe4e0]">BG Remover</h1>
+          <h1 className="mt-1 text-xl font-semibold tracking-tight">BG Remover</h1>
         </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 font-mono text-[10px]">
+            <span className={cn("h-1.5 w-1.5 rounded-full", originalCanvas ? "bg-primary" : "bg-muted-foreground")} />
+            {originalCanvas ? "ready" : "idle"}
+          </span>
+          <span className="font-mono text-[10px]">{dims}</span>
+        </div>
+      </div>
 
-        {/* Two-column grid */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[300px_minmax(0,1fr)]">
-          {/* LEFT */}
-          <div className="flex flex-col gap-3">
-            {/* Upload panel */}
-            <Panel className="p-3">
-              <SectionLabel>Source</SectionLabel>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessing}
-                className={cn(
-                  "mt-2 flex w-full flex-col items-center justify-center gap-1 rounded-[8px] border border-dashed px-3 py-5 transition-colors duration-150",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5eff9e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14181a]",
-                  selectedFile
-                    ? "border-[#245c3f] bg-[#245c3f]/10"
-                    : "border-[#262b2d] bg-[#0c0f0e] hover:border-[#245c3f]"
-                )}
-              >
-                <Upload className="h-4 w-4 text-[#5eff9e]" strokeWidth={1.75} />
-                {selectedFile ? (
-                  <>
-                    <span className="max-w-full truncate font-mono text-[11px] text-[#dfe4e0]">
-                      {selectedFile.name}
-                    </span>
-                    <span className="text-[10px] text-[#7c8783]">click to replace</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-[12px] font-medium text-[#dfe4e0]">
-                      {isProcessing ? "Processing…" : "Select image"}
-                    </span>
-                    <span className="font-mono text-[10px] text-[#525b58]">PNG · JPG · WEBP</span>
-                  </>
-                )}
-              </button>
-
-              {isDownloading && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between font-mono text-[10px] text-[#7c8783]">
-                    <span>downloading model</span>
-                    <span className="text-[#5eff9e]">
-                      {Math.round(Math.min(downloadProgress, 100))}%
-                    </span>
-                  </div>
-                  <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[#0c0f0e]">
-                    <div
-                      className="h-full rounded-full bg-[#5eff9e] transition-all"
-                      style={{ width: `${Math.min(downloadProgress, 100)}%` }}
-                    />
-                  </div>
-                </div>
+      {/* Main grid */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+        {/* LEFT */}
+        <div className="flex min-h-0 flex-col gap-4 lg:overflow-y-auto">
+          <Panel className="p-4">
+            <SectionLabel>Source</SectionLabel>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              className={cn(
+                "mt-2 flex w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-3 py-6 transition-colors duration-150",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                selectedFile
+                  ? "border-primary/60 bg-primary/5"
+                  : "border-border bg-muted/40 hover:border-primary/50 hover:bg-muted"
               )}
+            >
+              <Upload className="h-5 w-5 text-primary" strokeWidth={1.75} />
+              {selectedFile ? (
+                <>
+                  <span className="max-w-full truncate font-mono text-[11px]">{selectedFile.name}</span>
+                  <span className="text-[11px] text-muted-foreground">Click to replace</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm font-medium">
+                    {isProcessing ? "Processing…" : "Select an image"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">PNG · JPG · WEBP</span>
+                </>
+              )}
+            </button>
 
-              <div className="mt-3 space-y-1.5">
-                <SectionLabel>AI model</SectionLabel>
-                <Select
-                  ariaLabel="AI model"
-                  value={selectedModel}
-                  onChange={(v) => setSelectedModel(v as ModelId)}
-                  options={Object.entries(MODELS).map(([id, m]) => ({
-                    value: id as ModelId,
-                    label: `${m.name} · ${m.speed} · ${m.quality}`,
-                  }))}
-                />
+            {isDownloading && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
+                  <span>downloading model</span>
+                  <span className="text-primary">{Math.round(Math.min(downloadProgress, 100))}%</span>
+                </div>
+                <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${Math.min(downloadProgress, 100)}%` }}
+                  />
+                </div>
               </div>
-            </Panel>
+            )}
 
-            {/* Controls panel */}
-            <Panel className="p-3">
-              <div className="flex items-center justify-between">
-                <SectionLabel>Background removal</SectionLabel>
-                <span className="font-mono text-[11px] text-[#5eff9e]">
-                  {bgRemovalPercent[0]}%
-                </span>
-              </div>
-
-              <input
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={bgRemovalPercent[0]}
-                disabled={isProcessing}
-                onChange={(e) => handleSliderChange([parseInt(e.target.value, 10)])}
-                aria-label="Background removal percentage"
-                className="bgr-slider mt-3 w-full"
-                style={
-                  {
-                    "--fill": `${bgRemovalPercent[0]}%`,
-                  } as React.CSSProperties
-                }
+            <div className="mt-4 space-y-1.5">
+              <SectionLabel>AI model</SectionLabel>
+              <Select
+                ariaLabel="AI model"
+                value={selectedModel}
+                onChange={(v) => setSelectedModel(v as ModelId)}
+                options={Object.entries(MODELS).map(([id, m]) => ({
+                  value: id as ModelId,
+                  label: `${m.name} · ${m.speed} · ${m.quality}`,
+                }))}
               />
+            </div>
+          </Panel>
 
-              <div className="mt-4 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="mask-overlay" className="text-[12px] text-[#7c8783]">
-                    Mask overlay
-                  </label>
-                  <Toggle id="mask-overlay" checked={showMaskOverlay} onChange={setShowMaskOverlay} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="transparent-bg" className="text-[12px] text-[#7c8783]">
-                    Transparent preview
-                  </label>
-                  <Toggle id="transparent-bg" checked={showTransparent} onChange={setShowTransparent} />
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-1.5">
-                <SectionLabel>Export format</SectionLabel>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <Select
-                      ariaLabel="Export format"
-                      value={exportFormat}
-                      onChange={(v) => setExportFormat(v as ExportFormat)}
-                      options={[
-                        { value: "png", label: "PNG · transparent" },
-                        { value: "jpg", label: "JPG · fill color" },
-                        { value: "webp", label: "WEBP · transparent" },
-                        { value: "svg", label: "SVG · embedded" },
-                      ]}
-                    />
-                  </div>
-                  {exportFormat === "jpg" && (
-                    <input
-                      aria-label="JPG fill color"
-                      type="color"
-                      value={jpgFillColor}
-                      onChange={(e) => setJpgFillColor(e.target.value)}
-                      className="h-8 w-9 cursor-pointer rounded-[8px] border border-[#262b2d] bg-[#0c0f0e] p-0.5"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <Btn variant="ghost" onClick={handleReset} disabled={!originalCanvas}>
-                  <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.75} /> Reset
-                </Btn>
-                <Btn variant="danger" onClick={handleClear} disabled={!selectedFile}>
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} /> Clear
-                </Btn>
-                <Btn variant="primary" onClick={handleExport} disabled={!originalCanvas}>
-                  <Download className="h-3.5 w-3.5" strokeWidth={1.75} /> Export
-                </Btn>
-              </div>
-            </Panel>
-          </div>
-
-          {/* RIGHT */}
-          <Panel className="flex flex-col overflow-hidden bg-[#191e20]">
-            {/* toolbar */}
-            <div className="flex items-center justify-between border-b border-[#262b2d] px-3 py-2">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    originalCanvas ? "bg-[#5eff9e]" : "bg-[#525b58]"
-                  )}
-                />
-                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#7c8783]">
-                  live preview
-                </span>
-              </div>
-              <span className="font-mono text-[10px] text-[#525b58]">{dims}</span>
+          <Panel className="p-4">
+            <div className="flex items-center justify-between">
+              <SectionLabel>Background removal</SectionLabel>
+              <span className="font-mono text-xs font-medium text-primary">{bgRemovalPercent[0]}%</span>
             </div>
 
-            {/* preview */}
-            <div className="flex h-[360px] items-center justify-center bg-[#0c0f0e] p-3">
-              <div
-                className="flex h-full w-full items-center justify-center rounded-[8px]"
-                style={
-                  showTransparent
-                    ? {
-                        backgroundImage:
-                          "linear-gradient(45deg, #1b2022 25%, transparent 25%), linear-gradient(-45deg, #1b2022 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1b2022 75%), linear-gradient(-45deg, transparent 75%, #1b2022 75%)",
-                        backgroundSize: "16px 16px",
-                        backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
-                        backgroundColor: "#121617",
-                      }
-                    : { backgroundColor: "#f0f0f0" }
-                }
-              >
-                <canvas
-                  ref={canvasRef}
-                  className={cn(
-                    "max-h-full max-w-full object-contain",
-                    !originalCanvas && "hidden"
-                  )}
-                />
-                {!originalCanvas && (
-                  <span className="font-mono text-[11px] text-[#525b58]">no signal</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={bgRemovalPercent[0]}
+              disabled={isProcessing}
+              onChange={(e) => handleSliderChange([parseInt(e.target.value, 10)])}
+              aria-label="Background removal percentage"
+              className="bgr-slider mt-3 w-full"
+              style={{ "--fill": `${bgRemovalPercent[0]}%` } as React.CSSProperties}
+            />
+
+            <div className="mt-4 space-y-3 border-t border-border pt-4">
+              <div className="flex items-center justify-between">
+                <label htmlFor="mask-overlay" className="text-xs text-muted-foreground">
+                  Mask overlay
+                </label>
+                <Toggle id="mask-overlay" checked={showMaskOverlay} onChange={setShowMaskOverlay} />
+              </div>
+              <div className="flex items-center justify-between">
+                <label htmlFor="transparent-bg" className="text-xs text-muted-foreground">
+                  Transparent preview
+                </label>
+                <Toggle id="transparent-bg" checked={showTransparent} onChange={setShowTransparent} />
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-1.5 border-t border-border pt-4">
+              <SectionLabel>Export format</SectionLabel>
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Select
+                    ariaLabel="Export format"
+                    value={exportFormat}
+                    onChange={(v) => setExportFormat(v as ExportFormat)}
+                    options={[
+                      { value: "png", label: "PNG · transparent" },
+                      { value: "jpg", label: "JPG · fill color" },
+                      { value: "webp", label: "WEBP · transparent" },
+                      { value: "svg", label: "SVG · embedded" },
+                    ]}
+                  />
+                </div>
+                {exportFormat === "jpg" && (
+                  <input
+                    aria-label="JPG fill color"
+                    type="color"
+                    value={jpgFillColor}
+                    onChange={(e) => setJpgFillColor(e.target.value)}
+                    className="h-9 w-10 cursor-pointer rounded-md border border-border bg-input p-0.5"
+                  />
                 )}
               </div>
             </div>
 
-            {/* footer */}
-            <div className="flex items-center justify-between border-t border-[#262b2d] px-3 py-2">
-              <span className="font-mono text-[10px] text-[#7c8783]">
-                model: <span className="text-[#dfe4e0]">{MODELS[selectedModel].name}</span>
-              </span>
-              <span className="font-mono text-[10px] text-[#7c8783]">
-                inference:{" "}
-                <span className="text-[#5eff9e]">
-                  {telemetry.inferenceTimeMs ? `${telemetry.inferenceTimeMs}ms` : "—"}
-                </span>
-              </span>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <Btn variant="ghost" onClick={handleReset} disabled={!originalCanvas}>
+                <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.75} /> Reset
+              </Btn>
+              <Btn variant="danger" onClick={handleClear} disabled={!selectedFile}>
+                <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} /> Clear
+              </Btn>
+              <Btn variant="primary" onClick={handleExport} disabled={!originalCanvas}>
+                <Download className="h-3.5 w-3.5" strokeWidth={1.75} /> Export
+              </Btn>
             </div>
+          </Panel>
+
+          {/* Mask math */}
+          <Panel>
+            <button
+              type="button"
+              onClick={() => setMathOpen((o) => !o)}
+              aria-expanded={mathOpen}
+              className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="text-xs font-medium">Mask math</span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150",
+                  mathOpen && "rotate-180"
+                )}
+                strokeWidth={1.75}
+              />
+            </button>
+
+            {mathOpen && (
+              <div className="space-y-3 border-t border-border p-4">
+                <div className="rounded-md border border-border bg-muted/40 px-2 py-1 text-center font-mono text-[11px] text-primary">
+                  α = 1 − (1 − matte) × p
+                </div>
+                <ScopeGraph p={p} matte={0.4} />
+                <ul className="space-y-2 text-[11px] leading-relaxed text-muted-foreground">
+                  {[
+                    "0% removes nothing (α = 1 everywhere) → exact original",
+                    "100% removes all background (α = matte) → complete removal",
+                    "Deterministic: same p always yields the same result",
+                    "No cumulative processing — always computed vs. the original",
+                  ].map((item) => (
+                    <li key={item} className="flex gap-2.5">
+                      <span className="mt-[8px] h-px w-2.5 shrink-0 bg-primary/60" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </Panel>
         </div>
 
-        {/* Mask math */}
-        <Panel className="mt-3">
-          <button
-            type="button"
-            onClick={() => setMathOpen((o) => !o)}
-            aria-expanded={mathOpen}
-            className="flex w-full items-center justify-between gap-3 rounded-[10px] px-3 py-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5eff9e]"
-          >
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className="text-[12px] font-medium text-[#dfe4e0]">Mask math</span>
-              <span className="truncate rounded-full border border-[#245c3f] bg-[#245c3f]/20 px-2 py-0.5 font-mono text-[10px] text-[#5eff9e]">
-                α = 1 − (1 − matte) × p
-              </span>
-            </div>
-            <ChevronDown
+        {/* RIGHT — preview */}
+        <Panel className="flex min-h-[420px] flex-col overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              live preview
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {MODELS[selectedModel].name}
+            </span>
+          </div>
+
+          <div className="flex min-h-0 flex-1 items-center justify-center bg-muted/30 p-4">
+            <div
               className={cn(
-                "h-4 w-4 shrink-0 text-[#7c8783] transition-transform duration-150",
-                mathOpen && "rotate-180"
+                "flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-border",
+                showTransparent ? "bg-checkered" : "bg-background"
               )}
-              strokeWidth={1.75}
-            />
-          </button>
-
-          {mathOpen && (
-            <div className="grid grid-cols-1 gap-4 border-t border-[#262b2d] p-3 md:grid-cols-[minmax(0,1fr)_280px]">
-              <ul className="space-y-2 text-[12px] text-[#7c8783]">
-                {[
-                  <>0% removes nothing (α = 1 everywhere) → exact original</>,
-                  <>100% removes all background (α = matte) → complete removal</>,
-                  <>Deterministic: same p always yields the same result from the original</>,
-                  <>Preserves relative confidence ordering in the mask</>,
-                  <>No cumulative processing — always computed vs. the original</>,
-                ].map((item, i) => (
-                  <li key={i} className="flex gap-2.5">
-                    <span className="mt-[9px] h-px w-2.5 shrink-0 bg-[#245c3f]" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-                <li className="flex gap-2.5">
-                  <span className="mt-[9px] h-px w-2.5 shrink-0 bg-[#245c3f]" />
-                  <span>
-                    Where{" "}
-                    <code className="rounded border border-[#245c3f] bg-[#245c3f]/20 px-1 py-0.5 font-mono text-[10px] text-[#5eff9e]">
-                      matte ∈ [0,1]
-                    </code>{" "}
-                    (0 = background, 1 = foreground) and{" "}
-                    <code className="rounded border border-[#245c3f] bg-[#245c3f]/20 px-1 py-0.5 font-mono text-[10px] text-[#5eff9e]">
-                      p ∈ [0,1]
-                    </code>{" "}
-                    from the slider.
-                  </span>
-                </li>
-              </ul>
-
-              <ScopeGraph p={p} matte={0.4} />
+            >
+              <canvas
+                ref={canvasRef}
+                className={cn("max-h-full max-w-full object-contain", !originalCanvas && "hidden")}
+              />
+              {!originalCanvas && (
+                <span className="text-xs text-muted-foreground">
+                  Upload an image to see the preview
+                </span>
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {isProcessing ? "processing…" : "idle"}
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              inference:{" "}
+              <span className="text-primary">
+                {telemetry.inferenceTimeMs ? `${telemetry.inferenceTimeMs}ms` : "—"}
+              </span>
+            </span>
+          </div>
         </Panel>
       </div>
     </div>
+
   );
 };
 
