@@ -32,18 +32,13 @@ interface Telemetry {
 /* ---------------- small primitives (scoped to this instrument panel) --------------- */
 
 const Panel = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <div
-    className={cn(
-      "rounded-[10px] border border-[#262b2d] bg-[#14181a]",
-      className
-    )}
-  >
-    {children}
-  </div>
+  <div className={cn("rounded-xl border border-border bg-card shadow-sm", className)}>{children}</div>
 );
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#525b58]">{children}</div>
+  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+    {children}
+  </div>
 );
 
 const Toggle = ({
@@ -62,15 +57,15 @@ const Toggle = ({
     aria-checked={checked}
     onClick={() => onChange(!checked)}
     className={cn(
-      "relative h-[18px] w-[32px] shrink-0 rounded-full border transition-colors duration-150",
-      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5eff9e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14181a]",
-      checked ? "border-[#245c3f] bg-[#245c3f]/60" : "border-[#262b2d] bg-[#0c0f0e]"
+      "relative h-5 w-9 shrink-0 rounded-full border transition-colors duration-150",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+      checked ? "border-primary bg-primary" : "border-border bg-muted"
     )}
   >
     <span
       className={cn(
-        "absolute top-1/2 h-[12px] w-[12px] -translate-y-1/2 rounded-full transition-all duration-150",
-        checked ? "left-[16px] bg-[#5eff9e]" : "left-[2px] bg-[#525b58]"
+        "absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full transition-all duration-150",
+        checked ? "left-[18px] bg-primary-foreground" : "left-[3px] bg-muted-foreground"
       )}
     />
   </button>
@@ -92,15 +87,15 @@ const Select = <T extends string>({
       aria-label={ariaLabel}
       value={value}
       onChange={(e) => onChange(e.target.value as T)}
-      className="w-full appearance-none rounded-[8px] border border-[#262b2d] bg-[#0c0f0e] px-2.5 py-1.5 pr-7 font-mono text-[11px] text-[#dfe4e0] outline-none transition focus-visible:border-[#245c3f] focus-visible:ring-2 focus-visible:ring-[#5eff9e]"
+      className="w-full appearance-none rounded-md border border-border bg-input px-3 py-2 pr-8 text-xs text-foreground shadow-sm outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
     >
       {options.map((o) => (
-        <option key={o.value} value={o.value} className="bg-[#14181a]">
+        <option key={o.value} value={o.value} className="bg-popover text-popover-foreground">
           {o.label}
         </option>
       ))}
     </select>
-    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#525b58]" />
+    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
   </div>
 );
 
@@ -113,14 +108,14 @@ const Btn = ({
   <button
     {...props}
     className={cn(
-      "inline-flex items-center justify-center gap-1.5 rounded-[8px] px-3 py-1.5 text-[12px] font-medium transition-colors duration-150",
-      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5eff9e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14181a]",
+      "inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors duration-150",
+      "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
       "disabled:cursor-not-allowed disabled:opacity-40",
-      variant === "primary" && "bg-[#5eff9e] text-[#0c0f0e] hover:bg-[#4de88c]",
+      variant === "primary" && "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
       variant === "ghost" &&
-        "border border-[#262b2d] bg-[#191e20] text-[#dfe4e0] hover:border-[#245c3f] hover:text-[#5eff9e]",
+        "border border-border bg-secondary text-secondary-foreground hover:border-primary/50 hover:text-primary",
       variant === "danger" &&
-        "border border-[#262b2d] bg-[#191e20] text-[#7c8783] hover:border-[#ff6b6b]/50 hover:bg-[#ff6b6b]/10 hover:text-[#ff6b6b]",
+        "border border-border bg-secondary text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive",
       className
     )}
   >
@@ -144,7 +139,7 @@ const ScopeGraph = ({ p, matte = 0.4 }: { p: number; matte?: number }) => {
   const a = alphaAt(p);
 
   return (
-    <div className="rounded-[8px] border border-[#262b2d] bg-[#0c0f0e] p-2">
+    <div className="rounded-lg border border-border bg-muted/40 p-2">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Alpha response curve">
         {[0, 0.25, 0.5, 0.75, 1].map((g) => (
           <line
@@ -153,34 +148,34 @@ const ScopeGraph = ({ p, matte = 0.4 }: { p: number; matte?: number }) => {
             x2={W - pad}
             y1={y(g)}
             y2={y(g)}
-            stroke="#262b2d"
+            stroke="hsl(var(--border))"
             strokeWidth={g === 0 || g === 1 ? 1 : 0.5}
           />
         ))}
-        <line x1={pad} x2={pad} y1={pad} y2={H - pad} stroke="#262b2d" strokeWidth={1} />
-        <path d={path} fill="none" stroke="#5eff9e" strokeWidth={1.5} />
+        <line x1={pad} x2={pad} y1={pad} y2={H - pad} stroke="hsl(var(--border))" strokeWidth={1} />
+        <path d={path} fill="none" stroke="hsl(var(--primary))" strokeWidth={1.5} />
         <line
           x1={x(p)}
           x2={x(p)}
           y1={pad}
           y2={H - pad}
-          stroke="#5eff9e"
+          stroke="hsl(var(--primary))"
           strokeOpacity={0.4}
           strokeWidth={1}
           strokeDasharray="3 3"
         />
-        <circle cx={x(p)} cy={y(a)} r={3.5} fill="#5eff9e" />
-        <circle cx={x(p)} cy={y(a)} r={7} fill="#5eff9e" fillOpacity={0.15} />
-        <text x={pad} y={H - 3} fill="#525b58" fontSize="7" fontFamily="monospace">p=0</text>
-        <text x={W - pad - 14} y={H - 3} fill="#525b58" fontSize="7" fontFamily="monospace">p=1</text>
+        <circle cx={x(p)} cy={y(a)} r={3.5} fill="hsl(var(--primary))" />
+        <circle cx={x(p)} cy={y(a)} r={7} fill="hsl(var(--primary))" fillOpacity={0.15} />
+        <text x={pad} y={H - 3} fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">p=0</text>
+        <text x={W - pad - 14} y={H - 3} fill="hsl(var(--muted-foreground))" fontSize="7" fontFamily="monospace">p=1</text>
       </svg>
-      <div className="mt-1 text-center font-mono text-[10px] text-[#7c8783]">
-        α at matte={matte.toFixed(1)} →{" "}
-        <span className="text-[#5eff9e]">{a.toFixed(3)}</span>
+      <div className="mt-1 text-center font-mono text-[10px] text-muted-foreground">
+        α at matte={matte.toFixed(1)} → <span className="text-primary">{a.toFixed(3)}</span>
       </div>
     </div>
   );
 };
+
 
 /* -------------------------------- tool -------------------------------- */
 
