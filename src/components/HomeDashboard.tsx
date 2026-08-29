@@ -32,12 +32,13 @@ const descriptions: Record<string, string> = {
   "cron-generator": "Build cron expressions",
   "regex-explainer": "Explain regex patterns",
   "traffic-simulator": "Simulate distributed system traffic",
+  "http-playground": "Learn HTTP: chunks, streams, SSE, polling",
   hexscope: "H3 hexagonal grid heatmap explorer",
 };
 
 const categories: { name: string; ids: ToolId[] }[] = [
   { name: "Data & Encoding", ids: ["json", "encoder", "data-converter", "log-parser"] },
-  { name: "API & Network", ids: ["api", "jwt", "ip-lookup", "search"] },
+  { name: "API & Network", ids: ["api", "jwt", "ip-lookup", "search", "http-playground"] },
   { name: "Text & Code", ids: ["text-compare", "js-editor", "regex-explainer"] },
   { name: "Images & Media", ids: ["image", "bg-remover"] },
   { name: "Documents", ids: ["pdf-editor", "pdf-generator"] },
