@@ -852,6 +852,7 @@ function SSESection() {
   const connect = (max = 20) => {
     disconnect(false);
     setState("connecting");
+    openedOnce.current = false;
     const es = new EventSource(withKey(`${ENDPOINTS.sse}?interval=1000&max=${max}&retry=3000`));
     esRef.current = es;
     setReadyState(es.readyState);
@@ -861,6 +862,7 @@ function SSESection() {
       openedOnce.current = true;
       setState("active");
       setReadyState(es.readyState);
+      push("open", "connection established (readyState 1)");
     };
     es.onerror = () => {
       setReadyState(es.readyState);
@@ -872,7 +874,7 @@ function SSESection() {
         push("reconnecting", "connection dropped — EventSource is retrying automatically");
       }
     };
-    ["open", "tick", "metric", "message", "done"].forEach((name) => {
+    ["tick", "metric", "message", "done"].forEach((name) => {
       es.addEventListener(name, (ev) => {
         const me = ev as MessageEvent;
         push(name, me.data, me.lastEventId);
