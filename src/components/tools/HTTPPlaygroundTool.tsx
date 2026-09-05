@@ -1128,7 +1128,9 @@ function SSESection() {
 /* 5. Polling                                                           */
 /* ------------------------------------------------------------------ */
 
-type PollEntry = { n: number; status: string; startedAt: number; ms: number | null };
+type PollEntry = { n: number; status: string; startedAt: number; ms: number | null; result?: string | null };
+
+const DEFAULT_JOB_PAYLOAD = `{ "job": "export-report", "rows": 5000 }`;
 
 function PollingSection() {
   const [shortState, setShortState] = useState<RunState>("idle");
@@ -1136,6 +1138,7 @@ function PollingSection() {
   const [interval_, setInterval_] = useState(2000);
   const [shortLog, setShortLog] = useState<PollEntry[]>([]);
   const [longLog, setLongLog] = useState<PollEntry[]>([]);
+  const [payload, setPayload] = useState(DEFAULT_JOB_PAYLOAD);
   const [now, setNow] = useState(Date.now());
 
   const shortTimer = useRef<number | null>(null);
@@ -1145,6 +1148,15 @@ function PollingSection() {
   const longAbort = useRef<AbortController | null>(null);
   const t0Short = useRef(0);
   const t0Long = useRef(0);
+  const payloadRef = useRef(payload);
+  payloadRef.current = payload;
+
+  const jobInit = (signal?: AbortSignal): RequestInit => ({
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: payloadRef.current,
+    signal,
+  });
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 100);
@@ -1160,10 +1172,19 @@ function PollingSection() {
     try {
       const res = await fetch(
         withKey(`${ENDPOINTS.job}?mode=short&attempt=${n}&threshold=6`),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payloadRef.current,
+        },
       );
       const data = await res.json();
       setShortLog((l) =>
-        l.map((e) => (e.n === n ? { ...e, status: data.status, ms: Math.round(performance.now() - startedAt) } : e)),
+        l.map((e) =>
+          e.n === n
+            ? { ...e, status: data.status, ms: Math.round(performance.now() - startedAt), result: data.result }
+            : e,
+        ),
       );
       if (data.status === "done") stopShort("done");
     } catch {
@@ -1200,11 +1221,12 @@ function PollingSection() {
       try {
         const res = await fetch(
           withKey(`${ENDPOINTS.job}?mode=long&attempt=${n}&threshold=3&timeout=15000`),
-          { signal: ac.signal },
+          jobInit(ac.signal),
         );
         const data = await res.json();
         const ms = Math.round(performance.now() - startedAt);
-        setLongLog((l) => l.map((e) => (e.n === n ? { ...e, status: data.status, ms } : e)));
+        setLongLog((l) => l.map((e) => (e.n === n ? { ...e, status: data.status, ms, result: data.result } : e)));
+
         if (data.status === "done") {
           longRunning.current = false;
           setLongState("done");
