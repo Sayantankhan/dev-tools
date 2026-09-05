@@ -855,6 +855,16 @@ function StreamingSection() {
         complete body before showing anything.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your payload — both panels send this same text"
+        rows={5}
+        disabled={state === "active" || state === "connecting"}
+        hint="Identical data, identical total time — only the time to first visible content differs."
+      />
+
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
         <Btn variant="primary" onClick={start} disabled={state === "active" || state === "connecting"}>
           <Waves className="h-3.5 w-3.5" /> Start stream
