@@ -756,17 +756,15 @@ function StreamingSection() {
     const ac = new AbortController();
     abortRef.current = ac;
     const t0 = performance.now();
-    const post = (extra: string) => ({
+    const post = (): RequestInit => ({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: payload }),
       signal: ac.signal,
-      _url: extra,
     });
 
     const streamed = (async () => {
-      const o = post("");
-      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250`), o);
+      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250`), post());
       setState("active");
       const reader = res.body!.getReader();
       const dec = new TextDecoder();
@@ -783,7 +781,7 @@ function StreamingSection() {
     const buffered = (async () => {
       if (!compare) return;
       setBufferedLoading(true);
-      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250&buffered=1`), post(""));
+      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250&buffered=1`), post());
       const text = await res.text();
       setFirstBuffered(Math.round(performance.now() - t0));
       setBufferedText(text);
