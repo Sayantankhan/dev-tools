@@ -924,11 +924,20 @@ type SSEEvent = { id: string; name: string; data: string; at: string };
 
 const READY_LABEL = ["CONNECTING", "OPEN", "CLOSED"];
 
+const DEFAULT_SSE_PAYLOAD = `deploy started
+building bundle
+running tests
+uploading assets
+deploy finished`;
+
 function SSESection() {
   const [state, setState] = useState<RunState>("idle");
   const [readyState, setReadyState] = useState<number | null>(null);
   const [events, setEvents] = useState<SSEEvent[]>([]);
   const [reconnects, setReconnects] = useState(0);
+  const [payload, setPayload] = useState(DEFAULT_SSE_PAYLOAD);
+  const [eventName, setEventName] = useState("message");
+  const [interval_, setInterval_] = useState(1000);
   const esRef = useRef<EventSource | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const openedOnce = useRef(false);
@@ -940,13 +949,21 @@ function SSESection() {
   const push = (name: string, data: string, id = "") =>
     setEvents((e) => [...e.slice(-200), { id, name, data, at: new Date().toLocaleTimeString([], { hour12: false }) + "." + String(Date.now() % 1000).padStart(3, "0") }]);
 
-  const connect = (max = 20) => {
+  const connect = (limit?: number) => {
     disconnect(false);
     setState("connecting");
     openedOnce.current = false;
-    const es = new EventSource(withKey(`${ENDPOINTS.sse}?interval=1000&max=${max}&retry=3000`));
+    const lines = payload.split("\n").map((l) => l.trimEnd()).filter((l) => l.trim().length > 0);
+    const used = limit ? lines.slice(0, limit) : lines;
+    const name = eventName.trim() || "message";
+    const params = new URLSearchParams({ interval: String(interval_), retry: "3000", event: name });
+    if (used.length) params.set("text", used.join("\n"));
+    else params.set("max", String(limit ?? 20));
+    const es = new EventSource(withKey(`${ENDPOINTS.sse}?${params.toString()}`));
     esRef.current = es;
     setReadyState(es.readyState);
+
+
 
     es.onopen = () => {
       if (openedOnce.current) setReconnects((r) => r + 1);
