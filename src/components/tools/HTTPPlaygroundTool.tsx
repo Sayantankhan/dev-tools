@@ -1316,6 +1316,16 @@ function PollingSection() {
         until something happens — then the client immediately re-asks.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your job payload (sent with every poll)"
+        rows={3}
+        placeholder='{ "job": "export-report" }'
+        hint="Both pollers POST this body to the job endpoint; when the job finishes the server echoes back what it processed."
+      />
+
+
       <div className="grid gap-4 lg:grid-cols-2">
         {/* short */}
         <div className="rounded-xl border border-border/60 bg-card p-4">
