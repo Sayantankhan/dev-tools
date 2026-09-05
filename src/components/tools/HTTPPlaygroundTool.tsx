@@ -1378,6 +1378,15 @@ function PollingSection() {
                 </div>
               ))
             )}
+            {shortLog.at(-1)?.result && (
+              <div className="mt-2 break-all rounded-md border border-border/40 bg-card p-2 text-[11px] text-foreground/80">
+                {shortLog.at(-1)!.result}
+              </div>
+            )}
+            {false && (
+              <div />
+              ))
+            )}
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Stat label="Requests sent" value={shortLog.length} />
@@ -1430,6 +1439,11 @@ function PollingSection() {
                       </span>
                       <span className="text-muted-foreground">{shown}ms held</span>
                     </div>
+                    {e.result && (
+                      <div className="mt-1 break-all rounded-md border border-border/40 bg-card p-2 text-[11px] text-foreground/80">
+                        {e.result}
+                      </div>
+                    )}
                     <div className="mt-1 h-2 rounded-full bg-secondary">
                       <div
                         className={cn(
