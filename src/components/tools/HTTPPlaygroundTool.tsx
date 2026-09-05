@@ -591,6 +591,14 @@ function ChunkedSection() {
         finishes. With chunked encoding it can start sending immediately and keep appending.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your payload — one line per chunk"
+        disabled={state === "active" || state === "connecting"}
+        hint="This text is POSTed to the edge function, which streams it back one line at a time. Clear the box to fall back to the sample text."
+      />
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
         <Btn variant="primary" onClick={start} disabled={state === "active" || state === "connecting"}>
           <Play className="h-3.5 w-3.5" /> Start
@@ -598,17 +606,20 @@ function ChunkedSection() {
         <Btn onClick={() => reset()} disabled={state !== "active"}>
           <Square className="h-3.5 w-3.5" /> Stop
         </Btn>
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          Chunks
-          <input
-            type="number"
-            min={1}
-            max={40}
-            value={count}
-            onChange={(e) => setCount(Number(e.target.value))}
-            className="w-16 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
-          />
-        </label>
+        {!usePayload && (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            Sample chunks
+            <input
+              type="number"
+              min={1}
+              max={40}
+              value={count}
+              onChange={(e) => setCount(Number(e.target.value))}
+              className="w-16 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+            />
+          </label>
+        )}
+
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
           Delay (ms)
           <input
