@@ -446,10 +446,60 @@ function MethodsSection() {
 }
 
 /* ------------------------------------------------------------------ */
+/* User payload editor                                                  */
+/* ------------------------------------------------------------------ */
+
+function PayloadBox({
+  value,
+  onChange,
+  label = "Your payload",
+  hint,
+  placeholder = "One line per chunk…",
+  rows = 4,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label?: string;
+  hint?: React.ReactNode;
+  placeholder?: string;
+  rows?: number;
+  disabled?: boolean;
+}) {
+  const lines = value.split("\n").filter((l) => l.trim().length > 0).length;
+  return (
+    <div className="rounded-xl border border-border/60 bg-card p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">
+          {lines} line{lines === 1 ? "" : "s"} · {value.length} chars
+        </span>
+      </div>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
+        disabled={disabled}
+        placeholder={placeholder}
+        spellCheck={false}
+        className="w-full resize-y rounded-lg border border-border bg-input p-3 font-mono text-xs leading-relaxed text-foreground outline-none transition-colors focus:border-primary/50 disabled:opacity-60"
+      />
+      {hint && <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* 2. Chunked transfer-encoding                                         */
 /* ------------------------------------------------------------------ */
 
 type Chunk = { i: number; bytes: number; text: string; at: number };
+
+
+const DEFAULT_CHUNK_PAYLOAD = `Hello from my own payload
+Each line here is sent as a separate chunk
+Edit this text and press Start
+The last line closes the response`;
 
 function ChunkedSection() {
   const [state, setState] = useState<RunState>("idle");
@@ -457,8 +507,10 @@ function ChunkedSection() {
   const [headers, setHeaders] = useState<[string, string][]>([]);
   const [delay, setDelay] = useState(400);
   const [count, setCount] = useState(8);
+  const [payload, setPayload] = useState(DEFAULT_CHUNK_PAYLOAD);
   const abortRef = useRef<AbortController | null>(null);
 
+  const usePayload = payload.trim().length > 0;
   const totalBytes = chunks.reduce((s, c) => s + c.bytes, 0);
 
   const start = async () => {
@@ -469,8 +521,12 @@ function ChunkedSection() {
     const t0 = performance.now();
     try {
       const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=${count}&delay=${delay}`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: usePayload ? payload : "" }),
         signal: ac.signal,
       });
+
       const hs: [string, string][] = [];
       res.headers.forEach((v, k) => hs.push([k, v]));
       setHeaders(hs.sort((a, b) => a[0].localeCompare(b[0])));
@@ -535,6 +591,14 @@ function ChunkedSection() {
         finishes. With chunked encoding it can start sending immediately and keep appending.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your payload — one line per chunk"
+        disabled={state === "active" || state === "connecting"}
+        hint="This text is POSTed to the edge function, which streams it back one line at a time. Clear the box to fall back to the sample text."
+      />
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
         <Btn variant="primary" onClick={start} disabled={state === "active" || state === "connecting"}>
           <Play className="h-3.5 w-3.5" /> Start
@@ -542,17 +606,20 @@ function ChunkedSection() {
         <Btn onClick={() => reset()} disabled={state !== "active"}>
           <Square className="h-3.5 w-3.5" /> Stop
         </Btn>
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          Chunks
-          <input
-            type="number"
-            min={1}
-            max={40}
-            value={count}
-            onChange={(e) => setCount(Number(e.target.value))}
-            className="w-16 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
-          />
-        </label>
+        {!usePayload && (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            Sample chunks
+            <input
+              type="number"
+              min={1}
+              max={40}
+              value={count}
+              onChange={(e) => setCount(Number(e.target.value))}
+              className="w-16 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+            />
+          </label>
+        )}
+
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
           Delay (ms)
           <input
@@ -656,6 +723,12 @@ function Sparkline({ data }: { data: number[] }) {
   );
 }
 
+const DEFAULT_STREAM_PAYLOAD = `Write anything you want streamed back.
+Every non-empty line arrives as its own piece.
+The left panel paints each line the moment it lands.
+The right panel waits for the entire body first.
+Try pasting a long log or a story here.`;
+
 function StreamingSection() {
   const [state, setState] = useState<RunState>("idle");
   const [streamText, setStreamText] = useState("");
@@ -665,6 +738,7 @@ function StreamingSection() {
   const [firstBuffered, setFirstBuffered] = useState<number | null>(null);
   const [rate, setRate] = useState<number[]>([]);
   const [compare, setCompare] = useState(true);
+  const [payload, setPayload] = useState(DEFAULT_STREAM_PAYLOAD);
   const abortRef = useRef<AbortController | null>(null);
   const bytesWindow = useRef(0);
 
@@ -682,9 +756,15 @@ function StreamingSection() {
     const ac = new AbortController();
     abortRef.current = ac;
     const t0 = performance.now();
+    const post = (): RequestInit => ({
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: payload }),
+      signal: ac.signal,
+    });
 
     const streamed = (async () => {
-      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250`), { signal: ac.signal });
+      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250`), post());
       setState("active");
       const reader = res.body!.getReader();
       const dec = new TextDecoder();
@@ -701,12 +781,13 @@ function StreamingSection() {
     const buffered = (async () => {
       if (!compare) return;
       setBufferedLoading(true);
-      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250&buffered=1`), { signal: ac.signal });
+      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250&buffered=1`), post());
       const text = await res.text();
       setFirstBuffered(Math.round(performance.now() - t0));
       setBufferedText(text);
       setBufferedLoading(false);
     })();
+
 
     try {
       await Promise.all([streamed, buffered]);
@@ -774,6 +855,16 @@ function StreamingSection() {
         complete body before showing anything.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your payload — both panels send this same text"
+        rows={5}
+        disabled={state === "active" || state === "connecting"}
+        hint="Identical data, identical total time — only the time to first visible content differs."
+      />
+
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
         <Btn variant="primary" onClick={start} disabled={state === "active" || state === "connecting"}>
           <Waves className="h-3.5 w-3.5" /> Start stream
@@ -833,11 +924,20 @@ type SSEEvent = { id: string; name: string; data: string; at: string };
 
 const READY_LABEL = ["CONNECTING", "OPEN", "CLOSED"];
 
+const DEFAULT_SSE_PAYLOAD = `deploy started
+building bundle
+running tests
+uploading assets
+deploy finished`;
+
 function SSESection() {
   const [state, setState] = useState<RunState>("idle");
   const [readyState, setReadyState] = useState<number | null>(null);
   const [events, setEvents] = useState<SSEEvent[]>([]);
   const [reconnects, setReconnects] = useState(0);
+  const [payload, setPayload] = useState(DEFAULT_SSE_PAYLOAD);
+  const [eventName, setEventName] = useState("message");
+  const [interval_, setInterval_] = useState(1000);
   const esRef = useRef<EventSource | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const openedOnce = useRef(false);
@@ -849,13 +949,21 @@ function SSESection() {
   const push = (name: string, data: string, id = "") =>
     setEvents((e) => [...e.slice(-200), { id, name, data, at: new Date().toLocaleTimeString([], { hour12: false }) + "." + String(Date.now() % 1000).padStart(3, "0") }]);
 
-  const connect = (max = 20) => {
+  const connect = (limit?: number) => {
     disconnect(false);
     setState("connecting");
     openedOnce.current = false;
-    const es = new EventSource(withKey(`${ENDPOINTS.sse}?interval=1000&max=${max}&retry=3000`));
+    const lines = payload.split("\n").map((l) => l.trimEnd()).filter((l) => l.trim().length > 0);
+    const used = limit ? lines.slice(0, limit) : lines;
+    const name = eventName.trim() || "message";
+    const params = new URLSearchParams({ interval: String(interval_), retry: "3000", event: name });
+    if (used.length) params.set("text", used.join("\n"));
+    else params.set("max", String(limit ?? 20));
+    const es = new EventSource(withKey(`${ENDPOINTS.sse}?${params.toString()}`));
     esRef.current = es;
     setReadyState(es.readyState);
+
+
 
     es.onopen = () => {
       if (openedOnce.current) setReconnects((r) => r + 1);
@@ -874,7 +982,8 @@ function SSESection() {
         push("reconnecting", "connection dropped — EventSource is retrying automatically");
       }
     };
-    ["tick", "metric", "message", "done"].forEach((name) => {
+    const listen = Array.from(new Set(["tick", "metric", "message", "done", eventName.trim() || "message"]));
+    listen.forEach((name) => {
       es.addEventListener(name, (ev) => {
         const me = ev as MessageEvent;
         push(name, me.data, me.lastEventId);
@@ -882,6 +991,7 @@ function SSESection() {
         if (name === "done") setState("done");
       });
     });
+
   };
 
   const disconnect = (log = true) => {
@@ -943,8 +1053,18 @@ function SSESection() {
         browser's built-in reconnection kick in.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your events — one line per event"
+        rows={5}
+        disabled={state === "active" || state === "connecting"}
+        placeholder="One line per SSE event…"
+        hint="Each line is pushed as its own SSE event with an incrementing id. Clear the box to use the random sample stream."
+      />
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
-        <Btn variant="primary" onClick={() => connect(20)} disabled={state === "active" || state === "connecting"}>
+        <Btn variant="primary" onClick={() => connect()} disabled={state === "active" || state === "connecting"}>
           <Plug className="h-3.5 w-3.5" /> Connect
         </Btn>
         <Btn onClick={() => disconnect()} disabled={!esRef.current}>
@@ -953,11 +1073,34 @@ function SSESection() {
         <Btn onClick={() => connect(3)} title="Server closes after 3 events so you can see reconnect behaviour">
           <Radio className="h-3.5 w-3.5" /> Simulate short stream
         </Btn>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          event:
+          <input
+            value={eventName}
+            onChange={(e) => setEventName(e.target.value)}
+            disabled={state === "active" || state === "connecting"}
+            className="w-28 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          Every
+          <select
+            value={interval_}
+            onChange={(e) => setInterval_(Number(e.target.value))}
+            disabled={state === "active" || state === "connecting"}
+            className="rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+          >
+            <option value={400}>0.4s</option>
+            <option value={1000}>1s</option>
+            <option value={2000}>2s</option>
+          </select>
+        </label>
         <div className="ml-auto grid grid-cols-3 gap-2">
           <Stat label="readyState" value={readyState == null ? "—" : `${readyState} ${READY_LABEL[readyState]}`} />
           <Stat label="Events" value={events.length} />
           <Stat label="Reopens" value={reconnects} />
         </div>
+
       </div>
 
       <div className="rounded-xl border border-border/60 bg-card p-4">
@@ -985,7 +1128,9 @@ function SSESection() {
 /* 5. Polling                                                           */
 /* ------------------------------------------------------------------ */
 
-type PollEntry = { n: number; status: string; startedAt: number; ms: number | null };
+type PollEntry = { n: number; status: string; startedAt: number; ms: number | null; result?: string | null };
+
+const DEFAULT_JOB_PAYLOAD = `{ "job": "export-report", "rows": 5000 }`;
 
 function PollingSection() {
   const [shortState, setShortState] = useState<RunState>("idle");
@@ -993,6 +1138,7 @@ function PollingSection() {
   const [interval_, setInterval_] = useState(2000);
   const [shortLog, setShortLog] = useState<PollEntry[]>([]);
   const [longLog, setLongLog] = useState<PollEntry[]>([]);
+  const [payload, setPayload] = useState(DEFAULT_JOB_PAYLOAD);
   const [now, setNow] = useState(Date.now());
 
   const shortTimer = useRef<number | null>(null);
@@ -1002,6 +1148,15 @@ function PollingSection() {
   const longAbort = useRef<AbortController | null>(null);
   const t0Short = useRef(0);
   const t0Long = useRef(0);
+  const payloadRef = useRef(payload);
+  payloadRef.current = payload;
+
+  const jobInit = (signal?: AbortSignal): RequestInit => ({
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: payloadRef.current,
+    signal,
+  });
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 100);
@@ -1017,10 +1172,19 @@ function PollingSection() {
     try {
       const res = await fetch(
         withKey(`${ENDPOINTS.job}?mode=short&attempt=${n}&threshold=6`),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payloadRef.current,
+        },
       );
       const data = await res.json();
       setShortLog((l) =>
-        l.map((e) => (e.n === n ? { ...e, status: data.status, ms: Math.round(performance.now() - startedAt) } : e)),
+        l.map((e) =>
+          e.n === n
+            ? { ...e, status: data.status, ms: Math.round(performance.now() - startedAt), result: data.result }
+            : e,
+        ),
       );
       if (data.status === "done") stopShort("done");
     } catch {
@@ -1057,11 +1221,12 @@ function PollingSection() {
       try {
         const res = await fetch(
           withKey(`${ENDPOINTS.job}?mode=long&attempt=${n}&threshold=3&timeout=15000`),
-          { signal: ac.signal },
+          jobInit(ac.signal),
         );
         const data = await res.json();
         const ms = Math.round(performance.now() - startedAt);
-        setLongLog((l) => l.map((e) => (e.n === n ? { ...e, status: data.status, ms } : e)));
+        setLongLog((l) => l.map((e) => (e.n === n ? { ...e, status: data.status, ms, result: data.result } : e)));
+
         if (data.status === "done") {
           longRunning.current = false;
           setLongState("done");
@@ -1151,6 +1316,16 @@ function PollingSection() {
         until something happens — then the client immediately re-asks.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your job payload (sent with every poll)"
+        rows={3}
+        placeholder='{ "job": "export-report" }'
+        hint="Both pollers POST this body to the job endpoint; when the job finishes the server echoes back what it processed."
+      />
+
+
       <div className="grid gap-4 lg:grid-cols-2">
         {/* short */}
         <div className="rounded-xl border border-border/60 bg-card p-4">
@@ -1202,6 +1377,11 @@ function PollingSection() {
                   </span>
                 </div>
               ))
+            )}
+            {shortLog.at(-1)?.result && (
+              <div className="mt-2 break-all rounded-md border border-border/40 bg-card p-2 text-[11px] text-foreground/80">
+                {shortLog.at(-1)!.result}
+              </div>
             )}
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1255,6 +1435,11 @@ function PollingSection() {
                       </span>
                       <span className="text-muted-foreground">{shown}ms held</span>
                     </div>
+                    {e.result && (
+                      <div className="mt-1 break-all rounded-md border border-border/40 bg-card p-2 text-[11px] text-foreground/80">
+                        {e.result}
+                      </div>
+                    )}
                     <div className="mt-1 h-2 rounded-full bg-secondary">
                       <div
                         className={cn(

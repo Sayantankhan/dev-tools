@@ -18,20 +18,58 @@ const WORDS = [
   "When the last chunk lands, the connection can be reused for the next request.",
 ];
 
-Deno.serve((req) => {
+const MAX_LINES = 200;
+const MAX_CHARS = 20000;
+
+function normalise(raw: string): string[] {
+  return raw
+    .slice(0, MAX_CHARS)
+    .split("\n")
+    .map((l) => l.trimEnd())
+    .filter((l) => l.length > 0)
+    .slice(0, MAX_LINES);
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: baseHeaders });
   }
 
   const url = new URL(req.url);
-  const chunks = Math.min(Math.max(Number(url.searchParams.get("chunks") ?? 8), 1), 40);
   const delay = Math.min(Math.max(Number(url.searchParams.get("delay") ?? 400), 0), 3000);
   const buffered = url.searchParams.get("buffered") === "1";
 
+  // User-supplied payload: POST JSON { text } / { lines: [] }, raw text body, or ?text=
+  let userLines: string[] = [];
+  if (req.method === "POST") {
+    const raw = await req.text().catch(() => "");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed?.lines)) userLines = normalise(parsed.lines.join("\n"));
+        else if (typeof parsed?.text === "string") userLines = normalise(parsed.text);
+        else userLines = normalise(raw);
+      } catch {
+        userLines = normalise(raw);
+      }
+    }
+  }
+  if (!userLines.length) {
+    const q = url.searchParams.get("text");
+    if (q) userLines = normalise(q);
+  }
+
   const encoder = new TextEncoder();
-  const lines: string[] = [];
-  for (let i = 0; i < chunks; i++) {
-    lines.push(`[chunk ${i + 1}/${chunks}] ${WORDS[i % WORDS.length]}\n`);
+  let lines: string[];
+
+  if (userLines.length) {
+    lines = userLines.map((l) => `${l}\n`);
+  } else {
+    const chunks = Math.min(Math.max(Number(url.searchParams.get("chunks") ?? 8), 1), 40);
+    lines = [];
+    for (let i = 0; i < chunks; i++) {
+      lines.push(`[chunk ${i + 1}/${chunks}] ${WORDS[i % WORDS.length]}\n`);
+    }
   }
 
   if (buffered) {
@@ -50,7 +88,7 @@ Deno.serve((req) => {
             },
           }),
         );
-      }, delay * chunks);
+      }, delay * lines.length);
     });
   }
 
@@ -76,7 +114,8 @@ Deno.serve((req) => {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       "X-Demo-Mode": "chunked",
-      "X-Demo-Chunks": String(chunks),
+      "X-Demo-Chunks": String(lines.length),
+      "X-Demo-Source": userLines.length ? "user-payload" : "sample",
     },
   });
 });
