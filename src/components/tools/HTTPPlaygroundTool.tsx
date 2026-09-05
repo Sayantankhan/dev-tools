@@ -496,14 +496,21 @@ function PayloadBox({
 type Chunk = { i: number; bytes: number; text: string; at: number };
 
 
+const DEFAULT_CHUNK_PAYLOAD = `Hello from my own payload
+Each line here is sent as a separate chunk
+Edit this text and press Start
+The last line closes the response`;
+
 function ChunkedSection() {
   const [state, setState] = useState<RunState>("idle");
   const [chunks, setChunks] = useState<Chunk[]>([]);
   const [headers, setHeaders] = useState<[string, string][]>([]);
   const [delay, setDelay] = useState(400);
   const [count, setCount] = useState(8);
+  const [payload, setPayload] = useState(DEFAULT_CHUNK_PAYLOAD);
   const abortRef = useRef<AbortController | null>(null);
 
+  const usePayload = payload.trim().length > 0;
   const totalBytes = chunks.reduce((s, c) => s + c.bytes, 0);
 
   const start = async () => {
@@ -514,8 +521,12 @@ function ChunkedSection() {
     const t0 = performance.now();
     try {
       const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=${count}&delay=${delay}`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: usePayload ? payload : "" }),
         signal: ac.signal,
       });
+
       const hs: [string, string][] = [];
       res.headers.forEach((v, k) => hs.push([k, v]));
       setHeaders(hs.sort((a, b) => a[0].localeCompare(b[0])));
