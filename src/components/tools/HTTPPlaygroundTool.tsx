@@ -723,6 +723,12 @@ function Sparkline({ data }: { data: number[] }) {
   );
 }
 
+const DEFAULT_STREAM_PAYLOAD = `Write anything you want streamed back.
+Every non-empty line arrives as its own piece.
+The left panel paints each line the moment it lands.
+The right panel waits for the entire body first.
+Try pasting a long log or a story here.`;
+
 function StreamingSection() {
   const [state, setState] = useState<RunState>("idle");
   const [streamText, setStreamText] = useState("");
@@ -732,6 +738,7 @@ function StreamingSection() {
   const [firstBuffered, setFirstBuffered] = useState<number | null>(null);
   const [rate, setRate] = useState<number[]>([]);
   const [compare, setCompare] = useState(true);
+  const [payload, setPayload] = useState(DEFAULT_STREAM_PAYLOAD);
   const abortRef = useRef<AbortController | null>(null);
   const bytesWindow = useRef(0);
 
@@ -749,9 +756,17 @@ function StreamingSection() {
     const ac = new AbortController();
     abortRef.current = ac;
     const t0 = performance.now();
+    const post = (extra: string) => ({
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: payload }),
+      signal: ac.signal,
+      _url: extra,
+    });
 
     const streamed = (async () => {
-      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250`), { signal: ac.signal });
+      const o = post("");
+      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250`), o);
       setState("active");
       const reader = res.body!.getReader();
       const dec = new TextDecoder();
@@ -768,12 +783,13 @@ function StreamingSection() {
     const buffered = (async () => {
       if (!compare) return;
       setBufferedLoading(true);
-      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250&buffered=1`), { signal: ac.signal });
+      const res = await fetch(withKey(`${ENDPOINTS.chunked}?chunks=12&delay=250&buffered=1`), post(""));
       const text = await res.text();
       setFirstBuffered(Math.round(performance.now() - t0));
       setBufferedText(text);
       setBufferedLoading(false);
     })();
+
 
     try {
       await Promise.all([streamed, buffered]);
