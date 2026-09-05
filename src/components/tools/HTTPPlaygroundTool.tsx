@@ -446,10 +446,55 @@ function MethodsSection() {
 }
 
 /* ------------------------------------------------------------------ */
+/* User payload editor                                                  */
+/* ------------------------------------------------------------------ */
+
+function PayloadBox({
+  value,
+  onChange,
+  label = "Your payload",
+  hint,
+  placeholder = "One line per chunk…",
+  rows = 4,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label?: string;
+  hint?: React.ReactNode;
+  placeholder?: string;
+  rows?: number;
+  disabled?: boolean;
+}) {
+  const lines = value.split("\n").filter((l) => l.trim().length > 0).length;
+  return (
+    <div className="rounded-xl border border-border/60 bg-card p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">
+          {lines} line{lines === 1 ? "" : "s"} · {value.length} chars
+        </span>
+      </div>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
+        disabled={disabled}
+        placeholder={placeholder}
+        spellCheck={false}
+        className="w-full resize-y rounded-lg border border-border bg-input p-3 font-mono text-xs leading-relaxed text-foreground outline-none transition-colors focus:border-primary/50 disabled:opacity-60"
+      />
+      {hint && <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* 2. Chunked transfer-encoding                                         */
 /* ------------------------------------------------------------------ */
 
 type Chunk = { i: number; bytes: number; text: string; at: number };
+
 
 function ChunkedSection() {
   const [state, setState] = useState<RunState>("idle");
