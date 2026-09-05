@@ -1053,8 +1053,18 @@ function SSESection() {
         browser's built-in reconnection kick in.
       </Explainer>
 
+      <PayloadBox
+        value={payload}
+        onChange={setPayload}
+        label="Your events — one line per event"
+        rows={5}
+        disabled={state === "active" || state === "connecting"}
+        placeholder="One line per SSE event…"
+        hint="Each line is pushed as its own SSE event with an incrementing id. Clear the box to use the random sample stream."
+      />
+
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
-        <Btn variant="primary" onClick={() => connect(20)} disabled={state === "active" || state === "connecting"}>
+        <Btn variant="primary" onClick={() => connect()} disabled={state === "active" || state === "connecting"}>
           <Plug className="h-3.5 w-3.5" /> Connect
         </Btn>
         <Btn onClick={() => disconnect()} disabled={!esRef.current}>
@@ -1063,11 +1073,34 @@ function SSESection() {
         <Btn onClick={() => connect(3)} title="Server closes after 3 events so you can see reconnect behaviour">
           <Radio className="h-3.5 w-3.5" /> Simulate short stream
         </Btn>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          event:
+          <input
+            value={eventName}
+            onChange={(e) => setEventName(e.target.value)}
+            disabled={state === "active" || state === "connecting"}
+            className="w-28 rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          Every
+          <select
+            value={interval_}
+            onChange={(e) => setInterval_(Number(e.target.value))}
+            disabled={state === "active" || state === "connecting"}
+            className="rounded-md border border-border bg-input px-2 py-1 font-mono text-xs"
+          >
+            <option value={400}>0.4s</option>
+            <option value={1000}>1s</option>
+            <option value={2000}>2s</option>
+          </select>
+        </label>
         <div className="ml-auto grid grid-cols-3 gap-2">
           <Stat label="readyState" value={readyState == null ? "—" : `${readyState} ${READY_LABEL[readyState]}`} />
           <Stat label="Events" value={events.length} />
           <Stat label="Reopens" value={reconnects} />
         </div>
+
       </div>
 
       <div className="rounded-xl border border-border/60 bg-card p-4">
