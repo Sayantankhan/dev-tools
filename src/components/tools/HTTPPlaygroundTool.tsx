@@ -1383,10 +1383,6 @@ function PollingSection() {
                 {shortLog.at(-1)!.result}
               </div>
             )}
-            {false && (
-              <div />
-              ))
-            )}
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Stat label="Requests sent" value={shortLog.length} />
