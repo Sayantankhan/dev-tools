@@ -982,7 +982,8 @@ function SSESection() {
         push("reconnecting", "connection dropped — EventSource is retrying automatically");
       }
     };
-    ["tick", "metric", "message", "done"].forEach((name) => {
+    const listen = Array.from(new Set(["tick", "metric", "message", "done", eventName.trim() || "message"]));
+    listen.forEach((name) => {
       es.addEventListener(name, (ev) => {
         const me = ev as MessageEvent;
         push(name, me.data, me.lastEventId);
@@ -990,6 +991,7 @@ function SSESection() {
         if (name === "done") setState("done");
       });
     });
+
   };
 
   const disconnect = (log = true) => {
